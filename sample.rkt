@@ -31,6 +31,17 @@
 
 (printfln "(count %s) => %i" foods (count foods))
 
+(define max
+  (lambda (xs)
+    (cond
+      ((null? xs) (error "Cannot call max on a empty list"))
+      ((null? (cdr xs)) (car xs))
+      (#t (begin (define y (max (cdr xs)))
+                 (define x (car xs))
+                 (cond
+                   ((> x y) x)
+                   (#t y)))))))
+
 ; Higher-order functions
 (define reduce
   (lambda (f acc xs)
