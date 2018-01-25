@@ -1,8 +1,6 @@
 ;; This is not actually Racket code but rather a playground for what the Lisp
 ;; looks like.
 
-(define (printfln . ignore) '())
-
 ; There's variables, strings, numbers, booleans, and lists
 (define name "Language1")
 (define x 10)
