@@ -1,0 +1,110 @@
+First, look to https://github.com/kanaka/mal for ideas. Looks like most of
+their complete implementation include macros which would be pretty cool to
+include in the talk, assuming there's time and the implementation is simple
+enough.
+
+Also, their Go implementation uses a single interface to represent values. This
+is the type that's passed around to and from all functions, all of which
+perform type checks in order to do the right thing. Not sure if I like this or
+not but here's a quick example in Go:
+
+    package main
+
+    import (
+    	"errors"
+    	"fmt"
+    )
+
+    type Value interface{}
+
+    type Integer struct {
+    	internal int32
+    }
+
+    type Real struct {
+    	internal float32
+    }
+
+    type Bool struct {
+    	internal bool
+    }
+
+    func And(lhs Value, rhs Value) Value {
+    	switch l := lhs.(type) {
+    	case Bool:
+    		switch r := rhs.(type) {
+    		case Bool:
+    			return Bool{l.internal && r.internal}
+
+    		default:
+    			return errors.New("Cannot perform and operation on non-boolean value")
+    		}
+
+    	default:
+    		return errors.New("Cannot perform and operation on non-boolean value")
+    	}
+    }
+
+    func Add(lhs Value, rhs Value) Value {
+    	switch l := lhs.(type) {
+    	case Integer:
+    		return AddInteger(l, rhs)
+
+    	case Real:
+    		return AddReal(l, rhs)
+
+    	default:
+    		return errors.New("Cannot perform add operation on non-numerical value")
+    	}
+    }
+
+    func AddReal(lhs Real, rhs Value) Value {
+    	switch r := rhs.(type) {
+    	case Integer:
+    		return Real{lhs.internal + float32(r.internal)}
+
+    	case Real:
+    		return Real{lhs.internal + r.internal}
+
+    	default:
+    		return errors.New("Cannot perform add operation on an real number and non-numerical value")
+    	}
+    }
+
+    func AddInteger(lhs Integer, rhs Value) Value {
+    	switch r := rhs.(type) {
+    	case Integer:
+    		return Integer{lhs.internal + r.internal}
+
+    	case Real:
+    		return AddReal(r, lhs)
+
+    	default:
+    		return errors.New("Cannot perform add operation on an integer and non-numerical value")
+    	}
+    }
+
+    func main() {
+    	i := Integer{32}
+    	r := Real{43.1}
+    	t := Bool{true}
+
+    	fmt.Printf("%#v\n", i)
+    	fmt.Printf("%#v\n", r)
+    	fmt.Printf("%#v\n", Add(i, r))
+    	fmt.Printf("%#v\n", Add(r, i))
+    	fmt.Printf("%#v\n", Add(i, i))
+    	fmt.Printf("%#v\n", Add(r, r))
+    	fmt.Printf("%#v\n", Add(t, r))
+    	fmt.Printf("%#v\n", Add(t, i))
+    	fmt.Printf("%#v\n", Add(r, t))
+    	fmt.Printf("%#v\n", Add(i, t))
+    	fmt.Printf("%#v\n", And(Bool{true}, Bool{true}))
+    	fmt.Printf("%#v\n", And(Bool{true}, Bool{false}))
+    	fmt.Printf("%#v\n", And(Bool{false}, Bool{false}))
+    	fmt.Printf("%#v\n", And(Bool{false}, Bool{true}))
+    }
+
+
+There's a quasi-dynamic dispatch thing going on that I picked up from Dan G's
+course that I rather like. See `Add` and `AddInteger`/`AddReal` for an example.
