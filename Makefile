@@ -1,4 +1,4 @@
-.PHONY: build run
+.PHONY: build run fmt
 
 SCALAFLAGS = -deprecation \
 			 -Xfatal-warnings \
@@ -13,3 +13,6 @@ build:
 
 run:
 	scala -classpath build xyz.minond.talk.pti.Main
+
+fmt:
+	scalafmt src/
