@@ -20,9 +20,14 @@ class Scanner(raw: String) extends Iterator[Token] {
         Token(STRING, Some(str.mkString))
 
       case n if isDigit(n) =>
-        // XXX Should validate number here
-        val nums = n :: consume(or(isDigit, is('.'))).toList
-        Token(NUMBER, Some(nums.mkString))
+        val digits = n :: consume(or(isDigit, is('.'))).toList
+        val num = Some(digits.mkString)
+
+        digits.count(is('.')) match {
+          case 0 => Token(INTEGER, num)
+          case 1 => Token(REAL, num)
+          case _ => Token(INVALID, num)
+        }
 
       case x =>
         val chars = x :: consume(isIdentifier(_: Char)).toList

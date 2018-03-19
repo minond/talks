@@ -3,7 +3,8 @@ package xyz.minond.talk.pti
 object Token extends Enumeration {
   type Id = Value
 
-  val OPEN_PAREN, CLOSE_PAREN, IDENTIFIER, STRING, NUMBER, POUND, SQUOTE =
+  val OPEN_PAREN, CLOSE_PAREN, IDENTIFIER, STRING, INTEGER, REAL, POUND,
+  INVALID, SQUOTE =
     Value
 }
 

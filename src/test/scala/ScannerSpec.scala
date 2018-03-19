@@ -1,8 +1,7 @@
-import org.scalatest._
+package xyz.minond.talk.pti
 
-import xyz.minond.talk.pti.Scanner
-import xyz.minond.talk.pti.Token
-import xyz.minond.talk.pti.Token._
+import Token._
+import org.scalatest._
 
 class ExampleSpec extends FlatSpec with Matchers {
   def scan(src: String) =
@@ -32,11 +31,21 @@ class ExampleSpec extends FlatSpec with Matchers {
     scan(""""1 2 3"   "4 5 6"""") should be(twostrs)
   }
 
-  it should "tokenize numbers" in {
-    scan("1") should be(List(Token(NUMBER, Some("1"))))
-    scan("123") should be(List(Token(NUMBER, Some("123"))))
-    scan("0123456789") should be(List(Token(NUMBER, Some("0123456789"))))
-    scan("9876543210") should be(List(Token(NUMBER, Some("9876543210"))))
+  it should "tokenize integers" in {
+    scan("1") should be(List(Token(INTEGER, Some("1"))))
+    scan("123") should be(List(Token(INTEGER, Some("123"))))
+    scan("0123456789") should be(List(Token(INTEGER, Some("0123456789"))))
+    scan("9876543210") should be(List(Token(INTEGER, Some("9876543210"))))
+  }
+
+  it should "tokenize real numbers" in {
+    scan("0.0001") should be(List(Token(REAL, Some("0.0001"))))
+    scan("1.0") should be(List(Token(REAL, Some("1.0"))))
+    scan("9.999") should be(List(Token(REAL, Some("9.999"))))
+  }
+
+  it should "tokenize invalid numbers as errors" in {
+    scan("0.000.1") should be(List(Token(INVALID, Some("0.000.1"))))
   }
 
   it should "tokenize parentheses" in {
@@ -52,13 +61,13 @@ class ExampleSpec extends FlatSpec with Matchers {
 
   it should "tokenize content inside of parentheses" in {
     scan("(123)") should be(
-      List(Token(OPEN_PAREN), Token(NUMBER, Some("123")), Token(CLOSE_PAREN)))
+      List(Token(OPEN_PAREN), Token(INTEGER, Some("123")), Token(CLOSE_PAREN)))
 
     scan("(((123)))") should be(
       List(Token(OPEN_PAREN),
            Token(OPEN_PAREN),
            Token(OPEN_PAREN),
-           Token(NUMBER, Some("123")),
+           Token(INTEGER, Some("123")),
            Token(CLOSE_PAREN),
            Token(CLOSE_PAREN),
            Token(CLOSE_PAREN)))
@@ -68,8 +77,8 @@ class ExampleSpec extends FlatSpec with Matchers {
     scan("(+ 1 2)") should be(
       List(Token(OPEN_PAREN),
            Token(IDENTIFIER, Some("+")),
-           Token(NUMBER, Some("1")),
-           Token(NUMBER, Some("2")),
+           Token(INTEGER, Some("1")),
+           Token(INTEGER, Some("2")),
            Token(CLOSE_PAREN)))
 
     scan("(((+ 1 2)))") should be(
@@ -78,8 +87,8 @@ class ExampleSpec extends FlatSpec with Matchers {
         Token(OPEN_PAREN),
         Token(OPEN_PAREN),
         Token(IDENTIFIER, Some("+")),
-        Token(NUMBER, Some("1")),
-        Token(NUMBER, Some("2")),
+        Token(INTEGER, Some("1")),
+        Token(INTEGER, Some("2")),
         Token(CLOSE_PAREN),
         Token(CLOSE_PAREN),
         Token(CLOSE_PAREN)
@@ -91,11 +100,11 @@ class ExampleSpec extends FlatSpec with Matchers {
         Token(OPEN_PAREN),
         Token(OPEN_PAREN),
         Token(IDENTIFIER, Some("+")),
-        Token(NUMBER, Some("1")),
+        Token(INTEGER, Some("1")),
         Token(OPEN_PAREN),
         Token(IDENTIFIER, Some("*")),
-        Token(NUMBER, Some("2")),
-        Token(NUMBER, Some("3")),
+        Token(INTEGER, Some("2")),
+        Token(INTEGER, Some("3")),
         Token(CLOSE_PAREN),
         Token(CLOSE_PAREN),
         Token(CLOSE_PAREN),
