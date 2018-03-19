@@ -7,7 +7,7 @@ object Token extends Enumeration {
     Value
 }
 
-case class Token(id: Token.Id, lexeme: Option[String]) {
+case class Token(id: Token.Id, lexeme: Option[String] = None) {
   import Token._
 
   override def toString(): String = (id, lexeme) match {

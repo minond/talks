@@ -8,10 +8,10 @@ class Scanner(raw: String) extends Iterator[Token] {
   def next(): Token = {
     src.next match {
       case ' '  => next
-      case '('  => Token(OPEN_PAREN, None)
-      case ')'  => Token(CLOSE_PAREN, None)
-      case '#'  => Token(POUND, None)
-      case '\'' => Token(SQUOTE, None)
+      case '('  => Token(OPEN_PAREN)
+      case ')'  => Token(CLOSE_PAREN)
+      case '#'  => Token(POUND)
+      case '\'' => Token(SQUOTE)
 
       case '"' =>
         // XXX This should handle escaped quotes
