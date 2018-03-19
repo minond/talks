@@ -1,15 +1,17 @@
 package xyz.minond.talk.pti
 
 import Token._
-import scala.util.{Try, Success, Failure}
 
-class Scanner(raw: String) extends Iterator[Try[Token]] {
+class Scanner(raw: String) extends Iterator[Either[Error, Token]] {
   val src = raw.trim.toList.toIterator.buffered
 
   def ok(id: Token.Id, lexeme: Option[String] = None) =
-    Success(Token(id, lexeme))
+    Right(Token(id, lexeme))
 
-  def next(): Try[Token] = {
+  def err(message: String, lexeme: Option[String] = None) =
+    Left(Error(message, lexeme))
+
+  def next() = {
     src.next match {
       case ' '  => next
       case '('  => ok(OPEN_PAREN)
@@ -26,15 +28,15 @@ class Scanner(raw: String) extends Iterator[Try[Token]] {
             src.next
             ok(STRING, str)
 
-          // Internal error, string did not end with '"' but still has more
-          // input for some reason. This shouldn't happen.
           case (true, _) =>
-            src.next
-            ok(INVALID, str)
+            val msg =
+              """String did not end with '"' but we still has more input for some reason. This shouldn't happen."""
 
-          // User error, string did not end with a '"' character
+            src.next
+            err(msg, str)
+
           case (false, _) =>
-            ok(INVALID, str)
+            err("""String did not end with a '"' character""", str)
         }
 
       case n if isDigit(n) =>
@@ -44,7 +46,7 @@ class Scanner(raw: String) extends Iterator[Try[Token]] {
         digits.count(is('.')) match {
           case 0 => ok(INTEGER, num)
           case 1 => ok(REAL, num)
-          case _ => ok(INVALID, num)
+          case _ => err("Found multiple periods in number", num)
         }
 
       case x =>

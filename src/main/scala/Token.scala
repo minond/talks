@@ -4,8 +4,10 @@ object Token extends Enumeration {
   type Id = Value
 
   val OPEN_PAREN, CLOSE_PAREN, IDENTIFIER, STRING, INTEGER, REAL, POUND,
-  INVALID, SQUOTE =
+  SQUOTE =
     Value
+
+  case class Error(message: String, lexeme: Option[String] = None)
 }
 
 case class Token(id: Token.Id, lexeme: Option[String] = None) {

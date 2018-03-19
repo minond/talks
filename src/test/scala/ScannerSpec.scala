@@ -2,13 +2,12 @@ package xyz.minond.talk.pti
 
 import Token._
 import org.scalatest._
-import scala.util.{Failure, Success}
 
 class ExampleSpec extends FlatSpec with Matchers {
   def scan(src: String) =
     new Scanner(src).toList collect {
-      case Success(tok) => tok
-      case Failure(err) => throw err
+      case Right(tok) => tok
+      case Left(err)  => throw new Exception(err.message)
     }
 
   "The Scanner" should "handle empty input" in {
@@ -41,8 +40,13 @@ class ExampleSpec extends FlatSpec with Matchers {
   }
 
   it should "tokenize invalid strings that do not end with quotes" in {
-    scan(""""""") should be(List(Token(INVALID, Some(""))))
-    scan(""""123""") should be(List(Token(INVALID, Some("123"))))
+    a[Exception] should be thrownBy {
+      scan(""""""")
+    }
+
+    a[Exception] should be thrownBy {
+      scan(""""123""")
+    }
   }
 
   it should "tokenize integers" in {
@@ -59,7 +63,9 @@ class ExampleSpec extends FlatSpec with Matchers {
   }
 
   it should "tokenize invalid numbers as errors" in {
-    scan("0.000.1") should be(List(Token(INVALID, Some("0.000.1"))))
+    a[Exception] should be thrownBy {
+      scan("0.000.1")
+    }
   }
 
   it should "tokenize parentheses" in {
