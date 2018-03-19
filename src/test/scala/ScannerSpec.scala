@@ -2,10 +2,14 @@ package xyz.minond.talk.pti
 
 import Token._
 import org.scalatest._
+import scala.util.{Failure, Success}
 
 class ExampleSpec extends FlatSpec with Matchers {
   def scan(src: String) =
-    new Scanner(src) toList
+    new Scanner(src).toList collect {
+      case Success(tok) => tok
+      case Failure(err) => throw err
+    }
 
   "The Scanner" should "handle empty input" in {
     scan("") should be(List())

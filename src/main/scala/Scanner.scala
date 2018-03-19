@@ -1,17 +1,21 @@
 package xyz.minond.talk.pti
 
 import Token._
+import scala.util.{Try, Success, Failure}
 
-class Scanner(raw: String) extends Iterator[Token] {
+class Scanner(raw: String) extends Iterator[Try[Token]] {
   val src = raw.trim.toList.toIterator.buffered
 
-  def next(): Token = {
+  def ok(id: Token.Id, lexeme: Option[String] = None) =
+    Success(Token(id, lexeme))
+
+  def next(): Try[Token] = {
     src.next match {
       case ' '  => next
-      case '('  => Token(OPEN_PAREN)
-      case ')'  => Token(CLOSE_PAREN)
-      case '#'  => Token(POUND)
-      case '\'' => Token(SQUOTE)
+      case '('  => ok(OPEN_PAREN)
+      case ')'  => ok(CLOSE_PAREN)
+      case '#'  => ok(POUND)
+      case '\'' => ok(SQUOTE)
 
       case '"' =>
         val str = Some(lookbehind((curr, prev) =>
@@ -20,17 +24,17 @@ class Scanner(raw: String) extends Iterator[Token] {
         (src.hasNext, if (src.hasNext) src.head else 0) match {
           case (true, '"') =>
             src.next
-            Token(STRING, str)
+            ok(STRING, str)
 
           // Internal error, string did not end with '"' but still has more
           // input for some reason. This shouldn't happen.
           case (true, _) =>
             src.next
-            Token(INVALID, str)
+            ok(INVALID, str)
 
           // User error, string did not end with a '"' character
           case (false, _) =>
-            Token(INVALID, str)
+            ok(INVALID, str)
         }
 
       case n if isDigit(n) =>
@@ -38,14 +42,14 @@ class Scanner(raw: String) extends Iterator[Token] {
         val num = Some(digits.mkString)
 
         digits.count(is('.')) match {
-          case 0 => Token(INTEGER, num)
-          case 1 => Token(REAL, num)
-          case _ => Token(INVALID, num)
+          case 0 => ok(INTEGER, num)
+          case 1 => ok(REAL, num)
+          case _ => ok(INVALID, num)
         }
 
       case x =>
         val chars = x :: consume(isIdentifier(_: Char)).toList
-        Token(IDENTIFIER, Some(chars.mkString))
+        ok(IDENTIFIER, Some(chars.mkString))
     }
   }
 
