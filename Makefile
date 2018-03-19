@@ -9,7 +9,7 @@ SCALAFLAGS = -deprecation \
 
 build:
 	@if [ ! -d build ]; then mkdir build; fi
-	scalac $(SCALAFLAGS) -d build src/*.scala
+	scalac $(SCALAFLAGS) -d build src/main/scala/*.scala
 
 run:
 	scala -classpath build xyz.minond.talk.pti.Main
