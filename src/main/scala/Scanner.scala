@@ -14,10 +14,24 @@ class Scanner(raw: String) extends Iterator[Token] {
       case '\'' => Token(SQUOTE)
 
       case '"' =>
-        // XXX This should handle escaped quotes
-        val str = consume(not(is('"')))
-        src.next
-        Token(STRING, Some(str.mkString))
+        val str = Some(lookbehind((curr, prev) =>
+          curr != '"' || prev == Some('\\')).mkString)
+
+        (src.hasNext, if (src.hasNext) src.head else 0) match {
+          case (true, '"') =>
+            src.next
+            Token(STRING, str)
+
+          // Internal error, string did not end with '"' but still has more
+          // input for some reason. This shouldn't happen.
+          case (true, _) =>
+            src.next
+            Token(INVALID, str)
+
+          // User error, string did not end with a '"' character
+          case (false, _) =>
+            Token(INVALID, str)
+        }
 
       case n if isDigit(n) =>
         val digits = n :: consume(or(isDigit, is('.'))).toList
@@ -36,16 +50,21 @@ class Scanner(raw: String) extends Iterator[Token] {
   }
 
   // XXX Clean this function up
-  def consume(f: Char => Boolean) = {
+  def lookbehind(f: (Char, Option[Char]) => Boolean) = {
     var buff = List[Char]()
+    var prev: Option[Char] = None
 
-    while (src.hasNext && f(src.head)) {
+    while (src.hasNext && f(src.head, prev)) {
       buff = buff ++ List(src.head)
+      prev = Some(src.head)
       src.next
     }
 
     buff
   }
+
+  def consume(f: Char => Boolean) =
+    lookbehind((x: Char, _) => f(x))
 
   def hasNext(): Boolean =
     src.hasNext

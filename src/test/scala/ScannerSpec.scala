@@ -31,6 +31,16 @@ class ExampleSpec extends FlatSpec with Matchers {
     scan(""""1 2 3"   "4 5 6"""") should be(twostrs)
   }
 
+  it should "tokenize strings with escaped quotes" in {
+    scan(""""\"1 \"2 \"3"""") should be(
+      List(Token(STRING, Some("""\"1 \"2 \"3"""))))
+  }
+
+  it should "tokenize invalid strings that do not end with quotes" in {
+    scan(""""""") should be(List(Token(INVALID, Some(""))))
+    scan(""""123""") should be(List(Token(INVALID, Some("123"))))
+  }
+
   it should "tokenize integers" in {
     scan("1") should be(List(Token(INTEGER, Some("1"))))
     scan("123") should be(List(Token(INTEGER, Some("123"))))
