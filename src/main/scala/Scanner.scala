@@ -2,6 +2,14 @@ package xyz.minond.talk.pti
 
 import Token._
 
+object Scanner {
+  object Error {
+    val STR_NO_CLOSING_WITH_CONT = """String did not end with a '"' but there is still input."""
+    val STR_NO_CLOSING = """String did not end with a '"' character."""
+    val NUM_MULT_PERIOUS = "Found multiple periods in number."
+  }
+}
+
 class Scanner(raw: String) extends Iterator[Either[Error, Token]] {
   val src = raw.trim.toList.toIterator.buffered
 
@@ -29,14 +37,11 @@ class Scanner(raw: String) extends Iterator[Either[Error, Token]] {
             ok(STRING, str)
 
           case (true, _) =>
-            val msg =
-              """String did not end with '"' but we still has more input for some reason. This shouldn't happen."""
-
             src.next
-            err(msg, str)
+            err(Scanner.Error.STR_NO_CLOSING_WITH_CONT, str)
 
           case (false, _) =>
-            err("""String did not end with a '"' character""", str)
+            err(Scanner.Error.STR_NO_CLOSING, str)
         }
 
       case n if isDigit(n) =>
@@ -46,7 +51,7 @@ class Scanner(raw: String) extends Iterator[Either[Error, Token]] {
         digits.count(is('.')) match {
           case 0 => ok(INTEGER, num)
           case 1 => ok(REAL, num)
-          case _ => err("Found multiple periods in number", num)
+          case _ => err(Scanner.Error.NUM_MULT_PERIOUS, num)
         }
 
       case x =>
