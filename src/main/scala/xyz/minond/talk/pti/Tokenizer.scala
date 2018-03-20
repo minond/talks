@@ -16,11 +16,8 @@ class Tokenizer(raw: String) extends Iterator[Either[Error, Token]] {
 
   val src = raw.trim.toList.toIterator.buffered
 
-  def ok(id: Token.Id, lexeme: Option[String] = None) =
-    Right(Token(id, lexeme))
-
-  def err(message: String, lexeme: Option[String] = None) =
-    Left(Error(message, lexeme))
+  def hasNext(): Boolean =
+    src.hasNext
 
   def next(): Either[Error, Token] = {
     src.next match {
@@ -67,6 +64,12 @@ class Tokenizer(raw: String) extends Iterator[Either[Error, Token]] {
     }
   }
 
+  def ok(id: Token.Id, lexeme: Option[String] = None) =
+    Right(Token(id, lexeme))
+
+  def err(message: String, lexeme: Option[String] = None) =
+    Left(Error(message, lexeme))
+
   // XXX Clean this function up
   def lookbehind(f: (Char, Option[Char]) => Boolean) = {
     var buff = List[Char]()
@@ -83,9 +86,6 @@ class Tokenizer(raw: String) extends Iterator[Either[Error, Token]] {
 
   def consume(f: CharComp) =
     lookbehind((x: Char, _) => f(x))
-
-  def hasNext(): Boolean =
-    src.hasNext
 
   def isIdentifier(c: Char): Boolean =
     c != '(' && c != ')' && !c.isWhitespace

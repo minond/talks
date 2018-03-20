@@ -14,9 +14,15 @@ import Statement._
 class Parser(source: Tokenizer) extends Iterator[Either[Error, Statement]] {
   val tokens = source.buffered
 
+  def hasNext(): Boolean =
+    tokens.hasNext
+
   def next(): Either[Error, Statement] =
     ???
 
-  def hasNext(): Boolean =
-    tokens.hasNext
+  def ok(stmt: Statement) =
+    Right(stmt)
+
+  def err(message: String, stmt: Option[Statement] = None) =
+    Left(Error(message, stmt))
 }
