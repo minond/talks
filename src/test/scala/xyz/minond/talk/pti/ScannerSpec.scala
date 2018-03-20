@@ -14,6 +14,12 @@ class ExampleSpec extends FlatSpec with Matchers {
     scan("") should be(List())
     scan(" ") should be(List())
     scan("          ") should be(List())
+    scan("				") should be(List())
+
+    scan("""
+
+
+    """) should be(List())
   }
 
   it should "tokenize identifiers" in {

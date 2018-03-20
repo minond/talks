@@ -3,8 +3,7 @@ package xyz.minond.talk.pti
 object Token extends Enumeration {
   type Id = Value
 
-  val OPEN_PAREN, CLOSE_PAREN, IDENTIFIER, STRING, INTEGER, REAL, POUND,
-  SQUOTE =
+  val OPEN_PAREN, CLOSE_PAREN, IDENTIFIER, STRING, INTEGER, REAL, POUND, QUOTE =
     Value
 
   case class Error(message: String, lexeme: Option[String] = None)
@@ -13,8 +12,8 @@ object Token extends Enumeration {
 case class Token(id: Token.Id, lexeme: Option[String] = None) {
   import Token._
 
-  override def toString(): String = (id, lexeme) match {
-    case (OPEN_PAREN | CLOSE_PAREN | SQUOTE | POUND, _) =>
+  override def toString: String = (id, lexeme) match {
+    case (OPEN_PAREN | CLOSE_PAREN | QUOTE | POUND, _) =>
       s"($id)"
     case (STRING, Some(str)) =>
       s"""($id "$str")"""

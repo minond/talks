@@ -4,13 +4,16 @@ import Token._
 
 object Scanner {
   object Error {
-    val STR_NO_CLOSING_WITH_CONT = """String did not end with a '"' but there is still input."""
+    val STR_NO_CLOSING_WITH_CONT =
+      """String did not end with a '"' but there is still input."""
     val STR_NO_CLOSING = """String did not end with a '"' character."""
     val NUM_MULT_PERIOUS = "Found multiple periods in number."
   }
 }
 
 class Scanner(raw: String) extends Iterator[Either[Error, Token]] {
+  type CharComp = Char => Boolean
+
   val src = raw.trim.toList.toIterator.buffered
 
   def ok(id: Token.Id, lexeme: Option[String] = None) =
@@ -19,17 +22,21 @@ class Scanner(raw: String) extends Iterator[Either[Error, Token]] {
   def err(message: String, lexeme: Option[String] = None) =
     Left(Error(message, lexeme))
 
-  def next() = {
+  def next(): Either[Error, Token] = {
     src.next match {
-      case ' '  => next
+      case c if c.isWhitespace => next
+
       case '('  => ok(OPEN_PAREN)
       case ')'  => ok(CLOSE_PAREN)
       case '#'  => ok(POUND)
-      case '\'' => ok(SQUOTE)
+      case '\'' => ok(QUOTE)
 
       case '"' =>
-        val str = Some(lookbehind((curr, prev) =>
-          curr != '"' || prev == Some('\\')).mkString)
+        val str = Some(lookbehind({
+          case ('"', Some('\\')) => true
+          case ('"', _)          => false
+          case _                 => true
+        }).mkString)
 
         (src.hasNext, if (src.hasNext) src.head else 0) match {
           case (true, '"') =>
@@ -44,8 +51,8 @@ class Scanner(raw: String) extends Iterator[Either[Error, Token]] {
             err(Scanner.Error.STR_NO_CLOSING, str)
         }
 
-      case n if isDigit(n) =>
-        val digits = n :: consume(or(isDigit, is('.'))).toList
+      case n if n.isDigit =>
+        val digits = n :: consume(or(_.isDigit, is('.'))).toList
         val num = Some(digits.mkString)
 
         digits.count(is('.')) match {
@@ -74,24 +81,21 @@ class Scanner(raw: String) extends Iterator[Either[Error, Token]] {
     buff
   }
 
-  def consume(f: Char => Boolean) =
+  def consume(f: CharComp) =
     lookbehind((x: Char, _) => f(x))
 
   def hasNext(): Boolean =
     src.hasNext
 
-  def isDigit(c: Char): Boolean =
-    c >= '0' && c <= '9'
-
   def isIdentifier(c: Char): Boolean =
-    c != '(' && c != ')' && c != ' '
+    c != '(' && c != ')' && !c.isWhitespace
 
-  def is(c: Char) =
+  def is(c: Char): CharComp =
     (x: Char) => c == x
 
-  def not(f: Char => Boolean) =
+  def not(f: CharComp): CharComp =
     (x: Char) => !f(x)
 
-  def or(f1: Char => Boolean, f2: (Char) => Boolean) =
+  def or(f1: CharComp, f2: CharComp): CharComp =
     (x: Char) => f1(x) || f2(x)
 }
