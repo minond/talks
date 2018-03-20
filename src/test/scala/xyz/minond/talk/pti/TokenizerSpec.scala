@@ -55,6 +55,26 @@ class ExampleSpec extends FlatSpec with Matchers {
     }
   }
 
+  it should "tokenize pounds" in {
+    scan("#t") should be(List(Token(POUND), Token(IDENTIFIER, Some("t"))))
+    scan("#f") should be(List(Token(POUND), Token(IDENTIFIER, Some("f"))))
+    scan("#123") should be(List(Token(POUND), Token(INTEGER, Some("123"))))
+  }
+
+  it should "tokenize quotes" in {
+    scan("'abc") should be(List(Token(QUOTE), Token(IDENTIFIER, Some("abc"))))
+    scan("'123") should be(List(Token(QUOTE), Token(INTEGER, Some("123"))))
+
+    scan("'()") should be(
+      List(Token(QUOTE), Token(OPEN_PAREN), Token(CLOSE_PAREN)))
+
+    scan("'(abc)") should be(
+      List(Token(QUOTE),
+           Token(OPEN_PAREN),
+           Token(IDENTIFIER, Some("abc")),
+           Token(CLOSE_PAREN)))
+  }
+
   it should "tokenize integers" in {
     scan("1") should be(List(Token(INTEGER, Some("1"))))
     scan("123") should be(List(Token(INTEGER, Some("123"))))
