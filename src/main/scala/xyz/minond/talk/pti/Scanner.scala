@@ -22,7 +22,7 @@ class Scanner(raw: String) extends Iterator[Either[Error, Token]] {
   def err(message: String, lexeme: Option[String] = None) =
     Left(Error(message, lexeme))
 
-  def next(): Either[Error, Token] = {
+  def next: Either[Error, Token] = {
     src.next match {
       case c if c.isWhitespace => next
 
