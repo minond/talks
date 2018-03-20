@@ -5,12 +5,12 @@ import org.scalatest._
 
 class ExampleSpec extends FlatSpec with Matchers {
   def scan(src: String) =
-    new Scanner(src).toList collect {
+    new Tokenizer(src).toList collect {
       case Right(tok) => tok
       case Left(err)  => throw new Exception(err.message)
     }
 
-  "The Scanner" should "handle empty input" in {
+  "The Tokenizer" should "handle empty input" in {
     scan("") should be(List())
     scan(" ") should be(List())
     scan("          ") should be(List())

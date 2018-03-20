@@ -2,7 +2,7 @@ package xyz.minond.talk.pti
 
 import Token._
 
-object Scanner {
+object Tokenizer {
   object Error {
     val STR_NO_CLOSING_WITH_CONT =
       """String did not end with a '"' but there is still input."""
@@ -11,7 +11,7 @@ object Scanner {
   }
 }
 
-class Scanner(raw: String) extends Iterator[Either[Error, Token]] {
+class Tokenizer(raw: String) extends Iterator[Either[Error, Token]] {
   type CharComp = Char => Boolean
 
   val src = raw.trim.toList.toIterator.buffered
@@ -45,10 +45,10 @@ class Scanner(raw: String) extends Iterator[Either[Error, Token]] {
 
           case (true, _) =>
             src.next
-            err(Scanner.Error.STR_NO_CLOSING_WITH_CONT, str)
+            err(Tokenizer.Error.STR_NO_CLOSING_WITH_CONT, str)
 
           case (false, _) =>
-            err(Scanner.Error.STR_NO_CLOSING, str)
+            err(Tokenizer.Error.STR_NO_CLOSING, str)
         }
 
       case n if n.isDigit =>
@@ -58,7 +58,7 @@ class Scanner(raw: String) extends Iterator[Either[Error, Token]] {
         digits.count(is('.')) match {
           case 0 => ok(INTEGER, num)
           case 1 => ok(REAL, num)
-          case _ => err(Scanner.Error.NUM_MULT_PERIOUS, num)
+          case _ => err(Tokenizer.Error.NUM_MULT_PERIOUS, num)
         }
 
       case x =>
