@@ -55,8 +55,8 @@ object Parser {
 /*
  * Grammar:
  *
- * MAIN     = { stmt } ;
- * stmt     = "'" stmt | sexpr | value ;
+ * MAIN     = { expr } ;
+ * expr     = "'" expr | sexpr | value ;
  * sexpr    = "(" { value } ")" ;
  * value    = IDENTIFIER | NUMBER | boolean ;
  * boolean  = "#" ( "f" | "t" ) ;
@@ -195,8 +195,8 @@ class Parser(source: Tokenizer) extends Iterator[Either[Parser.Error, Expression
             case Left(err) =>
               return Left(Parser.Error(Parser.Message.STR_INVALID_SEXPR, Some(err)))
 
-            case Right(stmt) =>
-              values += stmt
+            case Right(expr) =>
+              values += expr
           }
         }
 
@@ -218,7 +218,7 @@ class Parser(source: Tokenizer) extends Iterator[Either[Parser.Error, Expression
         next match {
           case Left(err) =>
             Left(Parser.Error(Parser.Message.STR_INVALID_QUOTE, Some(err)))
-          case Right(stmt) => Right(QuoteExpr(stmt))
+          case Right(expr) => Right(QuoteExpr(expr))
         }
     }
   }

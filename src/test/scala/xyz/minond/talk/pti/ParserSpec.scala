@@ -5,7 +5,7 @@ import org.scalatest._
 class ParserSpec extends FlatSpec with Matchers {
   def parse(src: String) =
     new Parser(new Tokenizer(src)).toList collect {
-      case Right(stmt) => stmt
+      case Right(expr) => expr
       case Left(err) => throw new Exception(err.message)
     }
 
