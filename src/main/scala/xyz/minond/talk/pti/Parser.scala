@@ -48,11 +48,14 @@ class Parser(source: Tokenizer) extends Iterator[Either[Error, Statement]] {
     }
   }
 
-  def eat() =
+  def eat() = {
+    val curr = tokens.head
     if (tokens.hasNext) tokens.next
+    curr
+  }
 
   def expect(ids: Token.Id*): Either[Error, Token] = {
-    tokens.head match {
+    eat match {
       case Right(token) if ids contains token.id =>
         Right(token)
 
@@ -69,50 +72,39 @@ class Parser(source: Tokenizer) extends Iterator[Either[Error, Statement]] {
   def parseBoolean() = {
     expect(POUND) match {
       case Left(err) =>
-        eat
         Left(Error(Parser.Error.STR_INVALID_BOOL, Some(err)))
 
       case Right(_) =>
-        eat
         expect(IDENTIFIER) match {
-          case Right(Token(IDENTIFIER, Some("t"))) =>
-            eat
-            Right(BooleanStmt(true))
-          case Right(Token(IDENTIFIER, Some("f"))) =>
-            eat
-            Right(BooleanStmt(false))
+          case Right(Token(IDENTIFIER, Some("t"))) => Right(BooleanStmt(true))
+          case Right(Token(IDENTIFIER, Some("f"))) => Right(BooleanStmt(false))
 
           case Right(Token(IDENTIFIER, Some(invalid))) =>
-            eat
             Left(
               Error(Parser.Error.STR_INVALID_BOOL,
                     Some(Error(Parser.Error.STR_INVALID_BOOL_VALUE(invalid)))))
 
           case Right(token) =>
-            eat
             Left(
               Error(Parser.Error.STR_INVALID_BOOL,
                     Some(Error(Parser.Error.STR_INVALID_BOOL_TOK(token)))))
 
           case Left(err) =>
-            eat
             Left(Error(Parser.Error.STR_INVALID_BOOL, Some(err)))
         }
     }
   }
 
   def parseInteger() = {
-    (expect(INTEGER), tokens.head.map { _.lexeme.getOrElse("").toInt }) match {
+    val curr = tokens.head
+    (expect(INTEGER), curr.map { _.lexeme.getOrElse("").toInt }) match {
       case (Left(err), _) =>
-        eat
         Left(Error(Parser.Error.STR_INVALID_INT, Some(Error(err.message))))
 
       case (_, Left(err)) =>
-        eat
         Left(Error(Parser.Error.STR_INVALID_INT, Some(Error(err.message))))
 
       case (Right(_), Right(value)) =>
-        eat
         Right(IntegerNumberStmt(value))
     }
   }
