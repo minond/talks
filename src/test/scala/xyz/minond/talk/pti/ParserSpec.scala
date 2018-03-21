@@ -86,4 +86,12 @@ class ParserSpec extends FlatSpec with Matchers {
       parse("(#invalid)")
     }
   }
+
+  it should "parse valid quoted expressions" in {
+    parse("'a") should be(List(QuoteStmt(IdentifierStmt("a"))))
+    parse("'abc") should be(List(QuoteStmt(IdentifierStmt("abc"))))
+    parse("'1") should be(List(QuoteStmt(IntegerNumberStmt(1))))
+    parse("'123") should be(List(QuoteStmt(IntegerNumberStmt(123))))
+    parse("'()") should be(List(QuoteStmt(SExprStmt(None, List()))))
+  }
 }

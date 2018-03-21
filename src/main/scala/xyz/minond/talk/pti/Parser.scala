@@ -1,13 +1,16 @@
 package xyz.minond.talk.pti
 
 import Statement._
-import Token.{IDENTIFIER, POUND, INTEGER, REAL, OPEN_PAREN, CLOSE_PAREN}
+import Token.{IDENTIFIER, POUND, INTEGER, REAL, OPEN_PAREN, CLOSE_PAREN, QUOTE}
 
 object Parser {
   object Error {
     val STR_INVALID_INT = "Cannot parse integer number."
     val STR_INVALID_REAL = "Cannot parse real number."
     val STR_INVALID_SEXPR = "Cannot parse s-expression."
+
+    val STR_INVALID_QUOTE = "Cannot parse quoted expression."
+    val STR_INVALID_NIL_QUOTE = "Cannot parse empty quote expression."
 
     val STR_INVALID_IDENTIFIER = "Cannot parse identifier."
     val STR_INVALID_NIL_IDENTIFIER = "Empty identifier value."
@@ -49,15 +52,19 @@ class Parser(source: Tokenizer) extends Iterator[Either[Error, Statement]] {
       case Right(Token(INTEGER, _))    => parseInteger
       case Right(Token(REAL, _))       => parseReal
       case Right(Token(IDENTIFIER, _)) => parseIdentifier
+      case Right(Token(QUOTE, _))      => parseQuote
       case Right(Token(OPEN_PAREN, _)) => parseSExpr
 
       case Right(Token(CLOSE_PAREN, _)) =>
         skip
         Left(Error(Parser.Error.STR_UNEXPECTED_TOK(Token(CLOSE_PAREN))))
 
-      case Right(_) => ???
+      case Right(token) =>
+        skip
+        Left(Error(Parser.Error.STR_UNEXPECTED_TOK(token)))
 
       case Left(Token.Error(msg, _)) =>
+        skip
         Left(Error(Parser.Error.STR_INVALID_TOK, Some(Error(msg))))
     }
   }
@@ -165,6 +172,19 @@ class Parser(source: Tokenizer) extends Iterator[Either[Error, Statement]] {
         expect(CLOSE_PAREN) match {
           case Left(err) => Left(Error(Parser.Error.STR_INVALID_SEXPR, Some(err)))
           case Right(_)  => Right(SExprStmt(head, tail))
+        }
+    }
+  }
+
+  def parseQuote() = {
+    (expect(QUOTE), hasNext) match {
+      case (Left(err), _) => Left(Error(Parser.Error.STR_INVALID_QUOTE, Some(err)))
+      case (_, false)     => Left(Error(Parser.Error.STR_INVALID_NIL_QUOTE))
+
+      case (Right(_), true) =>
+        next match {
+          case Left(err)   => Left(Error(Parser.Error.STR_INVALID_QUOTE, Some(err)))
+          case Right(stmt) => Right(QuoteStmt(stmt))
         }
     }
   }
