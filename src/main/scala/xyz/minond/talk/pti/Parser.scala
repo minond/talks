@@ -8,8 +8,6 @@ object Parser {
     val STR_INVALID_INT = "Cannot parse integer value."
 
     val STR_INVALID_BOOL = "Cannot parse boolean value."
-    def STR_INVALID_BOOL_VALUE(value: String) =
-      s"Expecting either 'f' or 't' but found '${value}' instead."
     def STR_INVALID_BOOL_TOK(token: Token) =
       s"Expecting either 'f' or 't' but found ${token} instead."
 
@@ -31,6 +29,7 @@ object Parser {
  * boolean  = "#" ( "f" | "t" ) ;
  */
 class Parser(source: Tokenizer) extends Iterator[Either[Error, Statement]] {
+  var curr: Either[Token.Error, Token] = Left(Token.Error("Nil"))
   val tokens = source.buffered
 
   def hasNext(): Boolean =
@@ -49,7 +48,7 @@ class Parser(source: Tokenizer) extends Iterator[Either[Error, Statement]] {
   }
 
   def eat() = {
-    val curr = tokens.head
+    curr = tokens.head
     if (tokens.hasNext) tokens.next
     curr
   }
@@ -70,33 +69,21 @@ class Parser(source: Tokenizer) extends Iterator[Either[Error, Statement]] {
   }
 
   def parseBoolean() = {
-    expect(POUND) match {
-      case Left(err) =>
-        Left(Error(Parser.Error.STR_INVALID_BOOL, Some(err)))
+    (expect(POUND), expect(IDENTIFIER)) match {
+      case (Left(err), _) => Left(Error(Parser.Error.STR_INVALID_BOOL, Some(err)))
+      case (_, Left(err)) => Left(Error(Parser.Error.STR_INVALID_BOOL, Some(err)))
 
-      case Right(_) =>
-        expect(IDENTIFIER) match {
-          case Right(Token(IDENTIFIER, Some("t"))) => Right(BooleanStmt(true))
-          case Right(Token(IDENTIFIER, Some("f"))) => Right(BooleanStmt(false))
+      case (Right(_), Right(Token(_, Some("t")))) => Right(BooleanStmt(true))
+      case (Right(_), Right(Token(_, Some("f")))) => Right(BooleanStmt(false))
 
-          case Right(Token(IDENTIFIER, Some(invalid))) =>
-            Left(
-              Error(Parser.Error.STR_INVALID_BOOL,
-                    Some(Error(Parser.Error.STR_INVALID_BOOL_VALUE(invalid)))))
-
-          case Right(token) =>
-            Left(
-              Error(Parser.Error.STR_INVALID_BOOL,
-                    Some(Error(Parser.Error.STR_INVALID_BOOL_TOK(token)))))
-
-          case Left(err) =>
-            Left(Error(Parser.Error.STR_INVALID_BOOL, Some(err)))
-        }
+      case (Right(_), Right(token)) =>
+        Left(
+          Error(Parser.Error.STR_INVALID_BOOL,
+                Some(Error(Parser.Error.STR_INVALID_BOOL_TOK(token)))))
     }
   }
 
   def parseInteger() = {
-    val curr = tokens.head
     (expect(INTEGER), curr.map { _.lexeme.getOrElse("").toInt }) match {
       case (Left(err), _) =>
         Left(Error(Parser.Error.STR_INVALID_INT, Some(Error(err.message))))

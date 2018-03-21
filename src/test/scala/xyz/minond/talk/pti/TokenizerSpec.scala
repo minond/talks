@@ -40,8 +40,7 @@ class TokenizerSpec extends FlatSpec with Matchers {
   }
 
   it should "tokenize strings with escaped quotes" in {
-    scan(""""\"1 \"2 \"3"""") should be(
-      List(Token(STRING, Some("""\"1 \"2 \"3"""))))
+    scan(""""\"1 \"2 \"3"""") should be(List(Token(STRING, Some("""\"1 \"2 \"3"""))))
   }
 
   it should "tokenize invalid strings that do not end with quotes" in {
@@ -64,14 +63,10 @@ class TokenizerSpec extends FlatSpec with Matchers {
     scan("'abc") should be(List(Token(QUOTE), Token(IDENTIFIER, Some("abc"))))
     scan("'123") should be(List(Token(QUOTE), Token(INTEGER, Some("123"))))
 
-    scan("'()") should be(
-      List(Token(QUOTE), Token(OPEN_PAREN), Token(CLOSE_PAREN)))
+    scan("'()") should be(List(Token(QUOTE), Token(OPEN_PAREN), Token(CLOSE_PAREN)))
 
     scan("'(abc)") should be(
-      List(Token(QUOTE),
-           Token(OPEN_PAREN),
-           Token(IDENTIFIER, Some("abc")),
-           Token(CLOSE_PAREN)))
+      List(Token(QUOTE), Token(OPEN_PAREN), Token(IDENTIFIER, Some("abc")), Token(CLOSE_PAREN)))
   }
 
   it should "tokenize integers" in {
