@@ -32,7 +32,7 @@ class ParserSpec extends FlatSpec with Matchers {
     }
   }
 
-  it should "parse valid integer values" in {
+  it should "parse valid integer numbers" in {
     parse("1") should be(List(IntegerNumberStmt(1)))
     parse("123") should be(List(IntegerNumberStmt(123)))
     parse("1 2 3") should be(
@@ -40,6 +40,18 @@ class ParserSpec extends FlatSpec with Matchers {
         IntegerNumberStmt(1),
         IntegerNumberStmt(2),
         IntegerNumberStmt(3)
+      ))
+  }
+
+  it should "parse valid real numbers" in {
+    parse("1.0") should be(List(RealNumberStmt(1.0)))
+    parse("1.23") should be(List(RealNumberStmt(1.23)))
+    parse("0.123") should be(List(RealNumberStmt(0.123)))
+    parse("0.1 0.2 0.3") should be(
+      List(
+        RealNumberStmt(0.1),
+        RealNumberStmt(0.2),
+        RealNumberStmt(0.3)
       ))
   }
 }

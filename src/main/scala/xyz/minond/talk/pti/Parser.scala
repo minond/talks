@@ -1,11 +1,12 @@
 package xyz.minond.talk.pti
 
 import Statement._
-import Token.{IDENTIFIER, POUND, INTEGER}
+import Token.{IDENTIFIER, POUND, INTEGER, REAL}
 
 object Parser {
   object Error {
-    val STR_INVALID_INT = "Cannot parse integer value."
+    val STR_INVALID_INT = "Cannot parse integer number."
+    val STR_INVALID_REAL = "Cannot parse real number."
 
     val STR_INVALID_BOOL = "Cannot parse boolean value."
     def STR_INVALID_BOOL_TOK(token: Token) =
@@ -42,6 +43,7 @@ class Parser(source: Tokenizer) extends Iterator[Either[Error, Statement]] {
     tokens.head match {
       case Right(Token(POUND, _))   => parseBoolean
       case Right(Token(INTEGER, _)) => parseInteger
+      case Right(Token(REAL, _))    => parseReal
 
       case Right(_) => ???
 
@@ -96,6 +98,19 @@ class Parser(source: Tokenizer) extends Iterator[Either[Error, Statement]] {
 
       case (Right(_), Right(value)) =>
         Right(IntegerNumberStmt(value))
+    }
+  }
+
+  def parseReal() = {
+    (expect(REAL), curr.map { _.lexeme.getOrElse("").toDouble }) match {
+      case (Left(err), _) =>
+        Left(Error(Parser.Error.STR_INVALID_REAL, Some(Error(err.message))))
+
+      case (_, Left(err)) =>
+        Left(Error(Parser.Error.STR_INVALID_REAL, Some(Error(err.message))))
+
+      case (Right(_), Right(value)) =>
+        Right(RealNumberStmt(value))
     }
   }
 }
