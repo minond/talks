@@ -80,4 +80,10 @@ class ParserSpec extends FlatSpec with Matchers {
       List(SExprStmt(Some(IdentifierStmt("+")),
                      List(IntegerNumberStmt(1), IntegerNumberStmt(2)))))
   }
+
+  it should "fail to parse an s-expressions with invalid contents" in {
+    a[Exception] should be thrownBy {
+      parse("(#invalid)")
+    }
+  }
 }
