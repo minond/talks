@@ -93,5 +93,16 @@ class ParserSpec extends FlatSpec with Matchers {
     parse("'1") should be(List(QuoteStmt(IntegerNumberStmt(1))))
     parse("'123") should be(List(QuoteStmt(IntegerNumberStmt(123))))
     parse("'()") should be(List(QuoteStmt(SExprStmt(None, List()))))
+    parse("'#f") should be(List(QuoteStmt(BooleanStmt(false))))
+  }
+
+  it should "fail to parse invalid quoted expressions" in {
+    a[Exception] should be thrownBy {
+      parse("'")
+    }
+
+    a[Exception] should be thrownBy {
+      parse("'#x")
+    }
   }
 }
