@@ -1,13 +1,16 @@
 package xyz.minond.talk.pti
 
 import Statement._
-import Token.{IDENTIFIER, POUND, INTEGER, REAL, OPEN_PAREN, CLOSE_PAREN, QUOTE}
+import Token.{IDENTIFIER, POUND, INTEGER, REAL, OPEN_PAREN, CLOSE_PAREN, QUOTE, STRING}
 
 object Parser {
   object Error {
     val STR_INVALID_INT = "Cannot parse integer number."
     val STR_INVALID_REAL = "Cannot parse real number."
     val STR_INVALID_SEXPR = "Cannot parse s-expression."
+
+    val STR_INVALID_STR = "Cannot parse string."
+    val STR_INVALID_NIL_STR = "Cannot parse empty string."
 
     val STR_INVALID_QUOTE = "Cannot parse quoted expression."
     val STR_INVALID_NIL_QUOTE = "Cannot parse empty quote expression."
@@ -54,6 +57,7 @@ class Parser(source: Tokenizer) extends Iterator[Either[Error, Statement]] {
       case Right(Token(IDENTIFIER, _)) => parseIdentifier
       case Right(Token(QUOTE, _))      => parseQuote
       case Right(Token(OPEN_PAREN, _)) => parseSExpr
+      case Right(Token(STRING, _))     => parseString
 
       case Right(Token(CLOSE_PAREN, _)) =>
         skip
@@ -185,6 +189,14 @@ class Parser(source: Tokenizer) extends Iterator[Either[Error, Statement]] {
           case Left(err)   => Left(Error(Parser.Error.STR_INVALID_QUOTE, Some(err)))
           case Right(stmt) => Right(QuoteStmt(stmt))
         }
+    }
+  }
+
+  def parseString() = {
+    expect(STRING) match {
+      case Left(err)                  => Left(Error(Parser.Error.STR_INVALID_STR, Some(err)))
+      case Right(Token(_, None))      => Left(Error(Parser.Error.STR_INVALID_NIL_STR))
+      case Right(Token(_, Some(str))) => Right(StringStmt(str))
     }
   }
 }

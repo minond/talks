@@ -108,4 +108,22 @@ class ParserSpec extends FlatSpec with Matchers {
       parse("'#x")
     }
   }
+
+  it should "parse valid strings" in {
+    parse(""""hi"""") should be(List(StringStmt("hi")))
+    parse(""""1 2 3"""") should be(List(StringStmt("1 2 3")))
+    parse(""""1""2""3"""") should be(
+      List(
+        StringStmt("1"),
+        StringStmt("2"),
+        StringStmt("3")
+      ))
+
+    parse(""""1" "2" "3"""") should be(
+      List(
+        StringStmt("1"),
+        StringStmt("2"),
+        StringStmt("3")
+      ))
+  }
 }
