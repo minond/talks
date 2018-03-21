@@ -2,6 +2,7 @@ package xyz.minond.talk.pti
 
 import Statement._
 import Token.{IDENTIFIER, POUND, INTEGER, REAL, OPEN_PAREN, CLOSE_PAREN, QUOTE, STRING}
+import scala.collection.mutable.ListBuffer
 
 object Parser {
   object Error {
@@ -162,8 +163,7 @@ class Parser(source: Tokenizer) extends Iterator[Either[Error, Statement]] {
         Left(Error(Parser.Error.STR_INVALID_SEXPR, Some(err)))
 
       case Right(_) =>
-        // XXX Immutable option? Maybe a recursive function.
-        var values: List[Statement] = List()
+        val values = ListBuffer[Statement]()
 
         while (tokens.hasNext && tokens.head != Right(Token(CLOSE_PAREN))) {
           next match {
@@ -171,13 +171,13 @@ class Parser(source: Tokenizer) extends Iterator[Either[Error, Statement]] {
               return Left(Error(Parser.Error.STR_INVALID_SEXPR, Some(err)))
 
             case Right(stmt) =>
-              values = values ++ List(stmt)
+              values += stmt
           }
         }
 
         expect(CLOSE_PAREN) match {
           case Left(err) => Left(Error(Parser.Error.STR_INVALID_SEXPR, Some(err)))
-          case Right(_) => Right(SExprStmt(values))
+          case Right(_) => Right(SExprStmt(values.toList))
         }
     }
   }
