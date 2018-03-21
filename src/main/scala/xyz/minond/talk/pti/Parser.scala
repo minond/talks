@@ -7,12 +7,13 @@ object Parser {
   object Error {
     val STR_INVALID_BOOL = "Cannot parse boolean value."
     def STR_INVALID_BOOL_VALUE(value: String) =
-      s"Expecting either 'f' or 't' but found ${value} instead."
+      s"Expecting either 'f' or 't' but found '${value}' instead."
     def STR_INVALID_BOOL_TOK(token: Token) =
       s"Expecting either 'f' or 't' but found ${token} instead."
 
     val STR_INVALID_TOK = "Cannot parse invalid token."
-    def STR_UNEXPECTED_TOK(id: Token.Id) = s"Found unexpected token: ${id}"
+    def STR_UNEXPECTED_TOK(token: Token) =
+      s"Found unexpected token: ${token}"
     def STR_EXPECTING_ONE_OF(ids: Token.Id*) =
       s"Expecting (one of): ${ids.mkString(", ")}."
   }
@@ -53,9 +54,9 @@ class Parser(source: Tokenizer) extends Iterator[Either[Error, Statement]] {
       case Left(Token.Error(msg, _)) =>
         Left(Error(Parser.Error.STR_INVALID_TOK, Some(Error(msg))))
 
-      case Right(Token(id, _)) =>
+      case Right(token) =>
         Left(
-          Error(Parser.Error.STR_UNEXPECTED_TOK(id),
+          Error(Parser.Error.STR_UNEXPECTED_TOK(token),
                 Some(Error(Parser.Error.STR_EXPECTING_ONE_OF(ids: _*)))))
     }
   }
@@ -71,16 +72,19 @@ class Parser(source: Tokenizer) extends Iterator[Either[Error, Statement]] {
           case Right(Token(IDENTIFIER, Some("f"))) => Right(BooleanStmt(false))
 
           case Right(Token(IDENTIFIER, Some(invalid))) =>
+            tokens.next
             Left(
               Error(Parser.Error.STR_INVALID_BOOL,
                     Some(Error(Parser.Error.STR_INVALID_BOOL_VALUE(invalid)))))
 
           case Right(token) =>
+            tokens.next
             Left(
               Error(Parser.Error.STR_INVALID_BOOL,
                     Some(Error(Parser.Error.STR_INVALID_BOOL_TOK(token)))))
 
           case Left(err) =>
+            tokens.next
             Left(Error(Parser.Error.STR_INVALID_BOOL, Some(err)))
         }
     }

@@ -1,5 +1,6 @@
 package xyz.minond.talk.pti
 
+import Statement._
 import org.scalatest._
 
 class ParserSpec extends FlatSpec with Matchers {
@@ -18,5 +19,16 @@ class ParserSpec extends FlatSpec with Matchers {
 
 
     """) should be(List())
+  }
+
+  it should "parse valid boolean values" in {
+    parse("#f") should be(List(BooleanStmt(false)))
+    parse("#t") should be(List(BooleanStmt(true)))
+  }
+
+  it should "fail to parse an invalid boolea value" in {
+    a[Exception] should be thrownBy {
+      parse("#123")
+    }
   }
 }
