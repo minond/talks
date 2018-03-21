@@ -3,7 +3,9 @@ package xyz.minond.talk.pti
 object Statement {
   trait Statement
 
-  case class Error(message: String, prev: Option[Error] = None, stmt: Option[Statement] = None)
+  case class Error(message: String,
+                   prev: Option[Error] = None,
+                   stmt: Option[Statement] = None)
 
   case class SExprStmt(head: Option[Statement], tail: List[Statement]) extends Statement
   case class QuoteStmt(value: Statement) extends Statement

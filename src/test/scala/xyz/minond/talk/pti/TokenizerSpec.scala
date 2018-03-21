@@ -66,7 +66,10 @@ class TokenizerSpec extends FlatSpec with Matchers {
     scan("'()") should be(List(Token(QUOTE), Token(OPEN_PAREN), Token(CLOSE_PAREN)))
 
     scan("'(abc)") should be(
-      List(Token(QUOTE), Token(OPEN_PAREN), Token(IDENTIFIER, Some("abc")), Token(CLOSE_PAREN)))
+      List(Token(QUOTE),
+           Token(OPEN_PAREN),
+           Token(IDENTIFIER, Some("abc")),
+           Token(CLOSE_PAREN)))
   }
 
   it should "tokenize integers" in {

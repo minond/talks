@@ -62,4 +62,22 @@ class ParserSpec extends FlatSpec with Matchers {
     parse("number->string") should be(List(IdentifierStmt("number->string")))
     parse("package.name") should be(List(IdentifierStmt("package.name")))
   }
+
+  it should "parse valid s-expressions" in {
+    parse("()") should be(List(SExprStmt(None, List())))
+    parse("(())") should be(List(SExprStmt(Some(SExprStmt(None, List())), List())))
+    parse("((()))") should be(
+      List(SExprStmt(Some(SExprStmt(Some(SExprStmt(None, List())), List())), List())))
+
+    parse("((() () ()))") should be(
+      List(
+        SExprStmt(Some(SExprStmt(Some(SExprStmt(None, List())),
+                                 List(SExprStmt(None, List()), SExprStmt(None, List())))),
+                  List()))
+    )
+
+    parse("(+ 1 2)") should be(
+      List(SExprStmt(Some(IdentifierStmt("+")),
+                     List(IntegerNumberStmt(1), IntegerNumberStmt(2)))))
+  }
 }
