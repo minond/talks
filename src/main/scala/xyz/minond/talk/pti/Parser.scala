@@ -155,8 +155,8 @@ class Parser(source: Tokenizer) extends Iterator[Either[Error, Statement]] {
         Left(Error(Parser.Error.STR_INVALID_SEXPR, Some(err)))
 
       case Right(_) =>
-        var head: Option[Statement] = None
-        var tail: List[Statement] = List()
+        // XXX Immutable option? Maybe a recursive function.
+        var values: List[Statement] = List()
 
         while (tokens.hasNext && tokens.head != Right(Token(CLOSE_PAREN))) {
           next match {
@@ -164,14 +164,13 @@ class Parser(source: Tokenizer) extends Iterator[Either[Error, Statement]] {
               return Left(Error(Parser.Error.STR_INVALID_SEXPR, Some(err)))
 
             case Right(stmt) =>
-              if (head.isEmpty) head = Some(stmt)
-              else tail = tail ++ List(stmt)
+              values = values ++ List(stmt)
           }
         }
 
         expect(CLOSE_PAREN) match {
           case Left(err) => Left(Error(Parser.Error.STR_INVALID_SEXPR, Some(err)))
-          case Right(_)  => Right(SExprStmt(head, tail))
+          case Right(_)  => Right(SExprStmt(values))
         }
     }
   }

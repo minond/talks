@@ -64,21 +64,24 @@ class ParserSpec extends FlatSpec with Matchers {
   }
 
   it should "parse valid s-expressions" in {
-    parse("()") should be(List(SExprStmt(None, List())))
-    parse("(())") should be(List(SExprStmt(Some(SExprStmt(None, List())), List())))
-    parse("((()))") should be(
-      List(SExprStmt(Some(SExprStmt(Some(SExprStmt(None, List())), List())), List())))
+    parse("()") should be(List(SExprStmt(List())))
+    parse("(())") should be(List(SExprStmt(List(SExprStmt(List())))))
+    parse("((()))") should be(List(SExprStmt(List(SExprStmt(List(SExprStmt(List())))))))
 
     parse("((() () ()))") should be(
       List(
-        SExprStmt(Some(SExprStmt(Some(SExprStmt(None, List())),
-                                 List(SExprStmt(None, List()), SExprStmt(None, List())))),
-                  List()))
-    )
+        SExprStmt(
+          List(
+            SExprStmt(
+              List(
+                SExprStmt(List()),
+                SExprStmt(List()),
+                SExprStmt(List()),
+              ))))))
 
     parse("(+ 1 2)") should be(
-      List(SExprStmt(Some(IdentifierStmt("+")),
-                     List(IntegerNumberStmt(1), IntegerNumberStmt(2)))))
+      List(
+        SExprStmt(List(IdentifierStmt("+"), IntegerNumberStmt(1), IntegerNumberStmt(2)))))
   }
 
   it should "fail to parse an s-expressions with invalid contents" in {
@@ -92,7 +95,7 @@ class ParserSpec extends FlatSpec with Matchers {
     parse("'abc") should be(List(QuoteStmt(IdentifierStmt("abc"))))
     parse("'1") should be(List(QuoteStmt(IntegerNumberStmt(1))))
     parse("'123") should be(List(QuoteStmt(IntegerNumberStmt(123))))
-    parse("'()") should be(List(QuoteStmt(SExprStmt(None, List()))))
+    parse("'()") should be(List(QuoteStmt(SExprStmt(List()))))
     parse("'#f") should be(List(QuoteStmt(BooleanStmt(false))))
   }
 
