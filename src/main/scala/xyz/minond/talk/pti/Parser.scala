@@ -29,8 +29,11 @@ object Parser {
  * boolean  = "#" ( "f" | "t" ) ;
  */
 class Parser(source: Tokenizer) extends Iterator[Either[Error, Statement]] {
-  var curr: Either[Token.Error, Token] = Left(Token.Error("Nil"))
   val tokens = source.buffered
+
+  var curr =
+    if (tokens.hasNext) tokens.head
+    else Left(Token.Error("EOF"))
 
   def hasNext(): Boolean =
     tokens.hasNext
