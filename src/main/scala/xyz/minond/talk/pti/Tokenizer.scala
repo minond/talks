@@ -1,6 +1,28 @@
 package xyz.minond.talk.pti
 
-import Token._
+object Token extends Enumeration {
+  type Id = Value
+
+  val OPEN_PAREN, CLOSE_PAREN, IDENTIFIER, STRING, INTEGER, REAL, POUND, QUOTE =
+    Value
+}
+
+case class Token(id: Token.Id, lexeme: Option[String] = None) {
+  import Token._
+
+  override def toString: String = (id, lexeme) match {
+    case (OPEN_PAREN | CLOSE_PAREN | QUOTE | POUND, _) =>
+      s"($id)"
+    case (STRING, Some(str)) =>
+      s"""($id "$str")"""
+    case (_, Some(value)) =>
+      s"($id $value)"
+    case (_, None) =>
+      s"($id nil)"
+  }
+}
+
+case class TokenError(message: String, lexeme: Option[String] = None)
 
 object Tokenizer {
   object Error {
@@ -11,7 +33,9 @@ object Tokenizer {
   }
 }
 
-class Tokenizer(raw: String) extends Iterator[Either[Error, Token]] {
+class Tokenizer(raw: String) extends Iterator[Either[TokenError, Token]] {
+  import Token.{IDENTIFIER, POUND, INTEGER, REAL, OPEN_PAREN, CLOSE_PAREN, QUOTE, STRING}
+
   type CharComp = Char => Boolean
 
   val src = raw.trim.toList.toIterator.buffered
@@ -19,7 +43,7 @@ class Tokenizer(raw: String) extends Iterator[Either[Error, Token]] {
   def hasNext(): Boolean =
     src.hasNext
 
-  def next(): Either[Error, Token] = {
+  def next(): Either[TokenError, Token] = {
     src.next match {
       case c if c.isWhitespace => next
 
@@ -68,7 +92,7 @@ class Tokenizer(raw: String) extends Iterator[Either[Error, Token]] {
     Right(Token(id, lexeme))
 
   def err(message: String, lexeme: Option[String] = None) =
-    Left(Error(message, lexeme))
+    Left(TokenError(message, lexeme))
 
   // XXX Clean this function up
   def lookbehind(f: (Char, Option[Char]) => Boolean) = {

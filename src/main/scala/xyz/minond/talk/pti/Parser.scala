@@ -56,7 +56,7 @@ class Parser(source: Tokenizer) extends Iterator[Either[ExprError, Expression]] 
 
   var curr =
     if (tokens.hasNext) tokens.head
-    else Left(Token.Error("EOF"))
+    else Left(TokenError("EOF"))
 
   def hasNext(): Boolean =
     tokens.hasNext
@@ -79,7 +79,7 @@ class Parser(source: Tokenizer) extends Iterator[Either[ExprError, Expression]] 
         skip
         Left(ExprError(Parser.Error.STR_UNEXPECTED_TOK(token)))
 
-      case Left(Token.Error(msg, _)) =>
+      case Left(TokenError(msg, _)) =>
         skip
         Left(ExprError(Parser.Error.STR_INVALID_TOK, Some(ExprError(msg))))
     }
@@ -99,7 +99,7 @@ class Parser(source: Tokenizer) extends Iterator[Either[ExprError, Expression]] 
       case Right(token) if ids contains token.id =>
         Right(token)
 
-      case Left(Token.Error(msg, _)) =>
+      case Left(TokenError(msg, _)) =>
         Left(ExprError(Parser.Error.STR_INVALID_TOK, Some(ExprError(msg))))
 
       case Right(token) =>
@@ -131,7 +131,7 @@ class Parser(source: Tokenizer) extends Iterator[Either[ExprError, Expression]] 
       case (Left(err), _) =>
         Left(ExprError(Parser.Error.STR_INVALID_INT, Some(err)))
 
-      case (_, Left(err: Token.Error)) =>
+      case (_, Left(err: TokenError)) =>
         Left(ExprError(Parser.Error.STR_INVALID_INT, Some(ExprError(err.message))))
 
       case (Right(_), Right(value)) =>
@@ -144,7 +144,7 @@ class Parser(source: Tokenizer) extends Iterator[Either[ExprError, Expression]] 
       case (Left(err), _) =>
         Left(ExprError(Parser.Error.STR_INVALID_REAL, Some(err)))
 
-      case (_, Left(err: Token.Error)) =>
+      case (_, Left(err: TokenError)) =>
         Left(ExprError(Parser.Error.STR_INVALID_REAL, Some(ExprError(err.message))))
 
       case (Right(_), Right(value)) =>
