@@ -1,6 +1,16 @@
 package xyz.minond.talk.pti
 
-import Token._
+import Tokenizer.{
+  IDENTIFIER,
+  POUND,
+  INTEGER,
+  REAL,
+  OPEN_PAREN,
+  CLOSE_PAREN,
+  QUOTE,
+  STRING
+}
+
 import org.scalatest._
 
 class TokenizerSpec extends FlatSpec with Matchers {

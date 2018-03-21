@@ -1,15 +1,13 @@
 package xyz.minond.talk.pti
 
-object Token extends Enumeration {
+case class Token(id: Tokenizer.Id, lexeme: Option[String] = None)
+
+object Tokenizer extends Enumeration {
   type Id = Value
 
   val OPEN_PAREN, CLOSE_PAREN, IDENTIFIER, STRING, INTEGER, REAL, POUND, QUOTE =
     Value
-}
 
-case class Token(id: Token.Id, lexeme: Option[String] = None)
-
-object Tokenizer {
   object Message {
     val STR_NO_CLOSING_WITH_CONT =
       """String did not end with a '"' but there is still input."""
@@ -21,7 +19,16 @@ object Tokenizer {
 }
 
 class Tokenizer(raw: String) extends Iterator[Either[Tokenizer.Error, Token]] {
-  import Token.{IDENTIFIER, POUND, INTEGER, REAL, OPEN_PAREN, CLOSE_PAREN, QUOTE, STRING}
+  import Tokenizer.{
+    IDENTIFIER,
+    POUND,
+    INTEGER,
+    REAL,
+    OPEN_PAREN,
+    CLOSE_PAREN,
+    QUOTE,
+    STRING
+  }
 
   type CharComp = Char => Boolean
 
@@ -75,7 +82,7 @@ class Tokenizer(raw: String) extends Iterator[Either[Tokenizer.Error, Token]] {
     }
   }
 
-  def ok(id: Token.Id, lexeme: Option[String] = None) =
+  def ok(id: Tokenizer.Id, lexeme: Option[String] = None) =
     Right(Token(id, lexeme))
 
   def err(message: String, lexeme: Option[String] = None) =
