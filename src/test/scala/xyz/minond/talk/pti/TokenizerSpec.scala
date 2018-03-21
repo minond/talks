@@ -15,7 +15,6 @@ class TokenizerSpec extends FlatSpec with Matchers {
     scan(" ") should be(List())
     scan("          ") should be(List())
     scan("				") should be(List())
-
     scan("""
 
 
