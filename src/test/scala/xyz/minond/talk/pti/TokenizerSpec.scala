@@ -7,7 +7,7 @@ class TokenizerSpec extends FlatSpec with Matchers {
   def scan(src: String) =
     new Tokenizer(src).toList collect {
       case Right(tok) => tok
-      case Left(err)  => throw new Exception(err.message)
+      case Left(err) => throw new Exception(err.message)
     }
 
   "The Tokenizer" should "handle empty input" in {
@@ -66,10 +66,11 @@ class TokenizerSpec extends FlatSpec with Matchers {
     scan("'()") should be(List(Token(QUOTE), Token(OPEN_PAREN), Token(CLOSE_PAREN)))
 
     scan("'(abc)") should be(
-      List(Token(QUOTE),
-           Token(OPEN_PAREN),
-           Token(IDENTIFIER, Some("abc")),
-           Token(CLOSE_PAREN)))
+      List(
+        Token(QUOTE),
+        Token(OPEN_PAREN),
+        Token(IDENTIFIER, Some("abc")),
+        Token(CLOSE_PAREN)))
   }
 
   it should "tokenize integers" in {
@@ -94,12 +95,13 @@ class TokenizerSpec extends FlatSpec with Matchers {
   it should "tokenize parentheses" in {
     scan("()") should be(List(Token(OPEN_PAREN), Token(CLOSE_PAREN)))
     scan("((()))") should be(
-      List(Token(OPEN_PAREN),
-           Token(OPEN_PAREN),
-           Token(OPEN_PAREN),
-           Token(CLOSE_PAREN),
-           Token(CLOSE_PAREN),
-           Token(CLOSE_PAREN)))
+      List(
+        Token(OPEN_PAREN),
+        Token(OPEN_PAREN),
+        Token(OPEN_PAREN),
+        Token(CLOSE_PAREN),
+        Token(CLOSE_PAREN),
+        Token(CLOSE_PAREN)))
   }
 
   it should "tokenize content inside of parentheses" in {
@@ -107,22 +109,24 @@ class TokenizerSpec extends FlatSpec with Matchers {
       List(Token(OPEN_PAREN), Token(INTEGER, Some("123")), Token(CLOSE_PAREN)))
 
     scan("(((123)))") should be(
-      List(Token(OPEN_PAREN),
-           Token(OPEN_PAREN),
-           Token(OPEN_PAREN),
-           Token(INTEGER, Some("123")),
-           Token(CLOSE_PAREN),
-           Token(CLOSE_PAREN),
-           Token(CLOSE_PAREN)))
+      List(
+        Token(OPEN_PAREN),
+        Token(OPEN_PAREN),
+        Token(OPEN_PAREN),
+        Token(INTEGER, Some("123")),
+        Token(CLOSE_PAREN),
+        Token(CLOSE_PAREN),
+        Token(CLOSE_PAREN)))
   }
 
   it should "tokenize content separated by spaces that is inside of parentheses" in {
     scan("(+ 1 2)") should be(
-      List(Token(OPEN_PAREN),
-           Token(IDENTIFIER, Some("+")),
-           Token(INTEGER, Some("1")),
-           Token(INTEGER, Some("2")),
-           Token(CLOSE_PAREN)))
+      List(
+        Token(OPEN_PAREN),
+        Token(IDENTIFIER, Some("+")),
+        Token(INTEGER, Some("1")),
+        Token(INTEGER, Some("2")),
+        Token(CLOSE_PAREN)))
 
     scan("(((+ 1 2)))") should be(
       List(

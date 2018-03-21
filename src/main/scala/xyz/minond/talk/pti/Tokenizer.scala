@@ -23,16 +23,16 @@ class Tokenizer(raw: String) extends Iterator[Either[Error, Token]] {
     src.next match {
       case c if c.isWhitespace => next
 
-      case '('  => ok(OPEN_PAREN)
-      case ')'  => ok(CLOSE_PAREN)
-      case '#'  => ok(POUND)
+      case '(' => ok(OPEN_PAREN)
+      case ')' => ok(CLOSE_PAREN)
+      case '#' => ok(POUND)
       case '\'' => ok(QUOTE)
 
       case '"' =>
         val str = Some(lookbehind({
           case ('"', Some('\\')) => true
-          case ('"', _)          => false
-          case _                 => true
+          case ('"', _) => false
+          case _ => true
         }).mkString)
 
         (src.hasNext, if (src.hasNext) src.head else 0.toChar) match {
