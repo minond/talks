@@ -7,20 +7,7 @@ object Token extends Enumeration {
     Value
 }
 
-case class Token(id: Token.Id, lexeme: Option[String] = None) {
-  import Token._
-
-  override def toString: String = (id, lexeme) match {
-    case (OPEN_PAREN | CLOSE_PAREN | QUOTE | POUND, _) =>
-      s"($id)"
-    case (STRING, Some(str)) =>
-      s"""($id "$str")"""
-    case (_, Some(value)) =>
-      s"($id $value)"
-    case (_, None) =>
-      s"($id nil)"
-  }
-}
+case class Token(id: Token.Id, lexeme: Option[String] = None)
 
 object Tokenizer {
   object Message {
