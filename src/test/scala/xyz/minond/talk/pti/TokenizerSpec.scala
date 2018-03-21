@@ -3,7 +3,7 @@ package xyz.minond.talk.pti
 import Token._
 import org.scalatest._
 
-class ExampleSpec extends FlatSpec with Matchers {
+class TokenizerSpec extends FlatSpec with Matchers {
   def scan(src: String) =
     new Tokenizer(src).toList collect {
       case Right(tok) => tok
