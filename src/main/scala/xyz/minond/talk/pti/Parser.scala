@@ -13,8 +13,6 @@ case class RealNumberExpr(value: Double) extends Expression
 case class SExpr(values: List[Expression]) extends Expression
 case class StringExpr(value: String) extends Expression
 
-case class ExprError(message: String, prev: Option[ExprError] = None)
-
 object Parser {
   object Message {
     val STR_INVALID_INT = "Cannot parse integer number."
@@ -40,6 +38,8 @@ object Parser {
     def STR_EXPECTING_ONE_OF(ids: Token.Id*) =
       s"Expecting (one of): ${ids.mkString(", ")}."
   }
+
+  case class Error(message: String, prev: Option[Parser.Error] = None)
 }
 
 /*
@@ -51,17 +51,17 @@ object Parser {
  * value    = IDENTIFIER | NUMBER | boolean ;
  * boolean  = "#" ( "f" | "t" ) ;
  */
-class Parser(source: Tokenizer) extends Iterator[Either[ExprError, Expression]] {
+class Parser(source: Tokenizer) extends Iterator[Either[Parser.Error, Expression]] {
   val tokens = source.buffered
 
   var curr =
     if (tokens.hasNext) tokens.head
-    else Left(TokenError("EOF"))
+    else Left(Tokenizer.Error("EOF"))
 
   def hasNext(): Boolean =
     tokens.hasNext
 
-  def next(): Either[ExprError, Expression] = {
+  def next(): Either[Parser.Error, Expression] = {
     tokens.head match {
       case Right(Token(POUND, _)) => parseBoolean
       case Right(Token(INTEGER, _)) => parseInteger
@@ -73,15 +73,15 @@ class Parser(source: Tokenizer) extends Iterator[Either[ExprError, Expression]] 
 
       case Right(Token(CLOSE_PAREN, _)) =>
         skip
-        Left(ExprError(Parser.Message.STR_UNEXPECTED_TOK(Token(CLOSE_PAREN))))
+        Left(Parser.Error(Parser.Message.STR_UNEXPECTED_TOK(Token(CLOSE_PAREN))))
 
       case Right(token) =>
         skip
-        Left(ExprError(Parser.Message.STR_UNEXPECTED_TOK(token)))
+        Left(Parser.Error(Parser.Message.STR_UNEXPECTED_TOK(token)))
 
-      case Left(TokenError(msg, _)) =>
+      case Left(Tokenizer.Error(msg, _)) =>
         skip
-        Left(ExprError(Parser.Message.STR_INVALID_TOK, Some(ExprError(msg))))
+        Left(Parser.Error(Parser.Message.STR_INVALID_TOK, Some(Parser.Error(msg))))
     }
   }
 
@@ -94,45 +94,45 @@ class Parser(source: Tokenizer) extends Iterator[Either[ExprError, Expression]] 
   def skip() =
     if (tokens.hasNext) tokens.next
 
-  def expect(ids: Token.Id*): Either[ExprError, Token] = {
+  def expect(ids: Token.Id*): Either[Parser.Error, Token] = {
     eat match {
       case Right(token) if ids contains token.id =>
         Right(token)
 
-      case Left(TokenError(msg, _)) =>
-        Left(ExprError(Parser.Message.STR_INVALID_TOK, Some(ExprError(msg))))
+      case Left(Tokenizer.Error(msg, _)) =>
+        Left(Parser.Error(Parser.Message.STR_INVALID_TOK, Some(Parser.Error(msg))))
 
       case Right(token) =>
         Left(
-          ExprError(
+          Parser.Error(
             Parser.Message.STR_UNEXPECTED_TOK(token),
-            Some(ExprError(Parser.Message.STR_EXPECTING_ONE_OF(ids: _*)))))
+            Some(Parser.Error(Parser.Message.STR_EXPECTING_ONE_OF(ids: _*)))))
     }
   }
 
   def parseBoolean() = {
     (expect(POUND), expect(IDENTIFIER)) match {
-      case (Left(err), _) => Left(ExprError(Parser.Message.STR_INVALID_BOOL, Some(err)))
-      case (_, Left(err)) => Left(ExprError(Parser.Message.STR_INVALID_BOOL, Some(err)))
+      case (Left(err), _) => Left(Parser.Error(Parser.Message.STR_INVALID_BOOL, Some(err)))
+      case (_, Left(err)) => Left(Parser.Error(Parser.Message.STR_INVALID_BOOL, Some(err)))
 
       case (Right(_), Right(Token(_, Some("t")))) => Right(BooleanExpr(true))
       case (Right(_), Right(Token(_, Some("f")))) => Right(BooleanExpr(false))
 
       case (Right(_), Right(token)) =>
         Left(
-          ExprError(
+          Parser.Error(
             Parser.Message.STR_INVALID_BOOL,
-            Some(ExprError(Parser.Message.STR_INVALID_BOOL_TOK(token)))))
+            Some(Parser.Error(Parser.Message.STR_INVALID_BOOL_TOK(token)))))
     }
   }
 
   def parseInteger() = {
     (expect(INTEGER), curr.map { _.lexeme.getOrElse("").toInt }) match {
       case (Left(err), _) =>
-        Left(ExprError(Parser.Message.STR_INVALID_INT, Some(err)))
+        Left(Parser.Error(Parser.Message.STR_INVALID_INT, Some(err)))
 
-      case (_, Left(err: TokenError)) =>
-        Left(ExprError(Parser.Message.STR_INVALID_INT, Some(ExprError(err.message))))
+      case (_, Left(err: Tokenizer.Error)) =>
+        Left(Parser.Error(Parser.Message.STR_INVALID_INT, Some(Parser.Error(err.message))))
 
       case (Right(_), Right(value)) =>
         Right(IntNumberExpr(value))
@@ -142,10 +142,10 @@ class Parser(source: Tokenizer) extends Iterator[Either[ExprError, Expression]] 
   def parseReal() = {
     (expect(REAL), curr.map { _.lexeme.getOrElse("").toDouble }) match {
       case (Left(err), _) =>
-        Left(ExprError(Parser.Message.STR_INVALID_REAL, Some(err)))
+        Left(Parser.Error(Parser.Message.STR_INVALID_REAL, Some(err)))
 
-      case (_, Left(err: TokenError)) =>
-        Left(ExprError(Parser.Message.STR_INVALID_REAL, Some(ExprError(err.message))))
+      case (_, Left(err: Tokenizer.Error)) =>
+        Left(Parser.Error(Parser.Message.STR_INVALID_REAL, Some(Parser.Error(err.message))))
 
       case (Right(_), Right(value)) =>
         Right(RealNumberExpr(value))
@@ -155,23 +155,23 @@ class Parser(source: Tokenizer) extends Iterator[Either[ExprError, Expression]] 
   def parseIdentifier() = {
     expect(IDENTIFIER) match {
       case Left(err) =>
-        Left(ExprError(Parser.Message.STR_INVALID_IDENTIFIER, Some(err)))
+        Left(Parser.Error(Parser.Message.STR_INVALID_IDENTIFIER, Some(err)))
 
       case Right(Token(_, None)) =>
         Left(
-          ExprError(
+          Parser.Error(
             Parser.Message.STR_INVALID_IDENTIFIER,
-            Some(ExprError(Parser.Message.STR_INVALID_NIL_IDENTIFIER))))
+            Some(Parser.Error(Parser.Message.STR_INVALID_NIL_IDENTIFIER))))
 
       case Right(Token(_, Some(value))) =>
         Right(IdentifierExpr(value))
     }
   }
 
-  def parseSExpr(): Either[ExprError, Expression] = {
+  def parseSExpr(): Either[Parser.Error, Expression] = {
     expect(OPEN_PAREN) match {
       case Left(err) =>
-        Left(ExprError(Parser.Message.STR_INVALID_SEXPR, Some(err)))
+        Left(Parser.Error(Parser.Message.STR_INVALID_SEXPR, Some(err)))
 
       case Right(_) =>
         val values = ListBuffer[Expression]()
@@ -179,7 +179,7 @@ class Parser(source: Tokenizer) extends Iterator[Either[ExprError, Expression]] 
         while (tokens.hasNext && tokens.head != Right(Token(CLOSE_PAREN))) {
           next match {
             case Left(err) =>
-              return Left(ExprError(Parser.Message.STR_INVALID_SEXPR, Some(err)))
+              return Left(Parser.Error(Parser.Message.STR_INVALID_SEXPR, Some(err)))
 
             case Right(stmt) =>
               values += stmt
@@ -187,7 +187,7 @@ class Parser(source: Tokenizer) extends Iterator[Either[ExprError, Expression]] 
         }
 
         expect(CLOSE_PAREN) match {
-          case Left(err) => Left(ExprError(Parser.Message.STR_INVALID_SEXPR, Some(err)))
+          case Left(err) => Left(Parser.Error(Parser.Message.STR_INVALID_SEXPR, Some(err)))
           case Right(_) => Right(SExpr(values.toList))
         }
     }
@@ -195,12 +195,12 @@ class Parser(source: Tokenizer) extends Iterator[Either[ExprError, Expression]] 
 
   def parseQuote() = {
     (expect(QUOTE), hasNext) match {
-      case (Left(err), _) => Left(ExprError(Parser.Message.STR_INVALID_QUOTE, Some(err)))
-      case (_, false) => Left(ExprError(Parser.Message.STR_INVALID_NIL_QUOTE))
+      case (Left(err), _) => Left(Parser.Error(Parser.Message.STR_INVALID_QUOTE, Some(err)))
+      case (_, false) => Left(Parser.Error(Parser.Message.STR_INVALID_NIL_QUOTE))
 
       case (Right(_), true) =>
         next match {
-          case Left(err) => Left(ExprError(Parser.Message.STR_INVALID_QUOTE, Some(err)))
+          case Left(err) => Left(Parser.Error(Parser.Message.STR_INVALID_QUOTE, Some(err)))
           case Right(stmt) => Right(QuoteExpr(stmt))
         }
     }
@@ -208,8 +208,8 @@ class Parser(source: Tokenizer) extends Iterator[Either[ExprError, Expression]] 
 
   def parseString() = {
     expect(STRING) match {
-      case Left(err) => Left(ExprError(Parser.Message.STR_INVALID_STR, Some(err)))
-      case Right(Token(_, None)) => Left(ExprError(Parser.Message.STR_INVALID_NIL_STR))
+      case Left(err) => Left(Parser.Error(Parser.Message.STR_INVALID_STR, Some(err)))
+      case Right(Token(_, None)) => Left(Parser.Error(Parser.Message.STR_INVALID_NIL_STR))
       case Right(Token(_, Some(str))) => Right(StringExpr(str))
     }
   }

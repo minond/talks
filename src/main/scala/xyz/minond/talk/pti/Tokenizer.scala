@@ -22,8 +22,6 @@ case class Token(id: Token.Id, lexeme: Option[String] = None) {
   }
 }
 
-case class TokenError(message: String, lexeme: Option[String] = None)
-
 object Tokenizer {
   object Message {
     val STR_NO_CLOSING_WITH_CONT =
@@ -31,9 +29,11 @@ object Tokenizer {
     val STR_NO_CLOSING = """String did not end with a '"' character."""
     val NUM_MULT_PERIOUS = "Found multiple periods in number."
   }
+
+  case class Error(message: String, lexeme: Option[String] = None)
 }
 
-class Tokenizer(raw: String) extends Iterator[Either[TokenError, Token]] {
+class Tokenizer(raw: String) extends Iterator[Either[Tokenizer.Error, Token]] {
   import Token.{IDENTIFIER, POUND, INTEGER, REAL, OPEN_PAREN, CLOSE_PAREN, QUOTE, STRING}
 
   type CharComp = Char => Boolean
@@ -43,7 +43,7 @@ class Tokenizer(raw: String) extends Iterator[Either[TokenError, Token]] {
   def hasNext(): Boolean =
     src.hasNext
 
-  def next(): Either[TokenError, Token] = {
+  def next(): Either[Tokenizer.Error, Token] = {
     src.next match {
       case c if c.isWhitespace => next
 
@@ -92,7 +92,7 @@ class Tokenizer(raw: String) extends Iterator[Either[TokenError, Token]] {
     Right(Token(id, lexeme))
 
   def err(message: String, lexeme: Option[String] = None) =
-    Left(TokenError(message, lexeme))
+    Left(Tokenizer.Error(message, lexeme))
 
   // XXX Clean this function up
   def lookbehind(f: (Char, Option[Char]) => Boolean) = {
