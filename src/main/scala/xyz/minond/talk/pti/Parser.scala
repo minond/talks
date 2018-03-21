@@ -1,8 +1,19 @@
 package xyz.minond.talk.pti
 
-import Statement._
 import Token.{IDENTIFIER, POUND, INTEGER, REAL, OPEN_PAREN, CLOSE_PAREN, QUOTE, STRING}
 import scala.collection.mutable.ListBuffer
+
+trait Expression
+
+case class BooleanExpr(value: Boolean) extends Expression
+case class IdentifierExpr(value: String) extends Expression
+case class IntNumberExpr(value: Int) extends Expression
+case class QuoteExpr(value: Expression) extends Expression
+case class RealNumberExpr(value: Double) extends Expression
+case class SExpr(values: List[Expression]) extends Expression
+case class StringExpr(value: String) extends Expression
+
+case class Error(message: String, prev: Option[Error] = None)
 
 object Parser {
   object Error {
@@ -40,7 +51,7 @@ object Parser {
  * value    = IDENTIFIER | NUMBER | boolean ;
  * boolean  = "#" ( "f" | "t" ) ;
  */
-class Parser(source: Tokenizer) extends Iterator[Either[Error, Statement]] {
+class Parser(source: Tokenizer) extends Iterator[Either[Error, Expression]] {
   val tokens = source.buffered
 
   var curr =
@@ -50,7 +61,7 @@ class Parser(source: Tokenizer) extends Iterator[Either[Error, Statement]] {
   def hasNext(): Boolean =
     tokens.hasNext
 
-  def next(): Either[Error, Statement] = {
+  def next(): Either[Error, Expression] = {
     tokens.head match {
       case Right(Token(POUND, _)) => parseBoolean
       case Right(Token(INTEGER, _)) => parseInteger
@@ -104,8 +115,8 @@ class Parser(source: Tokenizer) extends Iterator[Either[Error, Statement]] {
       case (Left(err), _) => Left(Error(Parser.Error.STR_INVALID_BOOL, Some(err)))
       case (_, Left(err)) => Left(Error(Parser.Error.STR_INVALID_BOOL, Some(err)))
 
-      case (Right(_), Right(Token(_, Some("t")))) => Right(BooleanStmt(true))
-      case (Right(_), Right(Token(_, Some("f")))) => Right(BooleanStmt(false))
+      case (Right(_), Right(Token(_, Some("t")))) => Right(BooleanExpr(true))
+      case (Right(_), Right(Token(_, Some("f")))) => Right(BooleanExpr(false))
 
       case (Right(_), Right(token)) =>
         Left(
@@ -124,7 +135,7 @@ class Parser(source: Tokenizer) extends Iterator[Either[Error, Statement]] {
         Left(Error(Parser.Error.STR_INVALID_INT, Some(Error(err.message))))
 
       case (Right(_), Right(value)) =>
-        Right(IntegerNumberStmt(value))
+        Right(IntNumberExpr(value))
     }
   }
 
@@ -137,7 +148,7 @@ class Parser(source: Tokenizer) extends Iterator[Either[Error, Statement]] {
         Left(Error(Parser.Error.STR_INVALID_REAL, Some(Error(err.message))))
 
       case (Right(_), Right(value)) =>
-        Right(RealNumberStmt(value))
+        Right(RealNumberExpr(value))
     }
   }
 
@@ -153,17 +164,17 @@ class Parser(source: Tokenizer) extends Iterator[Either[Error, Statement]] {
             Some(Error(Parser.Error.STR_INVALID_NIL_IDENTIFIER))))
 
       case Right(Token(_, Some(value))) =>
-        Right(IdentifierStmt(value))
+        Right(IdentifierExpr(value))
     }
   }
 
-  def parseSExpr(): Either[Error, Statement] = {
+  def parseSExpr(): Either[Error, Expression] = {
     expect(OPEN_PAREN) match {
       case Left(err) =>
         Left(Error(Parser.Error.STR_INVALID_SEXPR, Some(err)))
 
       case Right(_) =>
-        val values = ListBuffer[Statement]()
+        val values = ListBuffer[Expression]()
 
         while (tokens.hasNext && tokens.head != Right(Token(CLOSE_PAREN))) {
           next match {
@@ -177,7 +188,7 @@ class Parser(source: Tokenizer) extends Iterator[Either[Error, Statement]] {
 
         expect(CLOSE_PAREN) match {
           case Left(err) => Left(Error(Parser.Error.STR_INVALID_SEXPR, Some(err)))
-          case Right(_) => Right(SExprStmt(values.toList))
+          case Right(_) => Right(SExpr(values.toList))
         }
     }
   }
@@ -190,7 +201,7 @@ class Parser(source: Tokenizer) extends Iterator[Either[Error, Statement]] {
       case (Right(_), true) =>
         next match {
           case Left(err) => Left(Error(Parser.Error.STR_INVALID_QUOTE, Some(err)))
-          case Right(stmt) => Right(QuoteStmt(stmt))
+          case Right(stmt) => Right(QuoteExpr(stmt))
         }
     }
   }
@@ -199,7 +210,7 @@ class Parser(source: Tokenizer) extends Iterator[Either[Error, Statement]] {
     expect(STRING) match {
       case Left(err) => Left(Error(Parser.Error.STR_INVALID_STR, Some(err)))
       case Right(Token(_, None)) => Left(Error(Parser.Error.STR_INVALID_NIL_STR))
-      case Right(Token(_, Some(str))) => Right(StringStmt(str))
+      case Right(Token(_, Some(str))) => Right(StringExpr(str))
     }
   }
 }
