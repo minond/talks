@@ -8,6 +8,9 @@ object Parser {
     val STR_INVALID_INT = "Cannot parse integer number."
     val STR_INVALID_REAL = "Cannot parse real number."
 
+    val STR_INVALID_IDENTIFIER = "Cannot parse identifier."
+    val STR_INVALID_NIL_IDENTIFIER = "Empty identifier value."
+
     val STR_INVALID_BOOL = "Cannot parse boolean value."
     def STR_INVALID_BOOL_TOK(token: Token) =
       s"Expecting either 'f' or 't' but found ${token} instead."
@@ -41,9 +44,10 @@ class Parser(source: Tokenizer) extends Iterator[Either[Error, Statement]] {
 
   def next(): Either[Error, Statement] = {
     tokens.head match {
-      case Right(Token(POUND, _))   => parseBoolean
-      case Right(Token(INTEGER, _)) => parseInteger
-      case Right(Token(REAL, _))    => parseReal
+      case Right(Token(POUND, _))      => parseBoolean
+      case Right(Token(INTEGER, _))    => parseInteger
+      case Right(Token(REAL, _))       => parseReal
+      case Right(Token(IDENTIFIER, _)) => parseIdentifier
 
       case Right(_) => ???
 
@@ -91,7 +95,7 @@ class Parser(source: Tokenizer) extends Iterator[Either[Error, Statement]] {
   def parseInteger() = {
     (expect(INTEGER), curr.map { _.lexeme.getOrElse("").toInt }) match {
       case (Left(err), _) =>
-        Left(Error(Parser.Error.STR_INVALID_INT, Some(Error(err.message))))
+        Left(Error(Parser.Error.STR_INVALID_INT, Some(err)))
 
       case (_, Left(err)) =>
         Left(Error(Parser.Error.STR_INVALID_INT, Some(Error(err.message))))
@@ -104,13 +108,28 @@ class Parser(source: Tokenizer) extends Iterator[Either[Error, Statement]] {
   def parseReal() = {
     (expect(REAL), curr.map { _.lexeme.getOrElse("").toDouble }) match {
       case (Left(err), _) =>
-        Left(Error(Parser.Error.STR_INVALID_REAL, Some(Error(err.message))))
+        Left(Error(Parser.Error.STR_INVALID_REAL, Some(err)))
 
       case (_, Left(err)) =>
         Left(Error(Parser.Error.STR_INVALID_REAL, Some(Error(err.message))))
 
       case (Right(_), Right(value)) =>
         Right(RealNumberStmt(value))
+    }
+  }
+
+  def parseIdentifier() = {
+    expect(IDENTIFIER) match {
+      case Left(err) =>
+        Left(Error(Parser.Error.STR_INVALID_IDENTIFIER, Some(err)))
+
+      case Right(Token(_, None)) =>
+        Left(
+          Error(Parser.Error.STR_INVALID_IDENTIFIER,
+                Some(Error(Parser.Error.STR_INVALID_NIL_IDENTIFIER))))
+
+      case Right(Token(_, Some(value))) =>
+        Right(IdentifierStmt(value))
     }
   }
 }

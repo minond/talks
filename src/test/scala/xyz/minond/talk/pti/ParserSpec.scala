@@ -54,4 +54,12 @@ class ParserSpec extends FlatSpec with Matchers {
         RealNumberStmt(0.3)
       ))
   }
+
+  it should "parse valid identifiers" in {
+    parse("+") should be(List(IdentifierStmt("+")))
+    parse("=") should be(List(IdentifierStmt("=")))
+    parse("mod") should be(List(IdentifierStmt("mod")))
+    parse("number->string") should be(List(IdentifierStmt("number->string")))
+    parse("package.name") should be(List(IdentifierStmt("package.name")))
+  }
 }
