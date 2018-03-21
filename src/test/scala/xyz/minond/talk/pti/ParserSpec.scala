@@ -26,9 +26,20 @@ class ParserSpec extends FlatSpec with Matchers {
     parse("#t") should be(List(BooleanStmt(true)))
   }
 
-  it should "fail to parse an invalid boolea value" in {
+  it should "fail to parse an invalid boolean value" in {
     a[Exception] should be thrownBy {
       parse("#123")
     }
+  }
+
+  it should "parse valid integer values" in {
+    parse("1") should be(List(IntegerNumberStmt(1)))
+    parse("123") should be(List(IntegerNumberStmt(123)))
+    parse("1 2 3") should be(
+      List(
+        IntegerNumberStmt(1),
+        IntegerNumberStmt(2),
+        IntegerNumberStmt(3)
+      ))
   }
 }
