@@ -25,7 +25,7 @@ case class Token(id: Token.Id, lexeme: Option[String] = None) {
 case class TokenError(message: String, lexeme: Option[String] = None)
 
 object Tokenizer {
-  object Error {
+  object Message {
     val STR_NO_CLOSING_WITH_CONT =
       """String did not end with a '"' but there is still input."""
     val STR_NO_CLOSING = """String did not end with a '"' character."""
@@ -66,10 +66,10 @@ class Tokenizer(raw: String) extends Iterator[Either[TokenError, Token]] {
 
           case (true, _) =>
             src.next
-            err(Tokenizer.Error.STR_NO_CLOSING_WITH_CONT, str)
+            err(Tokenizer.Message.STR_NO_CLOSING_WITH_CONT, str)
 
           case (false, _) =>
-            err(Tokenizer.Error.STR_NO_CLOSING, str)
+            err(Tokenizer.Message.STR_NO_CLOSING, str)
         }
 
       case n if n.isDigit =>
@@ -79,7 +79,7 @@ class Tokenizer(raw: String) extends Iterator[Either[TokenError, Token]] {
         digits.count(is('.')) match {
           case 0 => ok(INTEGER, num)
           case 1 => ok(REAL, num)
-          case _ => err(Tokenizer.Error.NUM_MULT_PERIOUS, num)
+          case _ => err(Tokenizer.Message.NUM_MULT_PERIOUS, num)
         }
 
       case x =>
