@@ -1,12 +1,13 @@
 package xyz.minond.talk.pti
 
 import Statement._
-import Token.{IDENTIFIER, POUND, INTEGER, REAL}
+import Token.{IDENTIFIER, POUND, INTEGER, REAL, OPEN_PAREN, CLOSE_PAREN}
 
 object Parser {
   object Error {
     val STR_INVALID_INT = "Cannot parse integer number."
     val STR_INVALID_REAL = "Cannot parse real number."
+    val STR_INVALID_SEXPR = "Cannot parse s-expression."
 
     val STR_INVALID_IDENTIFIER = "Cannot parse identifier."
     val STR_INVALID_NIL_IDENTIFIER = "Empty identifier value."
@@ -48,6 +49,11 @@ class Parser(source: Tokenizer) extends Iterator[Either[Error, Statement]] {
       case Right(Token(INTEGER, _))    => parseInteger
       case Right(Token(REAL, _))       => parseReal
       case Right(Token(IDENTIFIER, _)) => parseIdentifier
+      case Right(Token(OPEN_PAREN, _)) => parseSExpr
+
+      case Right(Token(CLOSE_PAREN, _)) =>
+        skip
+        Left(Error(Parser.Error.STR_UNEXPECTED_TOK(Token(CLOSE_PAREN))))
 
       case Right(_) => ???
 
@@ -58,9 +64,12 @@ class Parser(source: Tokenizer) extends Iterator[Either[Error, Statement]] {
 
   def eat() = {
     curr = tokens.head
-    if (tokens.hasNext) tokens.next
+    skip
     curr
   }
+
+  def skip() =
+    if (tokens.hasNext) tokens.next
 
   def expect(ids: Token.Id*): Either[Error, Token] = {
     eat match {
@@ -130,6 +139,33 @@ class Parser(source: Tokenizer) extends Iterator[Either[Error, Statement]] {
 
       case Right(Token(_, Some(value))) =>
         Right(IdentifierStmt(value))
+    }
+  }
+
+  def parseSExpr(): Either[Error, Statement] = {
+    expect(OPEN_PAREN) match {
+      case Left(err) =>
+        Left(Error(Parser.Error.STR_INVALID_SEXPR, Some(err)))
+
+      case Right(_) =>
+        var head: Option[Statement] = None
+        var tail: List[Statement] = List()
+
+        while (tokens.hasNext && tokens.head != Right(Token(CLOSE_PAREN))) {
+          next match {
+            case Left(err) =>
+              return Left(Error(Parser.Error.STR_INVALID_SEXPR, Some(err)))
+
+            case Right(stmt) =>
+              if (head.isEmpty) head = Some(stmt)
+              else tail = tail ++ List(stmt)
+          }
+        }
+
+        expect(CLOSE_PAREN) match {
+          case Left(err) => Left(Error(Parser.Error.STR_INVALID_SEXPR, Some(err)))
+          case Right(_)  => Right(SExprStmt(head, tail))
+        }
     }
   }
 }

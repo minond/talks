@@ -5,7 +5,7 @@ object Statement {
 
   case class Error(message: String, prev: Option[Error] = None, stmt: Option[Statement] = None)
 
-  case class SExprStmt(head: Statement, tail: List[Statement]) extends Statement
+  case class SExprStmt(head: Option[Statement], tail: List[Statement]) extends Statement
   case class QuoteStmt(value: Statement) extends Statement
   case class IdentifierStmt(value: String) extends Statement
   case class IntegerNumberStmt(value: Int) extends Statement
