@@ -35,7 +35,7 @@ class Tokenizer(raw: String) extends Iterator[Either[Error, Token]] {
           case _                 => true
         }).mkString)
 
-        (src.hasNext, if (src.hasNext) src.head else 0) match {
+        (src.hasNext, if (src.hasNext) src.head else 0.toChar) match {
           case (true, '"') =>
             src.next
             ok(STRING, str)

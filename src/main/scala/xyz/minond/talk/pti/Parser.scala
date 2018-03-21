@@ -1,7 +1,7 @@
 package xyz.minond.talk.pti
 
 import Statement._
-import Token.{IDENTIFIER, POUND, INTEGER, REAL}
+import Token.{IDENTIFIER, POUND, INTEGER}
 
 object Parser {
   object Error {
