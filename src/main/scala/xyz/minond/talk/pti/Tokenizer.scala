@@ -66,7 +66,7 @@ class Tokenizer(raw: String) extends Iterator[Either[Tokenizer.Error, Token]] {
             err(Tokenizer.Message.STR_NO_CLOSING, str)
         }
 
-      case n if n.isDigit =>
+      case n if n.isDigit || is('.')(n) =>
         val digits = n :: consume(or(_.isDigit, is('.'))).toList
         val num = Some(digits.mkString)
 
