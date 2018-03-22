@@ -36,6 +36,7 @@ class TokenizerSpec extends FlatSpec with Matchers {
     scan("dot.dot") should be(List(Token(IDENTIFIER, Some("dot.dot"))))
     scan("dash-dash") should be(List(Token(IDENTIFIER, Some("dash-dash"))))
     scan("obj->obj") should be(List(Token(IDENTIFIER, Some("obj->obj"))))
+    scan(".") should be(List(Token(IDENTIFIER, Some("."))))
   }
 
   it should "tokenize strings" in {

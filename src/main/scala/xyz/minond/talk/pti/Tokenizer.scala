@@ -70,10 +70,11 @@ class Tokenizer(raw: String) extends Iterator[Either[Tokenizer.Error, Token]] {
         val digits = n :: consume(or(_.isDigit, is('.'))).toList
         val num = Some(digits.mkString)
 
-        digits.count(is('.')) match {
-          case 0 => ok(INTEGER, num)
-          case 1 => ok(REAL, num)
-          case _ => err(Tokenizer.Message.NUM_MULT_PERIOUS, num)
+        (digits.count(is('.')), num) match {
+          case (1, Some(".")) => ok(IDENTIFIER, num)
+          case (1, _) => ok(REAL, num)
+          case (0, _) => ok(INTEGER, num)
+          case (_, _) => err(Tokenizer.Message.NUM_MULT_PERIOUS, num)
         }
 
       case x =>
