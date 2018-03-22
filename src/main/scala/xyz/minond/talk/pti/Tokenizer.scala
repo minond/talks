@@ -5,7 +5,7 @@ case class Token(id: Tokenizer.Id, lexeme: Option[String] = None)
 object Tokenizer extends Enumeration {
   type Id = Value
 
-  val OPEN_PAREN, CLOSE_PAREN, IDENTIFIER, STRING, INTEGER, REAL, POUND, QUOTE =
+  val OPEN_PAREN, CLOSE_PAREN, IDENTIFIER, STRING, INTEGER, REAL, POUND, QUOTE, DOT =
     Value
 
   object Message {
@@ -20,6 +20,7 @@ object Tokenizer extends Enumeration {
 
 class Tokenizer(raw: String) extends Iterator[Either[Tokenizer.Error, Token]] {
   import Tokenizer.{
+    DOT,
     IDENTIFIER,
     POUND,
     INTEGER,
@@ -71,7 +72,7 @@ class Tokenizer(raw: String) extends Iterator[Either[Tokenizer.Error, Token]] {
         val num = Some(digits.mkString)
 
         (digits.count(is('.')), num) match {
-          case (1, Some(".")) => ok(IDENTIFIER, num)
+          case (1, Some(".")) => ok(DOT)
           case (1, _) => ok(REAL, num)
           case (0, _) => ok(INTEGER, num)
           case (_, _) => err(Tokenizer.Message.NUM_MULT_PERIOUS, num)

@@ -80,6 +80,20 @@ class ParserSpec extends FlatSpec with Matchers {
 
     parse("(+ 1 2)") should be(
       List(SExpr(List(IdentifierExpr("+"), IntNumberExpr(1), IntNumberExpr(2)))))
+
+    parse("(lambda (h . t) t)") should be(
+      List(
+        SExpr(
+          List(
+            IdentifierExpr("lambda"),
+            SExpr(
+              List(
+                IdentifierExpr("h"),
+                IdentifierExpr("."),
+                IdentifierExpr("t"),
+              )),
+            IdentifierExpr("t"),
+          ))))
   }
 
   it should "fail to parse an s-expressions with invalid contents" in {

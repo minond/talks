@@ -1,6 +1,7 @@
 package xyz.minond.talk.pti
 
 import Tokenizer.{
+  DOT,
   IDENTIFIER,
   POUND,
   INTEGER,
@@ -36,7 +37,11 @@ class TokenizerSpec extends FlatSpec with Matchers {
     scan("dot.dot") should be(List(Token(IDENTIFIER, Some("dot.dot"))))
     scan("dash-dash") should be(List(Token(IDENTIFIER, Some("dash-dash"))))
     scan("obj->obj") should be(List(Token(IDENTIFIER, Some("obj->obj"))))
-    scan(".") should be(List(Token(IDENTIFIER, Some("."))))
+  }
+
+  it should "tokenize dots" in {
+    scan(".") should be(List(Token(DOT)))
+    scan(". . .") should be(List(Token(DOT), Token(DOT), Token(DOT)))
   }
 
   it should "tokenize strings" in {
@@ -167,6 +172,19 @@ class TokenizerSpec extends FlatSpec with Matchers {
         Token(CLOSE_PAREN),
         Token(CLOSE_PAREN),
         Token(CLOSE_PAREN),
+        Token(CLOSE_PAREN)
+      ))
+
+    scan("(lambda (h . t) t)") should be(
+      List(
+        Token(OPEN_PAREN),
+        Token(IDENTIFIER, Some("lambda")),
+        Token(OPEN_PAREN),
+        Token(IDENTIFIER, Some("h")),
+        Token(DOT),
+        Token(IDENTIFIER, Some("t")),
+        Token(CLOSE_PAREN),
+        Token(IDENTIFIER, Some("t")),
         Token(CLOSE_PAREN)
       ))
   }

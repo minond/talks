@@ -1,6 +1,7 @@
 package xyz.minond.talk.pti
 
 import Tokenizer.{
+  DOT,
   IDENTIFIER,
   POUND,
   INTEGER,
@@ -76,7 +77,7 @@ class Parser(source: Tokenizer) extends Iterator[Either[Parser.Error, Expression
       case Right(Token(POUND, _)) => parseBoolean
       case Right(Token(INTEGER, _)) => parseInteger
       case Right(Token(REAL, _)) => parseReal
-      case Right(Token(IDENTIFIER, _)) => parseIdentifier
+      case Right(Token(DOT | IDENTIFIER, _)) => parseIdentifier
       case Right(Token(QUOTE, _)) => parseQuote
       case Right(Token(OPEN_PAREN, _)) => parseSExpr
       case Right(Token(STRING, _)) => parseString
@@ -167,9 +168,12 @@ class Parser(source: Tokenizer) extends Iterator[Either[Parser.Error, Expression
   }
 
   def parseIdentifier() = {
-    expect(IDENTIFIER) match {
-      case Left(err) =>
-        Left(Parser.Error(Parser.Message.STR_INVALID_IDENTIFIER, Some(err)))
+    expect(IDENTIFIER, DOT) match {
+      case Right(Token(DOT, _)) =>
+        Right(IdentifierExpr("."))
+
+      case Right(Token(_, Some(value))) =>
+        Right(IdentifierExpr(value))
 
       case Right(Token(_, None)) =>
         Left(
@@ -177,8 +181,8 @@ class Parser(source: Tokenizer) extends Iterator[Either[Parser.Error, Expression
             Parser.Message.STR_INVALID_IDENTIFIER,
             Some(Parser.Error(Parser.Message.STR_INVALID_NIL_IDENTIFIER))))
 
-      case Right(Token(_, Some(value))) =>
-        Right(IdentifierExpr(value))
+      case Left(err) =>
+        Left(Parser.Error(Parser.Message.STR_INVALID_IDENTIFIER, Some(err)))
     }
   }
 
