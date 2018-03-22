@@ -94,6 +94,7 @@ class TokenizerSpec extends FlatSpec with Matchers {
     scan("0.0001") should be(List(Token(REAL, Some("0.0001"))))
     scan("1.0") should be(List(Token(REAL, Some("1.0"))))
     scan("9.999") should be(List(Token(REAL, Some("9.999"))))
+    scan(".999") should be(List(Token(REAL, Some(".999"))))
   }
 
   it should "tokenize invalid numbers as errors" in {
