@@ -1,26 +1,27 @@
 package xyz.minond.talk.pti
 
 object Main {
-  def main(args: Array[String]): Unit =
-    new Parser(new Tokenizer("""
+  def main(args: Array[String]): Unit = {
+    val source = """
 
-(define TRUE #t)
+(+ 1 2 3 4)
 
-(define             one                 1)
 
-(
+(error "Error: 1 2 3")
 
-define
-two
-2
 
-)
+'(1 2 3)
 
-(+ 1 2)
+(list 1 2 3)
 
-(define x*2
-  (lambda (x)
-    (* x 2)))
+(equal? 1 1)
+(equal? '(1 2 3) '(1 2 3))
+(equal? '(1 2 3) '(3 2 1))
 
-      """)) foreach println
+    """
+
+    new Parser(new Tokenizer(source)) foreach { expr =>
+      println(Interpreter.eval(expr))
+    }
+  }
 }
