@@ -26,7 +26,7 @@ object Main {
 
 (define z
   (lambda (n)
-    (* n n)))
+    (+ n n)))
 
 (define a x)
 
@@ -35,6 +35,9 @@ object Main {
 x
 y
 z
+
+(z 1 2 3)
+(z (+ 1 (+ 2 3)))
 
     """
 

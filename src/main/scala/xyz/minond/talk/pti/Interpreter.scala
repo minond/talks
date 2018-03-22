@@ -5,12 +5,26 @@ trait Value
 case class BooleanValue(value: Boolean) extends Value
 case class ErrorValue(message: String) extends Value
 case class IntNumberValue(value: Int) extends Value
-case class LambdaValue(args: Set[String], body: Expression) extends Value
 case class ListValue(values: List[Value]) extends Value
 case class RealNumberValue(value: Double) extends Value
 case class StringValue(value: String) extends Value
 case class SymbolValue(value: String) extends Value
 case class VarValue(label: String, value: Value) extends Value
+
+case class LambdaValue(args: Set[String], body: Expression) extends Value {
+  def scope(vals: List[Value], env: Environment): Environment =
+    // XXX Add support for varargs
+    args.zip(vals).foldLeft[Environment](env) {
+      case (env: Environment, (name: String, value: Value)) =>
+        env.define(VarValue(name, value))
+
+      case _ => env
+    }
+
+  def validArity(count: Int): Boolean =
+    // XXX Add support for varargs
+    count == args.size
+}
 
 case class Environment(vars: Map[String, VarValue], parent: Option[Environment] = None) {
   def define(definition: VarValue) = {
@@ -32,6 +46,8 @@ object Interpreter {
     def ERR_INVALID_ADD(a: Value, b: Value) =
       s"Cannot add a(n) ${a} and a(n) ${b} together."
 
+    val ERR_LAMBDA_NON_PROC_CALL =
+      "Call made to non-procedure."
     val ERR_LAMBDA_NON_ID_ARG =
       "Found non-identifier argument(s)"
     def ERR_LAMBDA_DUP_ARGS(dups: List[String]) =
@@ -99,6 +115,21 @@ object Interpreter {
       // XXX Should be a generic function call
       case Right(SExpr(IdentifierExpr("+") :: values)) =>
         (builtinAdd(safeEvals(values, env)), env)
+
+      case Right(SExpr(fn :: args)) =>
+        safeEval(fn, env) match {
+          case proc: LambdaValue =>
+            if (!proc.validArity(args.size))
+              (ErrorValue(Message.ERR_ARITY_MISMATCH(proc.args.size, args.size)), env)
+            else {
+              // XXX Check that all arguments were evaluated
+              val vals = safeEvals(args, env)
+              (safeEval(proc.body, proc.scope(vals, env)), env)
+            }
+
+          case err: ErrorValue => (err, env)
+          case invalid @ _ => (ErrorValue(Message.ERR_LAMBDA_NON_PROC_CALL), env)
+        }
 
       // XXX Add toString method to all error classes
       case Left(_) => ???
