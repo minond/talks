@@ -18,12 +18,21 @@ case class Environment(vars: Map[String, VarValue], parent: Option[Environment] 
   }
 
   def lookup(label: String): Value = {
-    val err = VarValue("", ErrorValue(s"${label} is undefined."))
+    val err = VarValue("", ErrorValue(Interpreter.Message.ERR_UNDEFINED_LOOKUP(label)))
     vars.getOrElse(label, err).value
   }
 }
 
 object Interpreter {
+  object Message {
+    def ERR_UNDEFINED_LOOKUP(label: String) =
+      s"${label} is undefined."
+    def ERR_ARITY_MISMATCH(expected: Int, got: Int) =
+      s"Arity mismatch. Expected ${expected} arguments but got ${got}."
+    def ERR_INVALID_ADD(a: Value, b: Value) =
+      s"Cannot add a(n) ${a} and a(n) ${b} together."
+  }
+
   def eval(
       exprs: List[Either[Parser.Error, Expression]],
       origEnv: Environment): (List[Value], Environment) = {
@@ -105,7 +114,7 @@ object Interpreter {
             RealNumberValue(a.toDouble + b)
 
           case (a, b) =>
-            ErrorValue(s"Cannot add a(n) ${a} and a(n) ${b} together.")
+            ErrorValue(Interpreter.Message.ERR_INVALID_ADD(a, b))
         }
     }
   }
@@ -115,7 +124,7 @@ object Interpreter {
       case lhs :: rhs :: Nil =>
         BooleanValue(lhs == rhs)
 
-      case _ => ErrorValue(s"Arity mismatch. Expected 2 but got ${values.size}")
+      case _ => ErrorValue(Interpreter.Message.ERR_ARITY_MISMATCH(2, values.size))
     }
   }
 }
