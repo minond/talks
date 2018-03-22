@@ -26,14 +26,18 @@ object Interpreter {
       case Right(SExpr(IdentifierExpr("error") :: StringExpr(msg) :: Nil)) =>
         ErrorValue(msg)
 
+      // XXX Should be a generic function call
       case Right(SExpr(IdentifierExpr("equal?") :: values)) =>
         builtinEquals(safeEvals(values))
 
+      // XXX Should be a generic function call
       case Right(SExpr(IdentifierExpr("+") :: values)) =>
         builtinAdd(safeEvals(values))
 
       // XXX Add toString method to all error classes
       case Left(_) => ???
+
+      // XXX Finish all cases
       case _ => ???
     }
   }
