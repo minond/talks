@@ -5,7 +5,7 @@ trait Value
 case class BooleanValue(value: Boolean) extends Value
 case class ErrorValue(message: String) extends Value
 case class IntNumberValue(value: Int) extends Value
-case class LambdaValue(args: List[Expression], body: Expression) extends Value
+case class LambdaValue(args: Set[String], body: Expression) extends Value
 case class ListValue(values: List[Value]) extends Value
 case class RealNumberValue(value: Double) extends Value
 case class StringValue(value: String) extends Value
@@ -31,6 +31,11 @@ object Interpreter {
       s"Arity mismatch. Expected ${expected} arguments but got ${got}."
     def ERR_INVALID_ADD(a: Value, b: Value) =
       s"Cannot add a(n) ${a} and a(n) ${b} together."
+
+    val ERR_LAMBDA_NON_ID_ARG =
+      "Found non-identifier argument(s)"
+    def ERR_LAMBDA_DUP_ARGS(dups: List[String]) =
+      s"Found duplicate argument name(s): ${dups.mkString(", ")}"
   }
 
   def eval(
@@ -61,8 +66,23 @@ object Interpreter {
       case Right(SExpr(IdentifierExpr("error") :: StringExpr(msg) :: Nil)) =>
         (ErrorValue(msg), env)
 
-      case Right(SExpr(IdentifierExpr("lambda") :: SExpr(args) :: body :: Nil)) =>
-        (LambdaValue(args, body), env)
+      case Right(SExpr(IdentifierExpr("lambda") :: SExpr(raw) :: body :: Nil)) =>
+        val (args, errs) = raw.partition {
+          case IdentifierExpr(_) => true
+          case _ => false
+        }
+
+        val names = args.map {
+          case IdentifierExpr(name) => name
+        }
+
+        val dups = names.groupBy(identity) collect {
+          case (x, xs) if xs.size > 1 => x
+        }
+
+        if (dups.size > 0) (ErrorValue(Message.ERR_LAMBDA_DUP_ARGS(dups.toList)), env)
+        else if (errs.size > 0) (ErrorValue(Message.ERR_LAMBDA_NON_ID_ARG), env)
+        else (LambdaValue(names.toSet, body), env)
 
       case Right(
           SExpr(IdentifierExpr("define") :: IdentifierExpr(name) :: value :: Nil)) =>
@@ -114,7 +134,7 @@ object Interpreter {
             RealNumberValue(a.toDouble + b)
 
           case (a, b) =>
-            ErrorValue(Interpreter.Message.ERR_INVALID_ADD(a, b))
+            ErrorValue(Message.ERR_INVALID_ADD(a, b))
         }
     }
   }
@@ -124,7 +144,7 @@ object Interpreter {
       case lhs :: rhs :: Nil =>
         BooleanValue(lhs == rhs)
 
-      case _ => ErrorValue(Interpreter.Message.ERR_ARITY_MISMATCH(2, values.size))
+      case _ => ErrorValue(Message.ERR_ARITY_MISMATCH(2, values.size))
     }
   }
 }
