@@ -18,10 +18,31 @@ object Main {
 (equal? '(1 2 3) '(1 2 3))
 (equal? '(1 2 3) '(3 2 1))
 
+
+(lambda (x) (* x 2))
+
+(define x 1)
+(define y 2)
+
+(define z
+  (lambda (n)
+    (* n n)))
+
+(define a x)
+
+(define x x)
+
+x
+y
+z
+
     """
 
-    new Parser(new Tokenizer(source)) foreach { expr =>
-      println(Interpreter.eval(expr))
-    }
+    val (vals, env) =
+      Interpreter.eval(new Parser(new Tokenizer(source)).toList, Environment(Map()))
+
+    vals foreach println
+    println()
+    println(env)
   }
 }

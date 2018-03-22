@@ -5,34 +5,71 @@ trait Value
 case class BooleanValue(value: Boolean) extends Value
 case class ErrorValue(message: String) extends Value
 case class IntNumberValue(value: Int) extends Value
-case class LambdaValue(label: String) extends Value
+case class LambdaValue(args: List[Expression], body: Expression) extends Value
 case class ListValue(values: List[Value]) extends Value
 case class RealNumberValue(value: Double) extends Value
 case class StringValue(value: String) extends Value
 case class SymbolValue(value: String) extends Value
-case class VarValue(label: String) extends Value
+case class VarValue(label: String, value: Value) extends Value
+
+case class Environment(vars: Map[String, VarValue], parent: Option[Environment] = None) {
+  def define(definition: VarValue) = {
+    Environment(vars ++ Map(definition.label -> definition), parent)
+  }
+
+  def lookup(label: String): Value = {
+    val err = VarValue("", ErrorValue(s"${label} is undefined."))
+    vars.getOrElse(label, err).value
+  }
+}
 
 object Interpreter {
-  def eval(expr: Either[Parser.Error, Expression]): Value = {
-    expr match {
-      case Right(BooleanExpr(value)) => BooleanValue(value)
-      case Right(IntNumberExpr(value)) => IntNumberValue(value)
-      case Right(RealNumberExpr(value)) => RealNumberValue(value)
-      case Right(StringExpr(value)) => StringValue(value)
+  def eval(
+      exprs: List[Either[Parser.Error, Expression]],
+      origEnv: Environment): (List[Value], Environment) = {
+    var env = origEnv
+    (exprs.map { expr =>
+      val (value, newEnv) = eval(expr, env)
+      env = newEnv
+      value
+    }, env)
+  }
 
-      case Right(QuoteExpr(SExpr(values))) => ListValue(safeEvals(values))
-      case Right(SExpr(IdentifierExpr("list") :: values)) => ListValue(safeEvals(values))
+  def eval(
+      expr: Either[Parser.Error, Expression],
+      env: Environment): (Value, Environment) = {
+    expr match {
+      case Right(BooleanExpr(value)) => (BooleanValue(value), env)
+      case Right(IntNumberExpr(value)) => (IntNumberValue(value), env)
+      case Right(RealNumberExpr(value)) => (RealNumberValue(value), env)
+      case Right(StringExpr(value)) => (StringValue(value), env)
+
+      case Right(QuoteExpr(SExpr(values))) =>
+        (ListValue(safeEvals(values, env)), env)
+      case Right(SExpr(IdentifierExpr("list") :: values)) =>
+        (ListValue(safeEvals(values, env)), env)
 
       case Right(SExpr(IdentifierExpr("error") :: StringExpr(msg) :: Nil)) =>
-        ErrorValue(msg)
+        (ErrorValue(msg), env)
+
+      case Right(SExpr(IdentifierExpr("lambda") :: SExpr(args) :: body :: Nil)) =>
+        (LambdaValue(args, body), env)
+
+      case Right(
+          SExpr(IdentifierExpr("define") :: IdentifierExpr(name) :: value :: Nil)) =>
+        val definition = VarValue(name, safeEval(value, env))
+        (definition, env.define(definition))
+
+      case Right(IdentifierExpr(label)) =>
+        (env.lookup(label), env)
 
       // XXX Should be a generic function call
       case Right(SExpr(IdentifierExpr("equal?") :: values)) =>
-        builtinEquals(safeEvals(values))
+        (builtinEquals(safeEvals(values, env)), env)
 
       // XXX Should be a generic function call
       case Right(SExpr(IdentifierExpr("+") :: values)) =>
-        builtinAdd(safeEvals(values))
+        (builtinAdd(safeEvals(values, env)), env)
 
       // XXX Add toString method to all error classes
       case Left(_) => ???
@@ -42,17 +79,12 @@ object Interpreter {
     }
   }
 
-  def safeEval(expr: Expression): Value =
-    eval(Right(expr))
+  def safeEval(expr: Expression, env: Environment): Value =
+    eval(Right(expr), env)._1
 
-  def evals(exprs: List[Either[Parser.Error, Expression]]): List[Value] =
+  def safeEvals(exprs: List[Expression], env: Environment): List[Value] =
     exprs.map { expr =>
-      eval(expr)
-    }
-
-  def safeEvals(exprs: List[Expression]): List[Value] =
-    exprs.map { expr =>
-      safeEval(expr)
+      safeEval(expr, env)
     }
 
   def builtinAdd(values: List[Value]): Value = {
