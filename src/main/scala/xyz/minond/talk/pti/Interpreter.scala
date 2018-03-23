@@ -176,8 +176,7 @@ object Interpreter {
           case invalid @ _ => (ErrorValue(Message.ERR_LAMBDA_NON_PROC_CALL), env)
         }
 
-      // XXX Add toString method to all error classes
-      case Left(_) => ???
+      case Left(err) => (ErrorValue(s"Syntax error:\n${err.stringify()}"), env)
 
       // XXX Finish all cases
       case _ => ???

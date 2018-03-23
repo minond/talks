@@ -54,6 +54,7 @@ object Parser {
     def STR_INVALID_BOOL_TOK(token: Token) =
       s"Expecting either 'f' or 't' but found ${token} instead."
 
+    val STR_UNEXPECTED_EOF = "Unexpected end of input"
     val STR_INVALID_TOK = "Cannot parse invalid token."
     def STR_UNEXPECTED_TOK(token: Token) =
       s"Found unexpected token: ${token}"
@@ -61,7 +62,16 @@ object Parser {
       s"Expecting (one of): ${ids.mkString(", ")}."
   }
 
-  case class Error(message: String, prev: Option[Parser.Error] = None)
+  case class Error(message: String, prev: Option[Parser.Error] = None) {
+    def stringify(prefix: String = "  "): String = {
+      val next = prev match {
+        case Some(err) => "\n" + err.stringify(prefix + "  ")
+        case None => ""
+      }
+
+      s"${prefix}- ${message}${next}"
+    }
+  }
 }
 
 /*
@@ -117,19 +127,21 @@ class Parser(source: Tokenizer) extends Iterator[Either[Parser.Error, Expression
     if (tokens.hasNext) tokens.next
 
   def expect(ids: Tokenizer.Id*): Either[Parser.Error, Token] = {
-    eat match {
-      case Right(token) if ids contains token.id =>
-        Right(token)
+    if (!tokens.hasNext) Left(Parser.Error(Parser.Message.STR_UNEXPECTED_EOF))
+    else
+      eat match {
+        case Right(token) if ids contains token.id =>
+          Right(token)
 
-      case Left(Tokenizer.Error(msg, _)) =>
-        Left(Parser.Error(Parser.Message.STR_INVALID_TOK, Some(Parser.Error(msg))))
+        case Left(Tokenizer.Error(msg, _)) =>
+          Left(Parser.Error(Parser.Message.STR_INVALID_TOK, Some(Parser.Error(msg))))
 
-      case Right(token) =>
-        Left(
-          Parser.Error(
-            Parser.Message.STR_UNEXPECTED_TOK(token),
-            Some(Parser.Error(Parser.Message.STR_EXPECTING_ONE_OF(ids: _*)))))
-    }
+        case Right(token) =>
+          Left(
+            Parser.Error(
+              Parser.Message.STR_UNEXPECTED_TOK(token),
+              Some(Parser.Error(Parser.Message.STR_EXPECTING_ONE_OF(ids: _*)))))
+      }
   }
 
   def parseBoolean() = {

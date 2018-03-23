@@ -97,6 +97,34 @@ z
 
     """
 
+    source = """
+
+(define not
+  (lambda (x)
+    (cond
+      (x #f)
+      (#t #t))))
+
+(define and
+  (lambda (a b)
+    (cond
+      (a b)
+      (#t #f))))
+
+(define or
+  (lambda (a b)
+    (cond
+      (a #t)
+      (#t b))))
+
+(define null?
+  (lambda (xs)
+    (equal? xs '())))
+
+(define zero?
+
+    """
+
     val (vals, env) =
       Interpreter.eval(new Parser(new Tokenizer(source)).toList, Environment(Map()))
 
