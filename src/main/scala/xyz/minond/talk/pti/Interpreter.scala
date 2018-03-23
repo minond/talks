@@ -7,6 +7,7 @@ abstract class Value {
       case err: ErrorValue => s"; Error:\n${err.stringify()}\n"
       case IntNumberValue(value) => value.toString
       case LambdaValue(_, _, _) => "#<procedure>"
+      case LazyValue(expr) => s"'${expr}"
       case ListValue(values) => s"'(${values.map(_.toString).mkString(" ")})"
       case RealNumberValue(value) => value.toString
       case StringValue(value) => value
@@ -17,6 +18,7 @@ abstract class Value {
 
 case class BooleanValue(value: Boolean) extends Value
 case class IntNumberValue(value: Int) extends Value
+case class LazyValue(expr: Expression) extends Value
 case class ListValue(values: List[Value]) extends Value
 case class RealNumberValue(value: Double) extends Value
 case class StringValue(value: String) extends Value
@@ -91,9 +93,12 @@ object Interpreter {
       s"Arity mismatch. Expected ${expected} arguments but got ${got}."
     def ERR_INVALID_ADD(a: Value, b: Value) =
       s"Cannot add a(n) ${a} and a(n) ${b} together."
+
     def ERR_EVAL_EXPR(expr: Expression) =
       s"Error evaluating $expr."
 
+    val ERR_LAMBDA_EMPTY_CALL =
+      "Missing procedure expression"
     val ERR_LAMBDA_NON_PROC_CALL =
       "Call made to non-procedure."
     val ERR_LAMBDA_NON_ID_ARG =
@@ -128,8 +133,8 @@ object Interpreter {
       case Right(QuoteExpr(RealNumberExpr(value))) => (RealNumberValue(value), env)
       case Right(QuoteExpr(StringExpr(value))) => (StringValue(value), env)
 
-      case Right(QuoteExpr(SExpr(values))) =>
-        (ListValue(safeEvals(values, env)), env)
+      case Right(QuoteExpr(value)) =>
+        (LazyValue(value), env)
       case Right(SExpr(IdentifierExpr("list") :: values)) =>
         (ListValue(safeEvals(values, env)), env)
 
@@ -146,6 +151,7 @@ object Interpreter {
         define(name, value, env)
 
       case Right(SExpr(fn :: args)) => procCall(fn, args, env)
+      case Right(SExpr(Nil)) => (ErrorValue(Message.ERR_LAMBDA_EMPTY_CALL), env)
 
       case Left(err) =>
         (ErrorValue(s"Syntax error:\n${err.stringify("  ")}"), env)
@@ -207,6 +213,7 @@ object Interpreter {
           case IdentifierExpr("cond") => (builtinCond(args, env), env)
           case IdentifierExpr("equal?") => (builtinEquals(safeEvals(args, env)), env)
           case IdentifierExpr("+") => (builtinAdd(safeEvals(args, env)), env)
+          case IdentifierExpr("eval") => (builtinEval(args, env), env)
           case _ => (err, env)
         }
 
@@ -218,7 +225,7 @@ object Interpreter {
           env)
     }
 
-  def builtinAdd(values: List[Value]): Value = {
+  def builtinAdd(values: List[Value]): Value =
     values match {
       case Nil => IntNumberValue(0)
       case h :: rest =>
@@ -239,18 +246,16 @@ object Interpreter {
             ErrorValue(Message.ERR_INVALID_ADD(a, b))
         }
     }
-  }
 
-  def builtinEquals(values: List[Value]): Value = {
+  def builtinEquals(values: List[Value]): Value =
     values match {
       case lhs :: rhs :: Nil =>
         BooleanValue(lhs == rhs)
 
       case _ => ErrorValue(Message.ERR_ARITY_MISMATCH(2, values.size))
     }
-  }
 
-  def builtinCond(conds: List[Expression], env: Environment): Value = {
+  def builtinCond(conds: List[Expression], env: Environment): Value =
     conds.find {
       case SExpr(cond :: _) =>
         safeEval(cond, env) match {
@@ -263,5 +268,18 @@ object Interpreter {
       case Some(SExpr(_ :: exprs)) => exprs.map(safeEval(_, env)).last
       case Some(expr) => ErrorValue(Message.ERR_EVAL_EXPR(expr))
     }
-  }
+
+  def builtinEval(args: List[Expression], env: Environment): Value =
+    args match {
+      case IdentifierExpr(name) :: Nil =>
+        env.lookup(name) match {
+          case LazyValue(expr) => safeEval(expr, env)
+          case res => res
+        }
+
+      case QuoteExpr(expr) :: Nil => safeEval(expr, env)
+      case expr :: Nil => safeEval(expr, env)
+      case Nil => ErrorValue(Message.ERR_ARITY_MISMATCH(1, 0))
+      case exprs => ErrorValue(Message.ERR_ARITY_MISMATCH(1, exprs.size))
+    }
 }

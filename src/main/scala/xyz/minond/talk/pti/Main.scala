@@ -130,6 +130,27 @@ z
 
     """
 
+    source = """
+
+(define name "Language1")
+(define x 10)
+(define no #f)
+'(1 2 3 4)
+'(banana apple orange)
+
+(define s '(+ 2 3))
+
+(eval '(+ 1 2))
+(eval s)
+(eval '2)
+(eval #t)
+(eval '())
+()
+(eval)
+(eval 1 2 3)
+
+    """
+
     val (vals, env) =
       Interpreter.eval(new Parser(new Tokenizer(source)).toList, Environment(Map()))
 
