@@ -14,7 +14,18 @@ import Tokenizer.{
 
 import scala.collection.mutable.ListBuffer
 
-trait Expression
+abstract class Expression {
+  override final def toString =
+    this match {
+      case BooleanExpr(value) => if (value) "#t" else "#f"
+      case IdentifierExpr(value) => value
+      case IntNumberExpr(value) => value.toString
+      case QuoteExpr(value) => s"'$value"
+      case RealNumberExpr(value) => value.toString
+      case SExpr(values) => s"(${values.map(_.toString).mkString(" ")})"
+      case StringExpr(value) => value
+    }
+}
 
 case class BooleanExpr(value: Boolean) extends Expression
 case class IdentifierExpr(value: String) extends Expression

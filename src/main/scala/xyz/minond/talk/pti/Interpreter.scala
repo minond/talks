@@ -1,6 +1,19 @@
 package xyz.minond.talk.pti
 
-trait Value
+abstract class Value {
+  override final def toString =
+    this match {
+      case BooleanValue(value) => if (value) "#t" else "#f"
+      case ErrorValue(text) => s"""(error "$text")"""
+      case IntNumberValue(value) => value.toString
+      case LambdaValue(_, _, _) => "#<procedure>"
+      case ListValue(values) => s"'(${values.map(_.toString).mkString(" ")})"
+      case RealNumberValue(value) => value.toString
+      case StringValue(value) => value
+      case SymbolValue(value) => s"'$value"
+      case VarValue(_, value) => value.toString
+    }
+}
 
 case class BooleanValue(value: Boolean) extends Value
 case class ErrorValue(message: String) extends Value
