@@ -57,7 +57,7 @@ object Parser {
     val STR_UNEXPECTED_EOF = "Unexpected end of input."
     val STR_INVALID_TOK = "Cannot parse invalid token."
     def STR_UNEXPECTED_TOK(token: Token) =
-      s"Found unexpected token: ${token}"
+      s"Found unexpected token ${token}."
     def STR_EXPECTING_ONE_OF(ids: Tokenizer.Id*) =
       s"Expecting (one of): ${ids.mkString(", ")}."
   }

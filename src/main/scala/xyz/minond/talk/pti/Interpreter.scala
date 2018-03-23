@@ -92,14 +92,14 @@ object Interpreter {
     def ERR_INVALID_ADD(a: Value, b: Value) =
       s"Cannot add a(n) ${a} and a(n) ${b} together."
     def ERR_EVAL_EXPR(expr: Expression) =
-      s"Error evaluating $expr"
+      s"Error evaluating $expr."
 
     val ERR_LAMBDA_NON_PROC_CALL =
       "Call made to non-procedure."
     val ERR_LAMBDA_NON_ID_ARG =
       "Found non-identifier argument(s) in lambda expression."
     def ERR_LAMBDA_DUP_ARGS(dups: List[String]) =
-      s"Found duplicate argument name(s): ${dups.mkString(", ")}"
+      s"Found duplicate argument name(s): ${dups.mkString(", ")}."
   }
 
   def eval(
