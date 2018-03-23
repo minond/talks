@@ -111,6 +111,12 @@ object Interpreter {
       case Right(RealNumberExpr(value)) => (RealNumberValue(value), env)
       case Right(StringExpr(value)) => (StringValue(value), env)
 
+      case Right(QuoteExpr(BooleanExpr(value))) => (BooleanValue(value), env)
+      case Right(QuoteExpr(IdentifierExpr(name))) => (SymbolValue(name), env)
+      case Right(QuoteExpr(IntNumberExpr(value))) => (IntNumberValue(value), env)
+      case Right(QuoteExpr(RealNumberExpr(value))) => (RealNumberValue(value), env)
+      case Right(QuoteExpr(StringExpr(value))) => (StringValue(value), env)
+
       case Right(QuoteExpr(SExpr(values))) =>
         (ListValue(safeEvals(values, env)), env)
       case Right(SExpr(IdentifierExpr("list") :: values)) =>

@@ -82,4 +82,12 @@ class InterpreterSpec extends FlatSpec with Matchers {
   it should "evaluate erros" in {
     eval("""(error "1 2 3")""")._1 should be(List(ErrorValue("1 2 3")))
   }
+
+  it should "evaluate quoted expressions" in {
+    eval("'abc")._1 should be(List(SymbolValue("abc")))
+    eval("'123")._1 should be(List(IntNumberValue(123)))
+    eval("'123.456")._1 should be(List(RealNumberValue(123.456)))
+    eval("'#t")._1 should be(List(BooleanValue(true)))
+    eval("'#f")._1 should be(List(BooleanValue(false)))
+  }
 }
