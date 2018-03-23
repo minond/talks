@@ -87,6 +87,14 @@ z
 
     """
 
+    source = """
+
+(cond
+  (#t 123)
+  (#f 321))
+
+    """
+
     val (vals, env) =
       Interpreter.eval(new Parser(new Tokenizer(source)).toList, Environment(Map()))
 

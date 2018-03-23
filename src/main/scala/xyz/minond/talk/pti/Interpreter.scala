@@ -8,6 +8,7 @@ abstract class Value {
       case IntNumberValue(value) => value.toString
       case LambdaValue(_, _, _) => "#<procedure>"
       case ListValue(values) => s"'(${values.map(_.toString).mkString(" ")})"
+      case NilValue() => ""
       case RealNumberValue(value) => value.toString
       case StringValue(value) => value
       case SymbolValue(value) => s"'$value"
@@ -19,6 +20,7 @@ case class BooleanValue(value: Boolean) extends Value
 case class ErrorValue(message: String) extends Value
 case class IntNumberValue(value: Int) extends Value
 case class ListValue(values: List[Value]) extends Value
+case class NilValue() extends Value
 case class RealNumberValue(value: Double) extends Value
 case class StringValue(value: String) extends Value
 case class SymbolValue(value: String) extends Value
@@ -78,6 +80,8 @@ object Interpreter {
       s"Arity mismatch. Expected ${expected} arguments but got ${got}."
     def ERR_INVALID_ADD(a: Value, b: Value) =
       s"Cannot add a(n) ${a} and a(n) ${b} together."
+    def ERR_EVAL_EXPR(expr: Expression) =
+      s"Error evaluating $expr"
 
     val ERR_LAMBDA_NON_PROC_CALL =
       "Call made to non-procedure."
@@ -140,6 +144,10 @@ object Interpreter {
 
       case Right(IdentifierExpr(label)) =>
         (env.lookup(label), env)
+
+      // XXX Should be a generic function call
+      case Right(SExpr(IdentifierExpr("cond") :: conds)) =>
+        (builtinCond(conds, env), env)
 
       // XXX Should be a generic function call
       case Right(SExpr(IdentifierExpr("equal?") :: values)) =>
@@ -209,6 +217,21 @@ object Interpreter {
         BooleanValue(lhs == rhs)
 
       case _ => ErrorValue(Message.ERR_ARITY_MISMATCH(2, values.size))
+    }
+  }
+
+  def builtinCond(conds: List[Expression], env: Environment): Value = {
+    conds.find {
+      case SExpr(cond :: _) =>
+        safeEval(cond, env) match {
+          case BooleanValue(false) => false
+          case _ => true
+        }
+    } match {
+      case None => NilValue()
+      case Some(SExpr(_ :: Nil)) => NilValue()
+      case Some(SExpr(_ :: exprs)) => exprs.map(safeEval(_, env)).last
+      case Some(expr) => ErrorValue(Message.ERR_EVAL_EXPR(expr))
     }
   }
 }
