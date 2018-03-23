@@ -8,7 +8,6 @@ abstract class Value {
       case IntNumberValue(value) => value.toString
       case LambdaValue(_, _, _) => "#<procedure>"
       case ListValue(values) => s"'(${values.map(_.toString).mkString(" ")})"
-      case NilValue() => ""
       case RealNumberValue(value) => value.toString
       case StringValue(value) => value
       case SymbolValue(value) => s"'$value"
@@ -20,7 +19,6 @@ case class BooleanValue(value: Boolean) extends Value
 case class ErrorValue(message: String) extends Value
 case class IntNumberValue(value: Int) extends Value
 case class ListValue(values: List[Value]) extends Value
-case class NilValue() extends Value
 case class RealNumberValue(value: Double) extends Value
 case class StringValue(value: String) extends Value
 case class SymbolValue(value: String) extends Value
@@ -234,8 +232,8 @@ object Interpreter {
           case _ => true
         }
     } match {
-      case None => NilValue()
-      case Some(SExpr(_ :: Nil)) => NilValue()
+      case None => ListValue(List.empty)
+      case Some(SExpr(_ :: Nil)) => ListValue(List.empty)
       case Some(SExpr(_ :: exprs)) => exprs.map(safeEval(_, env)).last
       case Some(expr) => ErrorValue(Message.ERR_EVAL_EXPR(expr))
     }
