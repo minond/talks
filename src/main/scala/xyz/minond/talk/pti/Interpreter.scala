@@ -84,7 +84,7 @@ object Interpreter {
     val ERR_LAMBDA_NON_PROC_CALL =
       "Call made to non-procedure."
     val ERR_LAMBDA_NON_ID_ARG =
-      "Found non-identifier argument(s)"
+      "Found non-identifier argument(s) in lambda expression."
     def ERR_LAMBDA_DUP_ARGS(dups: List[String]) =
       s"Found duplicate argument name(s): ${dups.mkString(", ")}"
   }
@@ -124,44 +124,68 @@ object Interpreter {
         (ErrorValue(msg), env)
 
       case Right(SExpr(IdentifierExpr("lambda") :: SExpr(raw) :: body :: Nil)) =>
-        val (args, errs) = raw.partition {
-          case IdentifierExpr(_) => true
-          case _ => false
-        }
-
-        val names = args.map {
-          case IdentifierExpr(name) => name
-        }
-
-        val dups = names.groupBy(identity) collect {
-          case (x, xs) if xs.size > 1 => x
-        }
-
-        if (dups.size > 0) (ErrorValue(Message.ERR_LAMBDA_DUP_ARGS(dups.toList)), env)
-        else if (errs.size > 0) (ErrorValue(Message.ERR_LAMBDA_NON_ID_ARG), env)
-        else (LambdaValue(names.toSet, body, env), env)
-
-      case Right(
-          SExpr(IdentifierExpr("define") :: IdentifierExpr(name) :: value :: Nil)) =>
-        val definition = VarValue(name, safeEval(value, env))
-        (definition, env.define(definition))
+        procDefn(raw, body, env)
 
       case Right(IdentifierExpr(label)) =>
         (env.lookup(label), env)
+      case Right(
+          SExpr(IdentifierExpr("define") :: IdentifierExpr(name) :: value :: Nil)) =>
+        define(name, value, env)
 
-      // XXX Should be a generic function call
-      case Right(SExpr(IdentifierExpr("cond") :: conds)) =>
-        (builtinCond(conds, env), env)
+      case Right(SExpr(fn :: args)) => procCall(fn, args, env)
 
-      // XXX Should be a generic function call
-      case Right(SExpr(IdentifierExpr("equal?") :: values)) =>
-        (builtinEquals(safeEvals(values, env)), env)
+      case Left(err) =>
+        (ErrorValue(s"Syntax error:\n${err.stringify()}"), env)
 
-      // XXX Should be a generic function call
-      case Right(SExpr(IdentifierExpr("+") :: values)) =>
-        (builtinAdd(safeEvals(values, env)), env)
+      // XXX Finish all cases
+      case _ => ???
+    }
+  }
 
-      case Right(SExpr(fn :: args)) =>
+  def safeEval(expr: Expression, env: Environment): Value =
+    eval(Right(expr), env)._1
+
+  def safeEvals(exprs: List[Expression], env: Environment): List[Value] =
+    exprs.map { expr =>
+      safeEval(expr, env)
+    }
+
+  def define(name: String, value: Expression, env: Environment): (Value, Environment) = {
+    val definition = VarValue(name, safeEval(value, env))
+    (definition, env.define(definition))
+  }
+
+  def procDefn(
+      raw: List[Expression],
+      body: Expression,
+      env: Environment): (Value, Environment) = {
+    val (args, errs) = raw.partition {
+      case IdentifierExpr(_) => true
+      case _ => false
+    }
+
+    val names = args.map {
+      case IdentifierExpr(name) => name
+    }
+
+    val dups = names.groupBy(identity) collect {
+      case (x, xs) if xs.size > 1 => x
+    }
+
+    if (dups.size > 0) (ErrorValue(Message.ERR_LAMBDA_DUP_ARGS(dups.toList)), env)
+    else if (errs.size > 0) (ErrorValue(Message.ERR_LAMBDA_NON_ID_ARG), env)
+    else (LambdaValue(names.toSet, body, env), env)
+  }
+
+  def procCall(
+      fn: Expression,
+      args: List[Expression],
+      env: Environment): (Value, Environment) =
+    fn match {
+      case IdentifierExpr("cond") => (builtinCond(args, env), env)
+      case IdentifierExpr("equal?") => (builtinEquals(safeEvals(args, env)), env)
+      case IdentifierExpr("+") => (builtinAdd(safeEvals(args, env)), env)
+      case _ =>
         safeEval(fn, env) match {
           case proc: LambdaValue =>
             if (!proc.validArity(args.size))
@@ -175,20 +199,6 @@ object Interpreter {
           case err: ErrorValue => (err, env)
           case invalid @ _ => (ErrorValue(Message.ERR_LAMBDA_NON_PROC_CALL), env)
         }
-
-      case Left(err) => (ErrorValue(s"Syntax error:\n${err.stringify()}"), env)
-
-      // XXX Finish all cases
-      case _ => ???
-    }
-  }
-
-  def safeEval(expr: Expression, env: Environment): Value =
-    eval(Right(expr), env)._1
-
-  def safeEvals(exprs: List[Expression], env: Environment): List[Value] =
-    exprs.map { expr =>
-      safeEval(expr, env)
     }
 
   def builtinAdd(values: List[Value]): Value = {

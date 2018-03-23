@@ -121,7 +121,8 @@ z
   (lambda (xs)
     (equal? xs '())))
 
-(define zero?
+(not #t)
+(not #f)
 
     """
 
