@@ -90,18 +90,15 @@ class Tokenizer(raw: String) extends Iterator[Either[Tokenizer.Error, Token]] {
   def err(message: String, lexeme: Option[String] = None) =
     Left(Tokenizer.Error(message, lexeme))
 
-  // XXX Clean this function up
   def lookbehind(f: (Char, Option[Char]) => Boolean) = {
-    var buff = List[Char]()
-    var prev: Option[Char] = None
+    def aux(buff: List[Char], prev: Option[Char]): List[Char] =
+      if (src.hasNext && f(src.head, prev)) {
+        val curr = src.head
+        src.next
+        aux(buff ++ List(curr), Some(curr))
+      } else buff
 
-    while (src.hasNext && f(src.head, prev)) {
-      buff = buff ++ List(src.head)
-      prev = Some(src.head)
-      src.next
-    }
-
-    buff
+    aux(List[Char](), None)
   }
 
   def consume(f: CharComp) =
