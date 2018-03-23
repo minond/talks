@@ -11,7 +11,8 @@ case class StringValue(value: String) extends Value
 case class SymbolValue(value: String) extends Value
 case class VarValue(label: String, value: Value) extends Value
 
-case class LambdaValue(args: Set[String], body: Expression, env: Environment) extends Value {
+case class LambdaValue(args: Set[String], body: Expression, env: Environment)
+    extends Value {
   def scope(vals: List[Value], local: Environment, global: Environment): Environment =
     // XXX Add support for varargs
     args.zip(vals).foldLeft[Environment](local.pushBack(global)) {
