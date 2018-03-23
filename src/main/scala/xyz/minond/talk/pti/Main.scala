@@ -2,7 +2,7 @@ package xyz.minond.talk.pti
 
 object Main {
   def main(args: Array[String]): Unit = {
-    val source = """
+    var source = """
 
 (+ 1 2 3 4)
 
@@ -38,6 +38,52 @@ z
 
 (z 1 2 3)
 (z (+ 1 (+ 2 3)))
+
+((lambda (x) (+ 2 x)) 21)
+
+(define add-x
+  (lambda (x)
+    (lambda (n)
+      (+ n x))))
+
+(define add-10 (add-x 10))
+(add-10 13)
+
+    """
+
+    source = """
+(define add-x
+  (lambda (x)
+    (lambda (n)
+      (+ n x))))
+
+(define add-10 (add-x 10))
+(add-10 13)
+
+(define add-y
+  (lambda ()
+    (lambda (n)
+      (+ n y))))
+
+(define add-what-ever-y-is (add-y))
+(define y 13)
+(add-what-ever-y-is 12)
+    """
+
+    source = """
+
+(define scope-test
+  (lambda (a)
+    (lambda (b)
+      (lambda (c)
+        (lambda (d)
+          (lambda (e)
+            (lambda (f)
+              (lambda (g)
+                (+ a b c d e f g)))))))))
+
+((((((scope-test 2) 3) 4) 5) 6) 7)
+(((((((scope-test 2) 3) 4) 5) 6) 7) 8)
 
     """
 

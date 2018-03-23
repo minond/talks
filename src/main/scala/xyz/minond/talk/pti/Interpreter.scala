@@ -11,14 +11,14 @@ case class StringValue(value: String) extends Value
 case class SymbolValue(value: String) extends Value
 case class VarValue(label: String, value: Value) extends Value
 
-case class LambdaValue(args: Set[String], body: Expression) extends Value {
-  def scope(vals: List[Value], env: Environment): Environment =
+case class LambdaValue(args: Set[String], body: Expression, env: Environment) extends Value {
+  def scope(vals: List[Value], local: Environment, global: Environment): Environment =
     // XXX Add support for varargs
-    args.zip(vals).foldLeft[Environment](env) {
+    args.zip(vals).foldLeft[Environment](local.pushBack(global)) {
       case (env: Environment, (name: String, value: Value)) =>
         env.define(VarValue(name, value))
 
-      case _ => env
+      case _ => local
     }
 
   def validArity(count: Int): Boolean =
@@ -31,9 +31,28 @@ case class Environment(vars: Map[String, VarValue], parent: Option[Environment] 
     Environment(vars ++ Map(definition.label -> definition), parent)
   }
 
+  def pushBack(env: Environment): Environment = {
+    parent match {
+      case Some(par) => Environment(vars, Some(par.pushBack(env)))
+      case None => Environment(vars, Some(env))
+    }
+  }
+
   def lookup(label: String): Value = {
-    val err = VarValue("", ErrorValue(Interpreter.Message.ERR_UNDEFINED_LOOKUP(label)))
-    vars.getOrElse(label, err).value
+    (vars.get(label), parent) match {
+      case (Some(varval), _) => varval.value
+      case (None, Some(env)) => env.lookup(label)
+      case (None, None) => ErrorValue(Interpreter.Message.ERR_UNDEFINED_LOOKUP(label))
+    }
+  }
+
+  override def toString = {
+    val text = vars.keys.toList ++ (parent match {
+      case Some(env) => List(env.toString)
+      case _ => List.empty
+    })
+
+    s"Environment{${text.mkString(", ")}}"
   }
 }
 
@@ -98,7 +117,7 @@ object Interpreter {
 
         if (dups.size > 0) (ErrorValue(Message.ERR_LAMBDA_DUP_ARGS(dups.toList)), env)
         else if (errs.size > 0) (ErrorValue(Message.ERR_LAMBDA_NON_ID_ARG), env)
-        else (LambdaValue(names.toSet, body), env)
+        else (LambdaValue(names.toSet, body, env), env)
 
       case Right(
           SExpr(IdentifierExpr("define") :: IdentifierExpr(name) :: value :: Nil)) =>
@@ -124,7 +143,7 @@ object Interpreter {
             else {
               // XXX Check that all arguments were evaluated
               val vals = safeEvals(args, env)
-              (safeEval(proc.body, proc.scope(vals, env)), env)
+              (safeEval(proc.body, proc.scope(vals, proc.env, env)), env)
             }
 
           case err: ErrorValue => (err, env)
