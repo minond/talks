@@ -124,6 +124,10 @@ z
 (not #t)
 (not #f)
 
+(define cond 12)
+('() (#t 'ok)))
+('() (#t 'ok)
+
     """
 
     val (vals, env) =

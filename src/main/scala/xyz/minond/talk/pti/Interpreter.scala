@@ -4,7 +4,7 @@ abstract class Value {
   override final def toString =
     this match {
       case BooleanValue(value) => if (value) "#t" else "#f"
-      case ErrorValue(text) => s"""(error "$text")"""
+      case err: ErrorValue => s"; Error:\n${err.stringify()}\n"
       case IntNumberValue(value) => value.toString
       case LambdaValue(_, _, _) => "#<procedure>"
       case ListValue(values) => s"'(${values.map(_.toString).mkString(" ")})"
@@ -16,13 +16,23 @@ abstract class Value {
 }
 
 case class BooleanValue(value: Boolean) extends Value
-case class ErrorValue(message: String) extends Value
 case class IntNumberValue(value: Int) extends Value
 case class ListValue(values: List[Value]) extends Value
 case class RealNumberValue(value: Double) extends Value
 case class StringValue(value: String) extends Value
 case class SymbolValue(value: String) extends Value
 case class VarValue(label: String, value: Value) extends Value
+
+case class ErrorValue(message: String, prev: Option[ErrorValue] = None) extends Value {
+  def stringify(prefix: String = ""): String = {
+    val next = prev match {
+      case Some(err) => "\n" + err.stringify(prefix + "  ")
+      case None => ""
+    }
+
+    s"; ${prefix}- ${message}${next}"
+  }
+}
 
 case class LambdaValue(args: Set[String], body: Expression, env: Environment)
     extends Value {
@@ -72,6 +82,9 @@ case class Environment(vars: Map[String, VarValue], parent: Option[Environment] 
 
 object Interpreter {
   object Message {
+    def GIVEN(thing: String) =
+      s"Given $thing."
+
     def ERR_UNDEFINED_LOOKUP(label: String) =
       s"${label} is undefined."
     def ERR_ARITY_MISMATCH(expected: Int, got: Int) =
@@ -135,7 +148,7 @@ object Interpreter {
       case Right(SExpr(fn :: args)) => procCall(fn, args, env)
 
       case Left(err) =>
-        (ErrorValue(s"Syntax error:\n${err.stringify()}"), env)
+        (ErrorValue(s"Syntax error:\n${err.stringify("  ")}"), env)
 
       // XXX Finish all cases
       case _ => ???
@@ -181,24 +194,28 @@ object Interpreter {
       fn: Expression,
       args: List[Expression],
       env: Environment): (Value, Environment) =
-    fn match {
-      case IdentifierExpr("cond") => (builtinCond(args, env), env)
-      case IdentifierExpr("equal?") => (builtinEquals(safeEvals(args, env)), env)
-      case IdentifierExpr("+") => (builtinAdd(safeEvals(args, env)), env)
-      case _ =>
-        safeEval(fn, env) match {
-          case proc: LambdaValue =>
-            if (!proc.validArity(args.size))
-              (ErrorValue(Message.ERR_ARITY_MISMATCH(proc.args.size, args.size)), env)
-            else {
-              // XXX Check that all arguments were evaluated
-              val vals = safeEvals(args, env)
-              (safeEval(proc.body, proc.scope(vals, proc.env, env)), env)
-            }
+    safeEval(fn, env) match {
+      case proc: LambdaValue =>
+        if (!proc.validArity(args.size))
+          (ErrorValue(Message.ERR_ARITY_MISMATCH(proc.args.size, args.size)), env)
+        else
+          // XXX Check that all arguments were evaluated
+          (safeEval(proc.body, proc.scope(safeEvals(args, env), proc.env, env)), env)
 
-          case err: ErrorValue => (err, env)
-          case invalid @ _ => (ErrorValue(Message.ERR_LAMBDA_NON_PROC_CALL), env)
+      case err: ErrorValue =>
+        fn match {
+          case IdentifierExpr("cond") => (builtinCond(args, env), env)
+          case IdentifierExpr("equal?") => (builtinEquals(safeEvals(args, env)), env)
+          case IdentifierExpr("+") => (builtinAdd(safeEvals(args, env)), env)
+          case _ => (err, env)
         }
+
+      case _ =>
+        (
+          ErrorValue(
+            Message.ERR_LAMBDA_NON_PROC_CALL,
+            Some(ErrorValue(Message.GIVEN(fn.toString)))),
+          env)
     }
 
   def builtinAdd(values: List[Value]): Value = {

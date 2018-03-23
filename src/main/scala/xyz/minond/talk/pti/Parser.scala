@@ -54,7 +54,7 @@ object Parser {
     def STR_INVALID_BOOL_TOK(token: Token) =
       s"Expecting either 'f' or 't' but found ${token} instead."
 
-    val STR_UNEXPECTED_EOF = "Unexpected end of input"
+    val STR_UNEXPECTED_EOF = "Unexpected end of input."
     val STR_INVALID_TOK = "Cannot parse invalid token."
     def STR_UNEXPECTED_TOK(token: Token) =
       s"Found unexpected token: ${token}"
@@ -63,13 +63,13 @@ object Parser {
   }
 
   case class Error(message: String, prev: Option[Parser.Error] = None) {
-    def stringify(prefix: String = "  "): String = {
+    def stringify(prefix: String = ""): String = {
       val next = prev match {
         case Some(err) => "\n" + err.stringify(prefix + "  ")
         case None => ""
       }
 
-      s"${prefix}- ${message}${next}"
+      s"; ${prefix}- ${message}${next}"
     }
   }
 }
