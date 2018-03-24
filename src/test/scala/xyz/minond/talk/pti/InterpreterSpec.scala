@@ -80,7 +80,8 @@ class InterpreterSpec extends FreeSpec with Matchers {
       eval("'#t")._1 should be(List(BooleanValue(true)))
       eval("'#f")._1 should be(List(BooleanValue(false)))
       eval("'(1 2 3)")._1 should be(
-        List(LazyValue(SExpr(List(IntNumberExpr(1), IntNumberExpr(2), IntNumberExpr(3))))))
+        List(
+          LazyValue(SExpr(List(IntNumberExpr(1), IntNumberExpr(2), IntNumberExpr(3))))))
     }
   }
 
@@ -95,20 +96,20 @@ class InterpreterSpec extends FreeSpec with Matchers {
     }
 
     "eval evaluates scalar values" in {
-      eval("(eval '123)")._1 should be (List(IntNumberValue(123)))
-      eval("(eval 123)")._1 should be (List(IntNumberValue(123)))
-      eval("(eval '123.456)")._1 should be (List(RealNumberValue(123.456)))
-      eval("(eval 123.456)")._1 should be (List(RealNumberValue(123.456)))
-      eval("(eval '#t)")._1 should be (List(BooleanValue(true)))
-      eval("(eval #t)")._1 should be (List(BooleanValue(true)))
-      eval("(eval '#f)")._1 should be (List(BooleanValue(false)))
-      eval("(eval #f)")._1 should be (List(BooleanValue(false)))
-      eval("""(eval '"hi")""")._1 should be (List(StringValue("hi")))
-      eval("""(eval "hi")""")._1 should be (List(StringValue("hi")))
+      eval("(eval '123)")._1 should be(List(IntNumberValue(123)))
+      eval("(eval 123)")._1 should be(List(IntNumberValue(123)))
+      eval("(eval '123.456)")._1 should be(List(RealNumberValue(123.456)))
+      eval("(eval 123.456)")._1 should be(List(RealNumberValue(123.456)))
+      eval("(eval '#t)")._1 should be(List(BooleanValue(true)))
+      eval("(eval #t)")._1 should be(List(BooleanValue(true)))
+      eval("(eval '#f)")._1 should be(List(BooleanValue(false)))
+      eval("(eval #f)")._1 should be(List(BooleanValue(false)))
+      eval("""(eval '"hi")""")._1 should be(List(StringValue("hi")))
+      eval("""(eval "hi")""")._1 should be(List(StringValue("hi")))
     }
 
     "eval evaluates s-expressions" in {
-      eval("(eval '(+ 2 4))")._1 should be (List(IntNumberValue(6)))
+      eval("(eval '(+ 2 4))")._1 should be(List(IntNumberValue(6)))
     }
   }
 }

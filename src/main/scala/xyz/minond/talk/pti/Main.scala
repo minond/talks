@@ -1,161 +1,28 @@
 package xyz.minond.talk.pti
 
+import java.io.{BufferedReader, InputStreamReader}
+
 object Main {
-  def main(args: Array[String]): Unit = {
-    var source = """
+  def main(args: Array[String]): Unit =
+    repl
 
-(+ 1 2 3 4)
+  def repl: Unit = {
+    val input = new InputStreamReader(System.in)
+    val reader = new BufferedReader(input)
 
+    def aux(env: Environment): Unit = {
+      print("> ")
 
-(error "Error: 1 2 3")
+      reader.readLine match {
+        case "(exit)" => return
+        case text =>
+          val src = new Parser(new Tokenizer(text))
+          val (vals, next) = Interpreter.eval(src.toList, env)
+          vals foreach println
+          aux(next)
+      }
+    }
 
-
-'(1 2 3)
-
-(list 1 2 3)
-
-(equal? 1 1)
-(equal? '(1 2 3) '(1 2 3))
-(equal? '(1 2 3) '(3 2 1))
-
-
-(lambda (x) (* x 2))
-
-(define x 1)
-(define y 2)
-
-(define z
-  (lambda (n)
-    (+ n n)))
-
-(define a x)
-
-(define x x)
-
-x
-y
-z
-
-(z 1 2 3)
-(z (+ 1 (+ 2 3)))
-
-((lambda (x) (+ 2 x)) 21)
-
-(define add-x
-  (lambda (x)
-    (lambda (n)
-      (+ n x))))
-
-(define add-10 (add-x 10))
-(add-10 13)
-
-    """
-
-    source = """
-(define add-x
-  (lambda (x)
-    (lambda (n)
-      (+ n x))))
-
-(define add-10 (add-x 10))
-(add-10 13)
-
-(define add-y
-  (lambda ()
-    (lambda (n)
-      (+ n y))))
-
-(define add-what-ever-y-is (add-y))
-(define y 13)
-(add-what-ever-y-is 12)
-    """
-
-    source = """
-
-(define scope-test
-  (lambda (a)
-    (lambda (b)
-      (lambda (c)
-        (lambda (d)
-          (lambda (e)
-            (lambda (f)
-              (lambda (g)
-                (+ a b c d e f g)))))))))
-
-((((((scope-test 2) 3) 4) 5) 6) 7)
-(((((((scope-test 2) 3) 4) 5) 6) 7) 8)
-
-    """
-
-    source = """
-
-(cond
-  ('12 '3)
-  ('a 'b)
-  (#t 123)
-  (#f 321))
-
-    """
-
-    source = """
-
-(define not
-  (lambda (x)
-    (cond
-      (x #f)
-      (#t #t))))
-
-(define and
-  (lambda (a b)
-    (cond
-      (a b)
-      (#t #f))))
-
-(define or
-  (lambda (a b)
-    (cond
-      (a #t)
-      (#t b))))
-
-(define null?
-  (lambda (xs)
-    (equal? xs '())))
-
-(not #t)
-(not #f)
-
-(define cond 12)
-('() (#t 'ok)))
-('() (#t 'ok)
-
-    """
-
-    source = """
-
-(define name "Language1")
-(define x 10)
-(define no #f)
-'(1 2 3 4)
-'(banana apple orange)
-
-(define s '(+ 2 3))
-
-(eval '(+ 1 2))
-(eval s)
-(eval '2)
-(eval #t)
-(eval '())
-()
-(eval)
-(eval 1 2 3)
-
-    """
-
-    val (vals, env) =
-      Interpreter.eval(new Parser(new Tokenizer(source)).toList, Environment(Map()))
-
-    vals foreach println
-    println()
-    println(env)
+    aux(Environment(Map()))
   }
 }
