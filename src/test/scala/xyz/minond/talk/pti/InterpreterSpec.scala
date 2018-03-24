@@ -111,5 +111,22 @@ class InterpreterSpec extends FreeSpec with Matchers {
     "eval evaluates s-expressions" in {
       eval("(eval '(+ 2 4))")._1 should be(List(IntNumberValue(6)))
     }
+
+    "cond does not evaluate expressions in false conditions" in {
+      eval("""
+        (cond
+          (#f this is not ok)
+          (#t 'ok))
+      """)._1 should be(List(SymbolValue("ok")))
+    }
+
+    "cond runs in its own scope" in {
+      eval("""
+        (cond
+          (#f (define a 1))
+          (#f (define b 2))
+          (#t (define c 3)))
+      """)._2 should be(Environment(Map()))
+    }
   }
 }
