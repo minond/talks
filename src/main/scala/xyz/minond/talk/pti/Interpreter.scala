@@ -4,9 +4,7 @@ abstract class Value {
   override final def toString =
     this match {
       case BooleanValue(value) => if (value) "#t" else "#f"
-      case err: ErrorValue => s"; Error:\n${err.stringify()}\n"
       case IntNumberValue(value) => value.toString
-      case BuiltinValue(_) => "#<builtin>"
       case LambdaValue(_, _, _) => "#<procedure>"
       case LazyValue(expr) => s"'${expr}"
       case ListValue(values) => s"'(${values.map(_.toString).mkString(" ")})"
@@ -14,6 +12,16 @@ abstract class Value {
       case StringValue(value) => value
       case SymbolValue(value) => s"'$value"
       case VarValue(_, value) => value.toString
+
+      case err: ErrorValue =>
+        s"; Error:\n${err.stringify()}\n"
+
+      case builtin: BuiltinValue =>
+        val name = Interpreter.builtin.filter({
+          case (_, b) => b == builtin
+        }).keys.headOption.getOrElse("???")
+
+        s"#<procedure:$name>"
     }
 }
 
