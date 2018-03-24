@@ -84,45 +84,6 @@ case class Environment(vars: Map[String, VarValue], parent: Option[Environment] 
   }
 }
 
-object Builtin {
-  val eval = BuiltinValue({ (args, env) =>
-    args match {
-      case IdentifierExpr(name) :: Nil =>
-        env.lookup(name) match {
-          case LazyValue(expr) => Interpreter.safeEval(expr, env)
-          case res => res
-        }
-
-      case QuoteExpr(expr) :: Nil => Interpreter.safeEval(expr, env)
-      case expr :: Nil => Interpreter.safeEval(expr, env)
-      case Nil => ErrorValue(Interpreter.Message.ERR_ARITY_MISMATCH(1, 0))
-      case exprs => ErrorValue(Interpreter.Message.ERR_ARITY_MISMATCH(1, exprs.size))
-    }
-  })
-
-  val cond = BuiltinValue({ (args, env) =>
-    args.find {
-      case SExpr(cond :: _) =>
-        Interpreter.safeEval(cond, env) match {
-          case BooleanValue(false) => false
-          case _ => true
-        }
-    } match {
-      case None => ListValue(List.empty)
-      case Some(SExpr(_ :: Nil)) => ListValue(List.empty)
-      case Some(SExpr(_ :: exprs)) => exprs.map(Interpreter.safeEval(_, env)).last
-      case Some(expr) => ErrorValue(Interpreter.Message.ERR_EVAL_EXPR(expr))
-    }
-  })
-
-  def get(name: String): Option[BuiltinValue] =
-    name match {
-      case "eval" => Some(Builtin.eval)
-      case "cond" => Some(Builtin.cond)
-      case _ => None
-    }
-}
-
 object Interpreter {
   object Message {
     def GIVEN(thing: String) =
@@ -147,6 +108,37 @@ object Interpreter {
     def ERR_LAMBDA_DUP_ARGS(dups: List[String]) =
       s"Found duplicate argument name(s): ${dups.mkString(", ")}."
   }
+
+  val builtin = Map(
+    'eval -> BuiltinValue({ (args, env) =>
+      args match {
+        case IdentifierExpr(name) :: Nil =>
+          env.lookup(name) match {
+            case LazyValue(expr) => safeEval(expr, env)
+            case res => res
+          }
+
+        case QuoteExpr(expr) :: Nil => safeEval(expr, env)
+        case expr :: Nil => safeEval(expr, env)
+        case Nil => ErrorValue(Message.ERR_ARITY_MISMATCH(1, 0))
+        case exprs => ErrorValue(Message.ERR_ARITY_MISMATCH(1, exprs.size))
+      }
+    }),
+    'cond -> BuiltinValue({ (args, env) =>
+      args.find {
+        case SExpr(cond :: _) =>
+          safeEval(cond, env) match {
+            case BooleanValue(false) => false
+            case _ => true
+          }
+      } match {
+        case None => ListValue(List.empty)
+        case Some(SExpr(_ :: Nil)) => ListValue(List.empty)
+        case Some(SExpr(_ :: exprs)) => exprs.map(safeEval(_, env)).last
+        case Some(expr) => ErrorValue(Message.ERR_EVAL_EXPR(expr))
+      }
+    })
+  )
 
   def eval(
       exprs: List[Either[Parser.Error, Expression]],
@@ -177,7 +169,7 @@ object Interpreter {
       case Right(QuoteExpr(value)) =>
         (LazyValue(value), env)
       case Right(SExpr(IdentifierExpr("list") :: values)) =>
-        (ListValue(safeEvals(values, env)), env)
+        (ListValue(safeEval(values, env)), env)
 
       case Right(SExpr(IdentifierExpr("error") :: StringExpr(msg) :: Nil)) =>
         (ErrorValue(msg), env)
@@ -186,10 +178,7 @@ object Interpreter {
         procDefn(raw, body, env)
 
       case Right(IdentifierExpr(label)) =>
-        (Builtin.get(label), env.lookup(label)) match {
-          case (Some(builtin), _) => (builtin, env)
-          case (_, result) => (result, env)
-        }
+        (builtin.getOrElse(Symbol(label), env.lookup(label)), env)
 
       case Right(
           SExpr(IdentifierExpr("define") :: IdentifierExpr(name) :: value :: Nil)) =>
@@ -209,7 +198,7 @@ object Interpreter {
   def safeEval(expr: Expression, env: Environment): Value =
     eval(Right(expr), env)._1
 
-  def safeEvals(exprs: List[Expression], env: Environment): List[Value] =
+  def safeEval(exprs: List[Expression], env: Environment): List[Value] =
     exprs.map { expr =>
       safeEval(expr, env)
     }
@@ -251,7 +240,7 @@ object Interpreter {
           (ErrorValue(Message.ERR_ARITY_MISMATCH(proc.args.size, args.size)), env)
         else
           // XXX Check that all arguments were evaluated
-          (safeEval(proc.body, proc.scope(safeEvals(args, env), proc.env, env)), env)
+          (safeEval(proc.body, proc.scope(safeEval(args, env), proc.env, env)), env)
 
       case BuiltinValue(fn) =>
         (fn(args, env), env)
@@ -259,8 +248,8 @@ object Interpreter {
       case err: ErrorValue =>
         fn match {
           // XXX Move over to Builtin
-          case IdentifierExpr("equal?") => (builtinEquals(safeEvals(args, env)), env)
-          case IdentifierExpr("+") => (builtinAdd(safeEvals(args, env)), env)
+          case IdentifierExpr("equal?") => (builtinEquals(safeEval(args, env)), env)
+          case IdentifierExpr("+") => (builtinAdd(safeEval(args, env)), env)
           case _ => (err, env)
         }
 
