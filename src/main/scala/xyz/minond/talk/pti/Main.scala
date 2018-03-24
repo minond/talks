@@ -10,19 +10,31 @@ object Main {
     val input = new InputStreamReader(System.in)
     val reader = new BufferedReader(input)
 
-    def aux(env: Environment): Unit = {
-      print("> ")
+    def aux(env: Environment, prefix: String): Unit = {
+      if (prefix == "") print("> ")
+      else print("| ")
 
-      reader.readLine match {
+      (prefix + " " + reader.readLine).trim match {
         case "(exit)" => return
         case text =>
-          val src = new Parser(new Tokenizer(text))
-          val (vals, next) = Interpreter.eval(src.toList, env)
-          vals foreach println
-          aux(next)
+          if (!balanced(text))
+            aux(env, text)
+          else {
+            val src = new Parser(new Tokenizer(text))
+            val (vals, next) = Interpreter.eval(src.toList, env)
+            vals foreach println
+            aux(next, "")
+          }
       }
     }
 
-    aux(Environment(Map()))
+    aux(Environment(Map()), "")
   }
+
+  def balanced(src: String): Boolean =
+    src.foldLeft(0)({
+      case (sum, '(') => sum + 1
+      case (sum, ')') => sum - 1
+      case (sum, _) => sum
+    }) == 0
 }
