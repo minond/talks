@@ -6,6 +6,7 @@ abstract class Value {
       case BooleanValue(value) => if (value) "#t" else "#f"
       case err: ErrorValue => s"; Error:\n${err.stringify()}\n"
       case IntNumberValue(value) => value.toString
+      case BuiltinValue(_) => "#<builtin>"
       case LambdaValue(_, _, _) => "#<procedure>"
       case LazyValue(expr) => s"'${expr}"
       case ListValue(values) => s"'(${values.map(_.toString).mkString(" ")})"
@@ -17,6 +18,7 @@ abstract class Value {
 }
 
 case class BooleanValue(value: Boolean) extends Value
+case class BuiltinValue(fn: (List[Expression], Environment) => Value) extends Value
 case class IntNumberValue(value: Int) extends Value
 case class LazyValue(expr: Expression) extends Value
 case class ListValue(values: List[Value]) extends Value
@@ -82,6 +84,45 @@ case class Environment(vars: Map[String, VarValue], parent: Option[Environment] 
   }
 }
 
+object Builtin {
+  val eval = BuiltinValue({ (args, env) =>
+    args match {
+      case IdentifierExpr(name) :: Nil =>
+        env.lookup(name) match {
+          case LazyValue(expr) => Interpreter.safeEval(expr, env)
+          case res => res
+        }
+
+      case QuoteExpr(expr) :: Nil => Interpreter.safeEval(expr, env)
+      case expr :: Nil => Interpreter.safeEval(expr, env)
+      case Nil => ErrorValue(Interpreter.Message.ERR_ARITY_MISMATCH(1, 0))
+      case exprs => ErrorValue(Interpreter.Message.ERR_ARITY_MISMATCH(1, exprs.size))
+    }
+  })
+
+  val cond = BuiltinValue({ (args, env) =>
+    args.find {
+      case SExpr(cond :: _) =>
+        Interpreter.safeEval(cond, env) match {
+          case BooleanValue(false) => false
+          case _ => true
+        }
+    } match {
+      case None => ListValue(List.empty)
+      case Some(SExpr(_ :: Nil)) => ListValue(List.empty)
+      case Some(SExpr(_ :: exprs)) => exprs.map(Interpreter.safeEval(_, env)).last
+      case Some(expr) => ErrorValue(Interpreter.Message.ERR_EVAL_EXPR(expr))
+    }
+  })
+
+  def get(name: String): Option[BuiltinValue] =
+    name match {
+      case "eval" => Some(Builtin.eval)
+      case "cond" => Some(Builtin.cond)
+      case _ => None
+    }
+}
+
 object Interpreter {
   object Message {
     def GIVEN(thing: String) =
@@ -145,7 +186,11 @@ object Interpreter {
         procDefn(raw, body, env)
 
       case Right(IdentifierExpr(label)) =>
-        (env.lookup(label), env)
+        (Builtin.get(label), env.lookup(label)) match {
+          case (Some(builtin), _) => (builtin, env)
+          case (_, result) => (result, env)
+        }
+
       case Right(
           SExpr(IdentifierExpr("define") :: IdentifierExpr(name) :: value :: Nil)) =>
         define(name, value, env)
@@ -208,12 +253,14 @@ object Interpreter {
           // XXX Check that all arguments were evaluated
           (safeEval(proc.body, proc.scope(safeEvals(args, env), proc.env, env)), env)
 
+      case BuiltinValue(fn) =>
+        (fn(args, env), env)
+
       case err: ErrorValue =>
         fn match {
-          case IdentifierExpr("cond") => (builtinCond(args, env), env)
+          // XXX Move over to Builtin
           case IdentifierExpr("equal?") => (builtinEquals(safeEvals(args, env)), env)
           case IdentifierExpr("+") => (builtinAdd(safeEvals(args, env)), env)
-          case IdentifierExpr("eval") => (builtinEval(args, env), env)
           case _ => (err, env)
         }
 
@@ -253,33 +300,5 @@ object Interpreter {
         BooleanValue(lhs == rhs)
 
       case _ => ErrorValue(Message.ERR_ARITY_MISMATCH(2, values.size))
-    }
-
-  def builtinCond(conds: List[Expression], env: Environment): Value =
-    conds.find {
-      case SExpr(cond :: _) =>
-        safeEval(cond, env) match {
-          case BooleanValue(false) => false
-          case _ => true
-        }
-    } match {
-      case None => ListValue(List.empty)
-      case Some(SExpr(_ :: Nil)) => ListValue(List.empty)
-      case Some(SExpr(_ :: exprs)) => exprs.map(safeEval(_, env)).last
-      case Some(expr) => ErrorValue(Message.ERR_EVAL_EXPR(expr))
-    }
-
-  def builtinEval(args: List[Expression], env: Environment): Value =
-    args match {
-      case IdentifierExpr(name) :: Nil =>
-        env.lookup(name) match {
-          case LazyValue(expr) => safeEval(expr, env)
-          case res => res
-        }
-
-      case QuoteExpr(expr) :: Nil => safeEval(expr, env)
-      case expr :: Nil => safeEval(expr, env)
-      case Nil => ErrorValue(Message.ERR_ARITY_MISMATCH(1, 0))
-      case exprs => ErrorValue(Message.ERR_ARITY_MISMATCH(1, exprs.size))
     }
 }
