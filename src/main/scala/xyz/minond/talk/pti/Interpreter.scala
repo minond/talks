@@ -110,6 +110,8 @@ object Interpreter {
       "Missing procedure expression"
     val ERR_LAMBDA_NON_PROC_CALL =
       "Call made to non-procedure."
+    val ERR_LAMBDA_BAD_SYNTAX =
+      "Bad lambda syntax"
     val ERR_LAMBDA_NON_ID_ARG =
       "Found non-identifier argument(s) in lambda expression."
     def ERR_LAMBDA_DUP_ARGS(dups: List[String]) =
@@ -185,6 +187,30 @@ object Interpreter {
         case SymbolValue(msg) :: Nil => ErrorValue(msg)
         case value => ErrorValue(Message.ERR_INVALID_ERROR(value))
       }
+    }),
+    "lambda" -> BuiltinValue({ (args, env) =>
+      args match {
+        case SExpr(raw) :: body :: Nil =>
+          val (args, errs) = raw.partition {
+            case IdentifierExpr(_) => true
+            case _ => false
+          }
+
+          val names = args.map {
+            case IdentifierExpr(name) => name
+          }
+
+          val dups = names.groupBy(identity) collect {
+            case (x, xs) if xs.size > 1 => x
+          }
+
+          if (dups.size > 0) ErrorValue(Message.ERR_LAMBDA_DUP_ARGS(dups.toList))
+          else if (errs.size > 0) ErrorValue(Message.ERR_LAMBDA_NON_ID_ARG)
+          else LambdaValue(names.toSet, body, env)
+
+        case _ =>
+          ErrorValue(Message.ERR_LAMBDA_BAD_SYNTAX)
+      }
     })
   )
 
@@ -215,9 +241,6 @@ object Interpreter {
       case Right(QuoteExpr(StringExpr(value))) => (StringValue(value), env)
       case Right(QuoteExpr(value)) => (LazyValue(value), env)
 
-      case Right(SExpr(IdentifierExpr("lambda") :: SExpr(raw) :: body :: Nil)) =>
-        procDefn(raw, body, env)
-
       case Right(
           SExpr(IdentifierExpr("define") :: IdentifierExpr(name) :: value :: Nil)) =>
         define(name, value, env)
@@ -244,28 +267,6 @@ object Interpreter {
   def define(name: String, value: Expression, env: Environment): (Value, Environment) = {
     val definition = VarValue(name, safeEval(value, env))
     (definition, env.define(definition))
-  }
-
-  def procDefn(
-      raw: List[Expression],
-      body: Expression,
-      env: Environment): (Value, Environment) = {
-    val (args, errs) = raw.partition {
-      case IdentifierExpr(_) => true
-      case _ => false
-    }
-
-    val names = args.map {
-      case IdentifierExpr(name) => name
-    }
-
-    val dups = names.groupBy(identity) collect {
-      case (x, xs) if xs.size > 1 => x
-    }
-
-    if (dups.size > 0) (ErrorValue(Message.ERR_LAMBDA_DUP_ARGS(dups.toList)), env)
-    else if (errs.size > 0) (ErrorValue(Message.ERR_LAMBDA_NON_ID_ARG), env)
-    else (LambdaValue(names.toSet, body, env), env)
   }
 
   def procCall(
