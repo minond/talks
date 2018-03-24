@@ -115,7 +115,7 @@ object Interpreter {
   }
 
   val builtin = Map(
-    'eval -> BuiltinValue({ (args, env) =>
+    "eval" -> BuiltinValue({ (args, env) =>
       args match {
         case IdentifierExpr(name) :: Nil =>
           env.lookup(name) match {
@@ -129,7 +129,7 @@ object Interpreter {
         case exprs => ErrorValue(Message.ERR_ARITY_MISMATCH(1, exprs.size))
       }
     }),
-    'cond -> BuiltinValue({ (args, env) =>
+    "cond" -> BuiltinValue({ (args, env) =>
       args.find {
         case SExpr(cond :: _) =>
           safeEval(cond, env) match {
@@ -143,7 +143,7 @@ object Interpreter {
         case Some(expr) => ErrorValue(Message.ERR_EVAL_EXPR(expr))
       }
     }),
-    '+ -> BuiltinValue({ (args, env) =>
+    "+" -> BuiltinValue({ (args, env) =>
       def aux(values: List[Value]): Value =
         values match {
           case Nil => IntNumberValue(0)
@@ -168,7 +168,7 @@ object Interpreter {
 
       aux(safeEval(args, env))
     }),
-    Symbol("equal?") -> BuiltinValue({ (args, env) =>
+    "equal?" -> BuiltinValue({ (args, env) =>
       safeEval(args, env) match {
         case lhs :: rhs :: Nil => BooleanValue(lhs == rhs)
         case _ => ErrorValue(Message.ERR_ARITY_MISMATCH(2, args.size))
@@ -214,7 +214,7 @@ object Interpreter {
         procDefn(raw, body, env)
 
       case Right(IdentifierExpr(label)) =>
-        (builtin.getOrElse(Symbol(label), env.lookup(label)), env)
+        (builtin.getOrElse(label, env.lookup(label)), env)
 
       case Right(
           SExpr(IdentifierExpr("define") :: IdentifierExpr(name) :: value :: Nil)) =>
