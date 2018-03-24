@@ -120,6 +120,14 @@ class InterpreterSpec extends FreeSpec with Matchers {
       """)._1 should be(List(SymbolValue("ok")))
     }
 
+    "cond does not evaluate exressions in false conditions" in {
+      eval("""
+        (cond
+          (#f 'err)
+          (#f 'err))
+      """)._1 should be(List(ListValue(List.empty)))
+    }
+
     "cond runs in its own scope" in {
       eval("""
         (cond
