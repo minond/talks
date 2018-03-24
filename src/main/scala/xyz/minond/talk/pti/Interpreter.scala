@@ -137,6 +137,37 @@ object Interpreter {
         case Some(SExpr(_ :: exprs)) => exprs.map(safeEval(_, env)).last
         case Some(expr) => ErrorValue(Message.ERR_EVAL_EXPR(expr))
       }
+    }),
+    '+ -> BuiltinValue({ (args, env) =>
+      def aux(values: List[Value]): Value =
+        values match {
+          case Nil => IntNumberValue(0)
+          case h :: rest =>
+            (h, aux(rest)) match {
+              case (IntNumberValue(a), IntNumberValue(b)) =>
+                IntNumberValue(a + b)
+
+              case (RealNumberValue(a), RealNumberValue(b)) =>
+                RealNumberValue(a + b)
+
+              case (RealNumberValue(a), IntNumberValue(b)) =>
+                RealNumberValue(a + b.toDouble)
+
+              case (IntNumberValue(a), RealNumberValue(b)) =>
+                RealNumberValue(a.toDouble + b)
+
+              case (a, b) =>
+                ErrorValue(Message.ERR_INVALID_ADD(a, b))
+            }
+        }
+
+      aux(safeEval(args, env))
+    }),
+    Symbol("equal?") -> BuiltinValue({ (args, env) =>
+      safeEval(args, env) match {
+        case lhs :: rhs :: Nil => BooleanValue(lhs == rhs)
+        case _ => ErrorValue(Message.ERR_ARITY_MISMATCH(2, args.size))
+      }
     })
   )
 
@@ -242,16 +273,8 @@ object Interpreter {
           // XXX Check that all arguments were evaluated
           (safeEval(proc.body, proc.scope(safeEval(args, env), proc.env, env)), env)
 
-      case BuiltinValue(fn) =>
-        (fn(args, env), env)
-
-      case err: ErrorValue =>
-        fn match {
-          // XXX Move over to Builtin
-          case IdentifierExpr("equal?") => (builtinEquals(safeEval(args, env)), env)
-          case IdentifierExpr("+") => (builtinAdd(safeEval(args, env)), env)
-          case _ => (err, env)
-        }
+      case BuiltinValue(fn) => (fn(args, env), env)
+      case err: ErrorValue => (err, env)
 
       case _ =>
         (
@@ -259,35 +282,5 @@ object Interpreter {
             Message.ERR_LAMBDA_NON_PROC_CALL,
             Some(ErrorValue(Message.GIVEN(fn.toString)))),
           env)
-    }
-
-  def builtinAdd(values: List[Value]): Value =
-    values match {
-      case Nil => IntNumberValue(0)
-      case h :: rest =>
-        (h, builtinAdd(rest)) match {
-          case (IntNumberValue(a), IntNumberValue(b)) =>
-            IntNumberValue(a + b)
-
-          case (RealNumberValue(a), RealNumberValue(b)) =>
-            RealNumberValue(a + b)
-
-          case (RealNumberValue(a), IntNumberValue(b)) =>
-            RealNumberValue(a + b.toDouble)
-
-          case (IntNumberValue(a), RealNumberValue(b)) =>
-            RealNumberValue(a.toDouble + b)
-
-          case (a, b) =>
-            ErrorValue(Message.ERR_INVALID_ADD(a, b))
-        }
-    }
-
-  def builtinEquals(values: List[Value]): Value =
-    values match {
-      case lhs :: rhs :: Nil =>
-        BooleanValue(lhs == rhs)
-
-      case _ => ErrorValue(Message.ERR_ARITY_MISMATCH(2, values.size))
     }
 }
