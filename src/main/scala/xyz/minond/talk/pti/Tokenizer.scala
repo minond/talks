@@ -45,6 +45,7 @@ class Tokenizer(raw: String) extends Iterator[Either[Tokenizer.Error, Token]] {
       case '(' => ok(OPEN_PAREN)
       case ')' => ok(CLOSE_PAREN)
       case '#' => ok(POUND)
+      case '`' => ok(QUOTE)
       case '\'' => ok(QUOTE)
 
       case '"' =>
