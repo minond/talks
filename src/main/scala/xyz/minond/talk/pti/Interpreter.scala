@@ -17,9 +17,11 @@ abstract class Value {
         s"; Error:\n${err.stringify()}\n"
 
       case builtin: BuiltinValue =>
-        val name = Interpreter.builtin.filter({
-          case (_, b) => b == builtin
-        }).keys.headOption.getOrElse("???")
+        val name = Interpreter.builtin
+          .filter({ case (_, b) => b == builtin })
+          .keys
+          .headOption
+          .getOrElse("???")
 
         s"#<procedure:$name>"
     }
