@@ -22,7 +22,12 @@ object Main {
           else {
             val src = new Parser(new Tokenizer(text))
             val (vals, next) = Interpreter.eval(src.toList, env)
-            vals foreach println
+
+            vals foreach {
+              case err: ErrorValue => println(err.stringify())
+              case res => println(res)
+            }
+
             aux(next, "")
           }
       }

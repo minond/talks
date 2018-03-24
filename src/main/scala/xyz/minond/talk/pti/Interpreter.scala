@@ -4,6 +4,7 @@ abstract class Value {
   override final def toString =
     this match {
       case BooleanValue(value) => if (value) "#t" else "#f"
+      case ErrorValue(message, _) => s"""(error "$message")"""
       case IntNumberValue(value) => value.toString
       case LambdaValue(_, _, _) => "#<procedure>"
       case LazyValue(expr) => s"'${expr}"
@@ -12,9 +13,6 @@ abstract class Value {
       case StringValue(value) => value
       case SymbolValue(value) => s"'$value"
       case VarValue(_, value) => value.toString
-
-      case err: ErrorValue =>
-        s"; Error:\n${err.stringify()}\n"
 
       case builtin: BuiltinValue =>
         val name = Interpreter.builtin
