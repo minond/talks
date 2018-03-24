@@ -98,6 +98,8 @@ object Interpreter {
       s"${label} is undefined."
     def ERR_ARITY_MISMATCH(expected: Int, got: Int) =
       s"Arity mismatch. Expected ${expected} arguments but got ${got}."
+    def ERR_INVALID_ERROR(values: List[Value]) =
+      s"Cannot use `(${values.mkString(" ")})` as an error message."
     def ERR_INVALID_ADD(a: Value, b: Value) =
       s"Cannot add a(n) ${a} and a(n) ${b} together."
 
@@ -173,6 +175,16 @@ object Interpreter {
         case lhs :: rhs :: Nil => BooleanValue(lhs == rhs)
         case _ => ErrorValue(Message.ERR_ARITY_MISMATCH(2, args.size))
       }
+    }),
+    "list" -> BuiltinValue({ (args, env) =>
+      ListValue(safeEval(args, env))
+    }),
+    "error" -> BuiltinValue({ (args, env) =>
+      safeEval(args, env) match {
+        case StringValue(msg) :: Nil => ErrorValue(msg)
+        case SymbolValue(msg) :: Nil => ErrorValue(msg)
+        case value => ErrorValue(Message.ERR_INVALID_ERROR(value))
+      }
     })
   )
 
@@ -201,24 +213,17 @@ object Interpreter {
       case Right(QuoteExpr(IntNumberExpr(value))) => (IntNumberValue(value), env)
       case Right(QuoteExpr(RealNumberExpr(value))) => (RealNumberValue(value), env)
       case Right(QuoteExpr(StringExpr(value))) => (StringValue(value), env)
-
-      case Right(QuoteExpr(value)) =>
-        (LazyValue(value), env)
-      case Right(SExpr(IdentifierExpr("list") :: values)) =>
-        (ListValue(safeEval(values, env)), env)
-
-      case Right(SExpr(IdentifierExpr("error") :: StringExpr(msg) :: Nil)) =>
-        (ErrorValue(msg), env)
+      case Right(QuoteExpr(value)) => (LazyValue(value), env)
 
       case Right(SExpr(IdentifierExpr("lambda") :: SExpr(raw) :: body :: Nil)) =>
         procDefn(raw, body, env)
 
-      case Right(IdentifierExpr(label)) =>
-        (builtin.getOrElse(label, env.lookup(label)), env)
-
       case Right(
           SExpr(IdentifierExpr("define") :: IdentifierExpr(name) :: value :: Nil)) =>
         define(name, value, env)
+
+      case Right(IdentifierExpr(label)) =>
+        (builtin.getOrElse(label, env.lookup(label)), env)
 
       case Right(SExpr(fn :: args)) => procCall(fn, args, env)
       case Right(SExpr(Nil)) => (ErrorValue(Message.ERR_LAMBDA_EMPTY_CALL), env)
