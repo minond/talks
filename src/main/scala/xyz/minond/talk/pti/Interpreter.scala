@@ -91,6 +91,8 @@ object Interpreter {
 
     def ERR_SYNTAX(err: Parser.Error) =
       s"Syntax error:\n${err.stringify("  ")}"
+    def ERR_BAD_SYNTAX(thing: String) =
+      s"${thing}: lambda syntax"
     def ERR_EXPRESSION(expr: Expression) =
       s"Expression error: ${expr}"
 
@@ -110,8 +112,6 @@ object Interpreter {
       "Missing procedure expression"
     val ERR_LAMBDA_NON_PROC_CALL =
       "Call made to non-procedure."
-    val ERR_LAMBDA_BAD_SYNTAX =
-      "Bad lambda syntax"
     val ERR_LAMBDA_NON_ID_ARG =
       "Found non-identifier argument(s) in lambda expression."
     def ERR_LAMBDA_DUP_ARGS(dups: List[String]) =
@@ -209,7 +209,7 @@ object Interpreter {
           else LambdaValue(names.toSet, body, env)
 
         case _ =>
-          ErrorValue(Message.ERR_LAMBDA_BAD_SYNTAX)
+          ErrorValue(Message.ERR_BAD_SYNTAX("lambda"))
       }
     })
   )
@@ -244,6 +244,8 @@ object Interpreter {
       case Right(
           SExpr(IdentifierExpr("define") :: IdentifierExpr(name) :: value :: Nil)) =>
         define(name, value, env)
+      case Right(SExpr(IdentifierExpr("define") :: _)) =>
+        (ErrorValue(Message.ERR_BAD_SYNTAX("define")), env)
 
       case Right(IdentifierExpr(label)) =>
         (builtin.getOrElse(label, env.lookup(label)), env)
