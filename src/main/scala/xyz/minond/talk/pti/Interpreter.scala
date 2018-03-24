@@ -89,6 +89,11 @@ object Interpreter {
     def GIVEN(thing: String) =
       s"Given $thing."
 
+    def ERR_SYNTAX(err: Parser.Error) =
+      s"Syntax error:\n${err.stringify("  ")}"
+    def ERR_EXPRESSION(expr: Expression) =
+      s"Expression error: ${expr}"
+
     def ERR_UNDEFINED_LOOKUP(label: String) =
       s"${label} is undefined."
     def ERR_ARITY_MISMATCH(expected: Int, got: Int) =
@@ -218,11 +223,8 @@ object Interpreter {
       case Right(SExpr(fn :: args)) => procCall(fn, args, env)
       case Right(SExpr(Nil)) => (ErrorValue(Message.ERR_LAMBDA_EMPTY_CALL), env)
 
-      case Left(err) =>
-        (ErrorValue(s"Syntax error:\n${err.stringify("  ")}"), env)
-
-      // XXX Finish all cases
-      case _ => ???
+      case Right(expr) => (ErrorValue(Message.ERR_EXPRESSION(expr)), env)
+      case Left(err) => (ErrorValue(Message.ERR_SYNTAX(err)), env)
     }
   }
 
