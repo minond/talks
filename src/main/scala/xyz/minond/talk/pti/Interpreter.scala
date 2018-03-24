@@ -7,7 +7,7 @@ abstract class Value {
       case ErrorValue(message, _) => s"""(error "$message")"""
       case IntNumberValue(value) => value.toString
       case LambdaValue(_, _, _) => "#<procedure>"
-      case LazyValue(expr) => s"'${expr}"
+      case LazyValue(expr) => expr.toString
       case ListValue(values) => s"'(${values.map(_.toString).mkString(" ")})"
       case RealNumberValue(value) => value.toString
       case StringValue(value) => value
