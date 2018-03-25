@@ -24,7 +24,7 @@ object Main {
             val (vals, next) = Interpreter.eval(src.toList, env)
 
             vals foreach {
-              case err: ErrorValue => println(err.stringify())
+              case err: ErrorExpr => println(err.stringify())
               case res => println(res)
             }
 

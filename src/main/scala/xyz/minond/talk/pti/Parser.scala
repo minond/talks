@@ -14,27 +14,6 @@ import Tokenizer.{
 
 import scala.collection.mutable.ListBuffer
 
-abstract class Expression {
-  override final def toString =
-    this match {
-      case BooleanExpr(value) => if (value) "#t" else "#f"
-      case IdentifierExpr(value) => value
-      case IntNumberExpr(value) => value.toString
-      case QuoteExpr(value) => s"'$value"
-      case RealNumberExpr(value) => value.toString
-      case SExpr(values) => s"(${values.map(_.toString).mkString(" ")})"
-      case StringExpr(value) => value
-    }
-}
-
-case class BooleanExpr(value: Boolean) extends Expression
-case class IdentifierExpr(value: String) extends Expression
-case class IntNumberExpr(value: Int) extends Expression
-case class QuoteExpr(value: Expression) extends Expression
-case class RealNumberExpr(value: Double) extends Expression
-case class SExpr(values: List[Expression]) extends Expression
-case class StringExpr(value: String) extends Expression
-
 object Parser {
   object Message {
     val STR_INVALID_INT = "Cannot parse integer number."

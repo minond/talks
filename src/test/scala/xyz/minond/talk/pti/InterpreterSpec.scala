@@ -19,97 +19,96 @@ class InterpreterSpec extends FreeSpec with Matchers {
     }
 
     "evaluates integer expressions" in {
-      eval("0")._1 should be(List(IntNumberValue(0)))
-      eval("1")._1 should be(List(IntNumberValue(1)))
-      eval("123")._1 should be(List(IntNumberValue(123)))
+      eval("0")._1 should be(List(IntNumberExpr(0)))
+      eval("1")._1 should be(List(IntNumberExpr(1)))
+      eval("123")._1 should be(List(IntNumberExpr(123)))
       eval("1 2 3")._1 should be(
-        List(IntNumberValue(1), IntNumberValue(2), IntNumberValue(3)))
+        List(IntNumberExpr(1), IntNumberExpr(2), IntNumberExpr(3)))
       eval("""
       1
       2
-      3""")._1 should be(List(IntNumberValue(1), IntNumberValue(2), IntNumberValue(3)))
+      3""")._1 should be(List(IntNumberExpr(1), IntNumberExpr(2), IntNumberExpr(3)))
     }
 
     "evaluates real number expressions" in {
-      eval("0.0")._1 should be(List(RealNumberValue(0)))
-      eval("1.1")._1 should be(List(RealNumberValue(1.1)))
-      eval("12.3")._1 should be(List(RealNumberValue(12.3)))
+      eval("0.0")._1 should be(List(RealNumberExpr(0)))
+      eval("1.1")._1 should be(List(RealNumberExpr(1.1)))
+      eval("12.3")._1 should be(List(RealNumberExpr(12.3)))
       eval("1.0 2.0 3.0")._1 should be(
-        List(RealNumberValue(1.0), RealNumberValue(2.0), RealNumberValue(3.0)))
+        List(RealNumberExpr(1.0), RealNumberExpr(2.0), RealNumberExpr(3.0)))
       eval("""
       .01
       .02
       .03""")._1 should be(
-        List(RealNumberValue(0.01), RealNumberValue(0.02), RealNumberValue(0.03)))
+        List(RealNumberExpr(0.01), RealNumberExpr(0.02), RealNumberExpr(0.03)))
     }
 
     "evaluates boolean expressions" in {
-      eval("#t")._1 should be(List(BooleanValue(true)))
-      eval("#f")._1 should be(List(BooleanValue(false)))
+      eval("#t")._1 should be(List(BooleanExpr(true)))
+      eval("#f")._1 should be(List(BooleanExpr(false)))
       eval("#t #f #t #f")._1 should be(
         List(
-          BooleanValue(true),
-          BooleanValue(false),
-          BooleanValue(true),
-          BooleanValue(false)))
+          BooleanExpr(true),
+          BooleanExpr(false),
+          BooleanExpr(true),
+          BooleanExpr(false)))
       eval("""
       #f
       #t
       #f
       #t""")._1 should be(
         List(
-          BooleanValue(false),
-          BooleanValue(true),
-          BooleanValue(false),
-          BooleanValue(true)
+          BooleanExpr(false),
+          BooleanExpr(true),
+          BooleanExpr(false),
+          BooleanExpr(true)
         ))
     }
 
     "evaluates string expressions" in {
-      eval(""""hi"""")._1 should be(List(StringValue("hi")))
+      eval(""""hi"""")._1 should be(List(StringExpr("hi")))
       eval(""""1""2""3"""")._1 should be(
-        List(StringValue("1"), StringValue("2"), StringValue("3")))
+        List(StringExpr("1"), StringExpr("2"), StringExpr("3")))
       eval(""""1" "2" "3"""")._1 should be(
-        List(StringValue("1"), StringValue("2"), StringValue("3")))
+        List(StringExpr("1"), StringExpr("2"), StringExpr("3")))
     }
 
     "evaluates quoted expressions" in {
-      eval("'abc")._1 should be(List(SymbolValue("abc")))
-      eval("'123")._1 should be(List(IntNumberValue(123)))
-      eval("'123.456")._1 should be(List(RealNumberValue(123.456)))
-      eval("'#t")._1 should be(List(BooleanValue(true)))
-      eval("'#f")._1 should be(List(BooleanValue(false)))
+      eval("'abc")._1 should be(List(QuoteExpr(IdentifierExpr("abc"))))
+      eval("'123")._1 should be(List(IntNumberExpr(123)))
+      eval("'123.456")._1 should be(List(RealNumberExpr(123.456)))
+      eval("'#t")._1 should be(List(BooleanExpr(true)))
+      eval("'#f")._1 should be(List(BooleanExpr(false)))
       eval("'(1 2 3)")._1 should be(
-        List(
-          LazyValue(SExpr(List(IntNumberExpr(1), IntNumberExpr(2), IntNumberExpr(3))))))
+        List(SExpr(List(IntNumberExpr(1), IntNumberExpr(2), IntNumberExpr(3)))))
     }
   }
 
   "Builtin Function" - {
     "list creates a list" in {
       eval("(list 1 2 3)")._1 should be(
-        List(ListValue(List(IntNumberValue(1), IntNumberValue(2), IntNumberValue(3)))))
+        List(SExpr(List(IntNumberExpr(1), IntNumberExpr(2), IntNumberExpr(3)))))
     }
 
     "error creates an error" in {
-      eval("""(error "1 2 3")""")._1 should be(List(ErrorValue("1 2 3")))
+      eval("""(error "1 2 3")""")._1 should be(List(ErrorExpr("1 2 3")))
     }
 
     "eval evaluates scalar values" in {
-      eval("(eval '123)")._1 should be(List(IntNumberValue(123)))
-      eval("(eval 123)")._1 should be(List(IntNumberValue(123)))
-      eval("(eval '123.456)")._1 should be(List(RealNumberValue(123.456)))
-      eval("(eval 123.456)")._1 should be(List(RealNumberValue(123.456)))
-      eval("(eval '#t)")._1 should be(List(BooleanValue(true)))
-      eval("(eval #t)")._1 should be(List(BooleanValue(true)))
-      eval("(eval '#f)")._1 should be(List(BooleanValue(false)))
-      eval("(eval #f)")._1 should be(List(BooleanValue(false)))
-      eval("""(eval '"hi")""")._1 should be(List(StringValue("hi")))
-      eval("""(eval "hi")""")._1 should be(List(StringValue("hi")))
+      eval("(eval '123)")._1 should be(List(IntNumberExpr(123)))
+      eval("(eval 123)")._1 should be(List(IntNumberExpr(123)))
+      eval("(eval '123.456)")._1 should be(List(RealNumberExpr(123.456)))
+      eval("(eval 123.456)")._1 should be(List(RealNumberExpr(123.456)))
+      eval("(eval '#t)")._1 should be(List(BooleanExpr(true)))
+      eval("(eval #t)")._1 should be(List(BooleanExpr(true)))
+      eval("(eval '#f)")._1 should be(List(BooleanExpr(false)))
+      eval("(eval #f)")._1 should be(List(BooleanExpr(false)))
+      eval("""(eval '"hi")""")._1 should be(List(StringExpr("hi")))
+      eval("""(eval "hi")""")._1 should be(List(StringExpr("hi")))
     }
 
     "eval evaluates s-expressions" in {
-      eval("(eval '(+ 2 4))")._1 should be(List(IntNumberValue(6)))
+      eval("(eval '(+ 2 4))")._1 should be(List(IntNumberExpr(6)))
     }
 
     "cond does not evaluate expressions in false conditions" in {
@@ -117,7 +116,7 @@ class InterpreterSpec extends FreeSpec with Matchers {
         (cond
           (#f this is not ok)
           (#t 'ok))
-      """)._1 should be(List(SymbolValue("ok")))
+      """)._1 should be(List(QuoteExpr(IdentifierExpr("ok"))))
     }
 
     "cond does not evaluate exressions in false conditions" in {
@@ -125,7 +124,7 @@ class InterpreterSpec extends FreeSpec with Matchers {
         (cond
           (#f 'err)
           (#f 'err))
-      """)._1 should be(List(ListValue(List.empty)))
+      """)._1 should be(List(SExpr(List.empty)))
     }
 
     "cond runs in its own scope" in {
