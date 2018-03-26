@@ -4,28 +4,36 @@ abstract class Expression {
   override final def toString =
     this match {
       case BooleanExpr(value) => if (value) "#t" else "#f"
+      case ErrorExpr(message, _) => s"""(error "$message")"""
       case IdentifierExpr(value) => value
       case IntNumberExpr(value) => value.toString
+      case LambdaExpr(_, _, _) => "#<procedure>"
+      case Pair(a, b) => s"($a . $b)"
       case QuoteExpr(value) => s"'$value"
       case RealNumberExpr(value) => value.toString
       case SExpr(values) => s"(${values.map(_.toString).mkString(" ")})"
       case StringExpr(value) => value
-      case ErrorExpr(message, _) => s"""(error "$message")"""
-      case LambdaExpr(_, _, _) => "#<procedure>"
-      case builtin: BuiltinExpr =>
+      case BuiltinExpr(fn) =>
         val name = Interpreter.builtin
-          .filter({ case (_, b) => b == builtin })
+          .filter({ case (_, b) => b == BuiltinExpr(fn) })
           .keys
           .headOption
           .getOrElse("???")
 
         s"#<procedure:$name>"
     }
+
+  def unQuote: Expression =
+    this match {
+      case QuoteExpr(expr) => expr
+      case expr => expr
+    }
 }
 
 case class BooleanExpr(value: Boolean) extends Expression
 case class IdentifierExpr(value: String) extends Expression
 case class IntNumberExpr(value: Int) extends Expression
+case class Pair(a: Expression, b: Expression) extends Expression
 case class QuoteExpr(value: Expression) extends Expression
 case class RealNumberExpr(value: Double) extends Expression
 case class SExpr(values: List[Expression]) extends Expression

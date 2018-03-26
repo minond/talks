@@ -8,19 +8,21 @@ object Interpreter {
     def ERR_SYNTAX(err: Parser.Error) =
       s"Syntax error:\n${err.stringify("  ")}"
     def ERR_BAD_SYNTAX(thing: String) =
-      s"${thing}: lambda syntax"
+      s"${thing}: bad syntax"
     def ERR_EXPRESSION(expr: Expression) =
       s"Expression error: ${expr}"
 
     def ERR_UNDEFINED_LOOKUP(label: String) =
       s"${label} is undefined."
     def ERR_ARITY_MISMATCH(expected: Int, got: Int) =
-      s"Arity mismatch. Expected ${expected} arguments but got ${got}."
+      s"Arity mismatch, expected ${expected} arguments but got ${got}."
     def ERR_INVALID_ERROR(exprs: List[Expression]) =
       s"Cannot use `(${exprs.mkString(" ")})` as an error message."
     def ERR_INVALID_ADD(a: Expression, b: Expression) =
       s"Cannot add a(n) ${a} and a(n) ${b} together."
 
+    val ERR_INTERNAL =
+      "Internal error"
     def ERR_EVAL_EXPR(expr: Expression) =
       s"Error evaluating $expr."
 
@@ -36,12 +38,18 @@ object Interpreter {
 
   val builtin = Map(
     "eval" -> BuiltinExpr({ (args, env) =>
-      args match {
-        // XXX Should be able to (eval (list + 1 2)) and (eval '(+ 1 2))
-        case QuoteExpr(expr) :: Nil => safeEval(expr, env)
-        case expr :: Nil => safeEval(expr, env)
+      safeEval(args, env) match {
+        case expr :: Nil => safeEval(expr.unQuote, env)
         case Nil => ErrorExpr(Message.ERR_ARITY_MISMATCH(1, 0))
         case exprs => ErrorExpr(Message.ERR_ARITY_MISMATCH(1, exprs.size))
+      }
+    }),
+    "cons" -> BuiltinExpr({ (args, env) =>
+      safeEval(args, env) match {
+        case head :: SExpr(tail) :: Nil => QuoteExpr(SExpr(head.unQuote :: tail))
+        case head :: tail :: Nil => Pair(head.unQuote, tail.unQuote)
+        case _ :: _ :: _ :: Nil => ErrorExpr(Message.ERR_ARITY_MISMATCH(2, args.size))
+        case _ => ErrorExpr(Message.ERR_INTERNAL)
       }
     }),
     "cond" -> BuiltinExpr({ (args, env) =>
