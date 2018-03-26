@@ -103,7 +103,7 @@ object Interpreter {
     }),
     "equal?" -> Builtin({ (args, env) =>
       safeEval(args, env) match {
-        case lhs :: rhs :: Nil => BooleanExpr(lhs == rhs)
+        case lhs :: rhs :: Nil => BooleanExpr(lhs.unQuote == rhs.unQuote)
         case _ => Error(Message.ERR_ARITY_MISMATCH(2, args.size))
       }
     }),
