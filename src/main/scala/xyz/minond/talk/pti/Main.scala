@@ -12,7 +12,7 @@ object Main {
 
     def aux(env: Environment, prefix: String): Unit = {
       if (prefix == "") print("> ")
-      else print("| ")
+      else print("  ")
 
       (prefix + " " + reader.readLine).trim match {
         case "(exit)" => return
