@@ -49,6 +49,7 @@ object Interpreter {
     "cons" -> Builtin({ (args, env) =>
       safeEval(args, env) match {
         case head :: SExpr(tail) :: Nil => Quote(SExpr(head.unQuote :: tail))
+        case head :: Quote(SExpr(tail)) :: Nil => Quote(SExpr(head.unQuote :: tail))
         case head :: tail :: Nil => Pair(head.unQuote, tail.unQuote)
         case _ :: _ :: _ :: Nil => Error(Message.ERR_ARITY_MISMATCH(2, args.size))
         case _ => Error(Message.ERR_INTERNAL)
