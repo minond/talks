@@ -21,8 +21,8 @@ class ParserSpec extends FlatSpec with Matchers {
   }
 
   it should "parse valid boolean values" in {
-    parse("#f") should be(List(BooleanExpr(false)))
-    parse("#t") should be(List(BooleanExpr(true)))
+    parse("#f") should be(List(False))
+    parse("#t") should be(List(True))
   }
 
   it should "fail to parse an invalid boolean value" in {
@@ -108,7 +108,7 @@ class ParserSpec extends FlatSpec with Matchers {
     parse("'1") should be(List(QuoteExpr(IntNumberExpr(1))))
     parse("'123") should be(List(QuoteExpr(IntNumberExpr(123))))
     parse("'()") should be(List(QuoteExpr(SExpr(List()))))
-    parse("'#f") should be(List(QuoteExpr(BooleanExpr(false))))
+    parse("'#f") should be(List(QuoteExpr(False)))
   }
 
   it should "fail to parse invalid quoted expressions" in {

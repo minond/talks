@@ -56,7 +56,7 @@ object Interpreter {
       args.find {
         case SExpr(cond :: _) =>
           safeEval(cond, env) match {
-            case BooleanExpr(false) => false
+            case False => false
             case _ => true
           }
       } match {
@@ -149,7 +149,8 @@ object Interpreter {
       expr: Either[Parser.Error, Expression],
       env: Environment): (Expression, Environment) = {
     expr match {
-      case Right(BooleanExpr(value)) => (BooleanExpr(value), env)
+      case Right(True) => (True, env)
+      case Right(False) => (False, env)
       case Right(IntNumberExpr(value)) => (IntNumberExpr(value), env)
       case Right(RealNumberExpr(value)) => (RealNumberExpr(value), env)
       case Right(StringExpr(value)) => (StringExpr(value), env)

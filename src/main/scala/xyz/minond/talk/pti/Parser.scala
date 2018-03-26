@@ -130,8 +130,8 @@ class Parser(source: Tokenizer) extends Iterator[Either[Parser.Error, Expression
       case (_, Left(err)) =>
         Left(Parser.Error(Parser.Message.STR_INVALID_BOOL, Some(err)))
 
-      case (Right(_), Right(Token(_, Some("t")))) => Right(BooleanExpr(true))
-      case (Right(_), Right(Token(_, Some("f")))) => Right(BooleanExpr(false))
+      case (Right(_), Right(Token(_, Some("t")))) => Right(True)
+      case (Right(_), Right(Token(_, Some("f")))) => Right(False)
 
       case (Right(_), Right(token)) =>
         Left(

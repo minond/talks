@@ -44,25 +44,14 @@ class InterpreterSpec extends FreeSpec with Matchers {
     }
 
     "evaluates boolean expressions" in {
-      eval("#t")._1 should be(List(BooleanExpr(true)))
-      eval("#f")._1 should be(List(BooleanExpr(false)))
-      eval("#t #f #t #f")._1 should be(
-        List(
-          BooleanExpr(true),
-          BooleanExpr(false),
-          BooleanExpr(true),
-          BooleanExpr(false)))
+      eval("#t")._1 should be(List(True))
+      eval("#f")._1 should be(List(False))
+      eval("#t #f #t #f")._1 should be(List(True, False, True, False))
       eval("""
       #f
       #t
       #f
-      #t""")._1 should be(
-        List(
-          BooleanExpr(false),
-          BooleanExpr(true),
-          BooleanExpr(false),
-          BooleanExpr(true)
-        ))
+      #t""")._1 should be(List(False, True, False, True))
     }
 
     "evaluates string expressions" in {
@@ -77,8 +66,8 @@ class InterpreterSpec extends FreeSpec with Matchers {
       eval("'abc")._1 should be(List(QuoteExpr(IdentifierExpr("abc"))))
       eval("'123")._1 should be(List(IntNumberExpr(123)))
       eval("'123.456")._1 should be(List(RealNumberExpr(123.456)))
-      eval("'#t")._1 should be(List(BooleanExpr(true)))
-      eval("'#f")._1 should be(List(BooleanExpr(false)))
+      eval("'#t")._1 should be(List(True))
+      eval("'#f")._1 should be(List(False))
       eval("'(1 2 3)")._1 should be(
         List(SExpr(List(IntNumberExpr(1), IntNumberExpr(2), IntNumberExpr(3)))))
     }
@@ -99,10 +88,10 @@ class InterpreterSpec extends FreeSpec with Matchers {
       eval("(eval 123)")._1 should be(List(IntNumberExpr(123)))
       eval("(eval '123.456)")._1 should be(List(RealNumberExpr(123.456)))
       eval("(eval 123.456)")._1 should be(List(RealNumberExpr(123.456)))
-      eval("(eval '#t)")._1 should be(List(BooleanExpr(true)))
-      eval("(eval #t)")._1 should be(List(BooleanExpr(true)))
-      eval("(eval '#f)")._1 should be(List(BooleanExpr(false)))
-      eval("(eval #f)")._1 should be(List(BooleanExpr(false)))
+      eval("(eval '#t)")._1 should be(List(True))
+      eval("(eval #t)")._1 should be(List(True))
+      eval("(eval '#f)")._1 should be(List(False))
+      eval("(eval #f)")._1 should be(List(False))
       eval("""(eval '"hi")""")._1 should be(List(StringExpr("hi")))
       eval("""(eval "hi")""")._1 should be(List(StringExpr("hi")))
     }

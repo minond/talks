@@ -3,7 +3,8 @@ package xyz.minond.talk.pti
 abstract class Expression {
   override final def toString =
     this match {
-      case BooleanExpr(value) => if (value) "#t" else "#f"
+      case True => "#t"
+      case False => "#f"
       case ErrorExpr(message, _) => s"""(error "$message")"""
       case IdentifierExpr(value) => value
       case IntNumberExpr(value) => value.toString
@@ -30,7 +31,6 @@ abstract class Expression {
     }
 }
 
-case class BooleanExpr(value: Boolean) extends Expression
 case class IdentifierExpr(value: String) extends Expression
 case class IntNumberExpr(value: Int) extends Expression
 case class Pair(a: Expression, b: Expression) extends Expression
@@ -38,6 +38,16 @@ case class QuoteExpr(value: Expression) extends Expression
 case class RealNumberExpr(value: Double) extends Expression
 case class SExpr(values: List[Expression]) extends Expression
 case class StringExpr(value: String) extends Expression
+
+object BooleanExpr {
+  def apply(value: Boolean): BooleanExpr =
+    if (value) True
+    else False
+}
+
+trait BooleanExpr extends Expression
+case object True extends BooleanExpr
+case object False extends BooleanExpr
 
 case class BuiltinExpr(fn: (List[Expression], Environment) => Expression)
     extends Expression
