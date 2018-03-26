@@ -5,18 +5,18 @@ abstract class Expression {
     this match {
       case True => "#t"
       case False => "#f"
-      case ErrorExpr(message, _) => s"""(error "$message")"""
-      case IdentifierExpr(value) => value
-      case IntNumberExpr(value) => value.toString
-      case LambdaExpr(_, _, _) => "#<procedure>"
+      case Error(message, _) => s"""(error "$message")"""
+      case Identifier(value) => value
+      case Integer(value) => value.toString
+      case Lambda(_, _, _) => "#<procedure>"
       case Pair(a, b) => s"($a . $b)"
-      case QuoteExpr(value) => s"'$value"
-      case RealNumberExpr(value) => value.toString
+      case Quote(value) => s"'$value"
+      case Real(value) => value.toString
       case SExpr(values) => s"(${values.map(_.toString).mkString(" ")})"
-      case StringExpr(value) => value
-      case BuiltinExpr(fn) =>
+      case Str(value) => value
+      case Builtin(fn) =>
         val name = Interpreter.builtin
-          .filter({ case (_, b) => b == BuiltinExpr(fn) })
+          .filter({ case (_, b) => b == Builtin(fn) })
           .keys
           .headOption
           .getOrElse("???")
@@ -26,18 +26,18 @@ abstract class Expression {
 
   def unQuote: Expression =
     this match {
-      case QuoteExpr(expr) => expr
+      case Quote(expr) => expr
       case expr => expr
     }
 }
 
-case class IdentifierExpr(value: String) extends Expression
-case class IntNumberExpr(value: Int) extends Expression
+case class Identifier(value: String) extends Expression
+case class Integer(value: Int) extends Expression
 case class Pair(a: Expression, b: Expression) extends Expression
-case class QuoteExpr(value: Expression) extends Expression
-case class RealNumberExpr(value: Double) extends Expression
+case class Quote(value: Expression) extends Expression
+case class Real(value: Double) extends Expression
 case class SExpr(values: List[Expression]) extends Expression
-case class StringExpr(value: String) extends Expression
+case class Str(value: String) extends Expression
 
 object BooleanExpr {
   def apply(value: Boolean): BooleanExpr =
@@ -49,10 +49,9 @@ trait BooleanExpr extends Expression
 case object True extends BooleanExpr
 case object False extends BooleanExpr
 
-case class BuiltinExpr(fn: (List[Expression], Environment) => Expression)
-    extends Expression
+case class Builtin(fn: (List[Expression], Environment) => Expression) extends Expression
 
-case class ErrorExpr(message: String, prev: Option[ErrorExpr] = None) extends Expression {
+case class Error(message: String, prev: Option[Error] = None) extends Expression {
   def stringify(prefix: String = ""): String = {
     val next = prev match {
       case Some(err) => "\n" + err.stringify(prefix + "  ")
@@ -63,7 +62,7 @@ case class ErrorExpr(message: String, prev: Option[ErrorExpr] = None) extends Ex
   }
 }
 
-case class LambdaExpr(args: Set[String], body: Expression, env: Environment)
+case class Lambda(args: Set[String], body: Expression, env: Environment)
     extends Expression {
   def scope(
       vals: List[Expression],
@@ -99,7 +98,7 @@ case class Environment(
     (vars.get(name), parent) match {
       case (Some(expr), _) => expr
       case (None, Some(env)) => env.lookup(name)
-      case (None, None) => ErrorExpr(Interpreter.Message.ERR_UNDEFINED_LOOKUP(name))
+      case (None, None) => Error(Interpreter.Message.ERR_UNDEFINED_LOOKUP(name))
     }
   }
 

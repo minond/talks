@@ -37,22 +37,22 @@ object Interpreter {
   }
 
   val builtin = Map(
-    "eval" -> BuiltinExpr({ (args, env) =>
+    "eval" -> Builtin({ (args, env) =>
       safeEval(args, env) match {
         case expr :: Nil => safeEval(expr.unQuote, env)
-        case Nil => ErrorExpr(Message.ERR_ARITY_MISMATCH(1, 0))
-        case exprs => ErrorExpr(Message.ERR_ARITY_MISMATCH(1, exprs.size))
+        case Nil => Error(Message.ERR_ARITY_MISMATCH(1, 0))
+        case exprs => Error(Message.ERR_ARITY_MISMATCH(1, exprs.size))
       }
     }),
-    "cons" -> BuiltinExpr({ (args, env) =>
+    "cons" -> Builtin({ (args, env) =>
       safeEval(args, env) match {
-        case head :: SExpr(tail) :: Nil => QuoteExpr(SExpr(head.unQuote :: tail))
+        case head :: SExpr(tail) :: Nil => Quote(SExpr(head.unQuote :: tail))
         case head :: tail :: Nil => Pair(head.unQuote, tail.unQuote)
-        case _ :: _ :: _ :: Nil => ErrorExpr(Message.ERR_ARITY_MISMATCH(2, args.size))
-        case _ => ErrorExpr(Message.ERR_INTERNAL)
+        case _ :: _ :: _ :: Nil => Error(Message.ERR_ARITY_MISMATCH(2, args.size))
+        case _ => Error(Message.ERR_INTERNAL)
       }
     }),
-    "cond" -> BuiltinExpr({ (args, env) =>
+    "cond" -> Builtin({ (args, env) =>
       args.find {
         case SExpr(cond :: _) =>
           safeEval(cond, env) match {
@@ -63,73 +63,64 @@ object Interpreter {
         case None => SExpr(List.empty)
         case Some(SExpr(_ :: Nil)) => SExpr(List.empty)
         case Some(SExpr(_ :: exprs)) => exprs.map(safeEval(_, env)).last
-        case Some(expr) => ErrorExpr(Message.ERR_EVAL_EXPR(expr))
+        case Some(expr) => Error(Message.ERR_EVAL_EXPR(expr))
       }
     }),
-    "+" -> BuiltinExpr({ (args, env) =>
+    "+" -> Builtin({ (args, env) =>
       def aux(exprs: List[Expression]): Expression =
         exprs match {
-          case Nil => IntNumberExpr(0)
+          case Nil => Integer(0)
           case h :: rest =>
             (h, aux(rest)) match {
-              case (IntNumberExpr(a), IntNumberExpr(b)) =>
-                IntNumberExpr(a + b)
-
-              case (RealNumberExpr(a), RealNumberExpr(b)) =>
-                RealNumberExpr(a + b)
-
-              case (RealNumberExpr(a), IntNumberExpr(b)) =>
-                RealNumberExpr(a + b.toDouble)
-
-              case (IntNumberExpr(a), RealNumberExpr(b)) =>
-                RealNumberExpr(a.toDouble + b)
-
-              case (a, b) =>
-                ErrorExpr(Message.ERR_INVALID_ADD(a, b))
+              case (Integer(a), Integer(b)) => Integer(a + b)
+              case (Real(a), Real(b)) => Real(a + b)
+              case (Real(a), Integer(b)) => Real(a + b.toDouble)
+              case (Integer(a), Real(b)) => Real(a.toDouble + b)
+              case (a, b) => Error(Message.ERR_INVALID_ADD(a, b))
             }
         }
 
       aux(safeEval(args, env))
     }),
-    "equal?" -> BuiltinExpr({ (args, env) =>
+    "equal?" -> Builtin({ (args, env) =>
       safeEval(args, env) match {
         case lhs :: rhs :: Nil => BooleanExpr(lhs == rhs)
-        case _ => ErrorExpr(Message.ERR_ARITY_MISMATCH(2, args.size))
+        case _ => Error(Message.ERR_ARITY_MISMATCH(2, args.size))
       }
     }),
-    "list" -> BuiltinExpr({ (args, env) =>
+    "list" -> Builtin({ (args, env) =>
       SExpr(safeEval(args, env))
     }),
-    "error" -> BuiltinExpr({ (args, env) =>
+    "error" -> Builtin({ (args, env) =>
       safeEval(args, env) match {
-        case StringExpr(msg) :: Nil => ErrorExpr(msg)
-        case QuoteExpr(IdentifierExpr(msg)) :: Nil => ErrorExpr(msg)
-        case QuoteExpr(StringExpr(msg)) :: Nil => ErrorExpr(msg)
-        case expr => ErrorExpr(Message.ERR_INVALID_ERROR(expr))
+        case Str(msg) :: Nil => Error(msg)
+        case Quote(Identifier(msg)) :: Nil => Error(msg)
+        case Quote(Str(msg)) :: Nil => Error(msg)
+        case expr => Error(Message.ERR_INVALID_ERROR(expr))
       }
     }),
-    "lambda" -> BuiltinExpr({ (args, env) =>
+    "lambda" -> Builtin({ (args, env) =>
       args match {
         case SExpr(raw) :: body :: Nil =>
           val (args, errs) = raw.partition {
-            case IdentifierExpr(_) => true
+            case Identifier(_) => true
             case _ => false
           }
 
           val names = args.map {
-            case IdentifierExpr(name) => name
+            case Identifier(name) => name
           }
 
           val dups = names.groupBy(identity) collect {
             case (x, xs) if xs.size > 1 => x
           }
 
-          if (dups.size > 0) ErrorExpr(Message.ERR_LAMBDA_DUP_ARGS(dups.toList))
-          else if (errs.size > 0) ErrorExpr(Message.ERR_LAMBDA_NON_ID_ARG)
-          else LambdaExpr(names.toSet, body, env)
+          if (dups.size > 0) Error(Message.ERR_LAMBDA_DUP_ARGS(dups.toList))
+          else if (errs.size > 0) Error(Message.ERR_LAMBDA_NON_ID_ARG)
+          else Lambda(names.toSet, body, env)
 
         case _ =>
-          ErrorExpr(Message.ERR_BAD_SYNTAX("lambda"))
+          Error(Message.ERR_BAD_SYNTAX("lambda"))
       }
     })
   )
@@ -151,28 +142,27 @@ object Interpreter {
     expr match {
       case Right(True) => (True, env)
       case Right(False) => (False, env)
-      case Right(IntNumberExpr(value)) => (IntNumberExpr(value), env)
-      case Right(RealNumberExpr(value)) => (RealNumberExpr(value), env)
-      case Right(StringExpr(value)) => (StringExpr(value), env)
+      case Right(Integer(value)) => (Integer(value), env)
+      case Right(Real(value)) => (Real(value), env)
+      case Right(Str(value)) => (Str(value), env)
 
-      case Right(QuoteExpr(IdentifierExpr(name))) =>
-        (QuoteExpr(IdentifierExpr(name)), env)
-      case Right(QuoteExpr(value)) => (value, env)
+      case Right(Quote(Identifier(name))) =>
+        (Quote(Identifier(name)), env)
+      case Right(Quote(value)) => (value, env)
 
-      case Right(
-          SExpr(IdentifierExpr("define") :: IdentifierExpr(name) :: value :: Nil)) =>
+      case Right(SExpr(Identifier("define") :: Identifier(name) :: value :: Nil)) =>
         define(name, value, env)
-      case Right(SExpr(IdentifierExpr("define") :: _)) =>
-        (ErrorExpr(Message.ERR_BAD_SYNTAX("define")), env)
+      case Right(SExpr(Identifier("define") :: _)) =>
+        (Error(Message.ERR_BAD_SYNTAX("define")), env)
 
-      case Right(IdentifierExpr(label)) =>
+      case Right(Identifier(label)) =>
         (builtin.getOrElse(label, env.lookup(label)), env)
 
       case Right(SExpr(fn :: args)) => procCall(fn, args, env)
-      case Right(SExpr(Nil)) => (ErrorExpr(Message.ERR_LAMBDA_EMPTY_CALL), env)
+      case Right(SExpr(Nil)) => (Error(Message.ERR_LAMBDA_EMPTY_CALL), env)
 
-      case Right(expr) => (ErrorExpr(Message.ERR_EXPRESSION(expr)), env)
-      case Left(err) => (ErrorExpr(Message.ERR_SYNTAX(err)), env)
+      case Right(expr) => (Error(Message.ERR_EXPRESSION(expr)), env)
+      case Left(err) => (Error(Message.ERR_SYNTAX(err)), env)
     }
   }
 
@@ -197,21 +187,21 @@ object Interpreter {
       args: List[Expression],
       env: Environment): (Expression, Environment) =
     safeEval(fn, env) match {
-      case proc: LambdaExpr =>
+      case proc: Lambda =>
         if (!proc.validArity(args.size))
-          (ErrorExpr(Message.ERR_ARITY_MISMATCH(proc.args.size, args.size)), env)
+          (Error(Message.ERR_ARITY_MISMATCH(proc.args.size, args.size)), env)
         else
           // XXX Check that all arguments were evaluated
           (safeEval(proc.body, proc.scope(safeEval(args, env), proc.env, env)), env)
 
-      case BuiltinExpr(fn) => (fn(args, env), env)
-      case err: ErrorExpr => (err, env)
+      case Builtin(fn) => (fn(args, env), env)
+      case err: Error => (err, env)
 
       case _ =>
         (
-          ErrorExpr(
+          Error(
             Message.ERR_LAMBDA_NON_PROC_CALL,
-            Some(ErrorExpr(Message.GIVEN(fn.toString)))),
+            Some(Error(Message.GIVEN(fn.toString)))),
           env)
     }
 }

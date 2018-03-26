@@ -151,7 +151,7 @@ class Parser(source: Tokenizer) extends Iterator[Either[Parser.Error, Expression
           Parser.Error(Parser.Message.STR_INVALID_INT, Some(Parser.Error(err.message))))
 
       case (Right(_), Right(value)) =>
-        Right(IntNumberExpr(value))
+        Right(Integer(value))
     }
   }
 
@@ -165,17 +165,17 @@ class Parser(source: Tokenizer) extends Iterator[Either[Parser.Error, Expression
           Parser.Error(Parser.Message.STR_INVALID_REAL, Some(Parser.Error(err.message))))
 
       case (Right(_), Right(value)) =>
-        Right(RealNumberExpr(value))
+        Right(Real(value))
     }
   }
 
   def parseIdentifier() = {
     expect(IDENTIFIER, DOT) match {
       case Right(Token(DOT, _)) =>
-        Right(IdentifierExpr("."))
+        Right(Identifier("."))
 
       case Right(Token(_, Some(value))) =>
-        Right(IdentifierExpr(value))
+        Right(Identifier(value))
 
       case Right(Token(_, None)) =>
         Left(
@@ -224,7 +224,7 @@ class Parser(source: Tokenizer) extends Iterator[Either[Parser.Error, Expression
         next match {
           case Left(err) =>
             Left(Parser.Error(Parser.Message.STR_INVALID_QUOTE, Some(err)))
-          case Right(expr) => Right(QuoteExpr(expr))
+          case Right(expr) => Right(Quote(expr))
         }
     }
   }
@@ -233,7 +233,7 @@ class Parser(source: Tokenizer) extends Iterator[Either[Parser.Error, Expression
     expect(STRING) match {
       case Left(err) => Left(Parser.Error(Parser.Message.STR_INVALID_STR, Some(err)))
       case Right(Token(_, None)) => Left(Parser.Error(Parser.Message.STR_INVALID_NIL_STR))
-      case Right(Token(_, Some(str))) => Right(StringExpr(str))
+      case Right(Token(_, Some(str))) => Right(Str(str))
     }
   }
 }

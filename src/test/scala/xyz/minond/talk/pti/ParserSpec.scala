@@ -32,34 +32,24 @@ class ParserSpec extends FlatSpec with Matchers {
   }
 
   it should "parse valid integer numbers" in {
-    parse("1") should be(List(IntNumberExpr(1)))
-    parse("123") should be(List(IntNumberExpr(123)))
-    parse("1 2 3") should be(
-      List(
-        IntNumberExpr(1),
-        IntNumberExpr(2),
-        IntNumberExpr(3)
-      ))
+    parse("1") should be(List(Integer(1)))
+    parse("123") should be(List(Integer(123)))
+    parse("1 2 3") should be(List(Integer(1), Integer(2), Integer(3)))
   }
 
   it should "parse valid real numbers" in {
-    parse("1.0") should be(List(RealNumberExpr(1.0)))
-    parse("1.23") should be(List(RealNumberExpr(1.23)))
-    parse("0.123") should be(List(RealNumberExpr(0.123)))
-    parse("0.1 0.2 0.3") should be(
-      List(
-        RealNumberExpr(0.1),
-        RealNumberExpr(0.2),
-        RealNumberExpr(0.3)
-      ))
+    parse("1.0") should be(List(Real(1.0)))
+    parse("1.23") should be(List(Real(1.23)))
+    parse("0.123") should be(List(Real(0.123)))
+    parse("0.1 0.2 0.3") should be(List(Real(0.1), Real(0.2), Real(0.3)))
   }
 
   it should "parse valid identifiers" in {
-    parse("+") should be(List(IdentifierExpr("+")))
-    parse("=") should be(List(IdentifierExpr("=")))
-    parse("mod") should be(List(IdentifierExpr("mod")))
-    parse("number->string") should be(List(IdentifierExpr("number->string")))
-    parse("package.name") should be(List(IdentifierExpr("package.name")))
+    parse("+") should be(List(Identifier("+")))
+    parse("=") should be(List(Identifier("=")))
+    parse("mod") should be(List(Identifier("mod")))
+    parse("number->string") should be(List(Identifier("number->string")))
+    parse("package.name") should be(List(Identifier("package.name")))
   }
 
   it should "parse valid s-expressions" in {
@@ -78,21 +68,20 @@ class ParserSpec extends FlatSpec with Matchers {
                 SExpr(List()),
               ))))))
 
-    parse("(+ 1 2)") should be(
-      List(SExpr(List(IdentifierExpr("+"), IntNumberExpr(1), IntNumberExpr(2)))))
+    parse("(+ 1 2)") should be(List(SExpr(List(Identifier("+"), Integer(1), Integer(2)))))
 
     parse("(lambda (h . t) t)") should be(
       List(
         SExpr(
           List(
-            IdentifierExpr("lambda"),
+            Identifier("lambda"),
             SExpr(
               List(
-                IdentifierExpr("h"),
-                IdentifierExpr("."),
-                IdentifierExpr("t"),
+                Identifier("h"),
+                Identifier("."),
+                Identifier("t"),
               )),
-            IdentifierExpr("t"),
+            Identifier("t"),
           ))))
   }
 
@@ -103,12 +92,12 @@ class ParserSpec extends FlatSpec with Matchers {
   }
 
   it should "parse valid quoted expressions" in {
-    parse("'a") should be(List(QuoteExpr(IdentifierExpr("a"))))
-    parse("'abc") should be(List(QuoteExpr(IdentifierExpr("abc"))))
-    parse("'1") should be(List(QuoteExpr(IntNumberExpr(1))))
-    parse("'123") should be(List(QuoteExpr(IntNumberExpr(123))))
-    parse("'()") should be(List(QuoteExpr(SExpr(List()))))
-    parse("'#f") should be(List(QuoteExpr(False)))
+    parse("'a") should be(List(Quote(Identifier("a"))))
+    parse("'abc") should be(List(Quote(Identifier("abc"))))
+    parse("'1") should be(List(Quote(Integer(1))))
+    parse("'123") should be(List(Quote(Integer(123))))
+    parse("'()") should be(List(Quote(SExpr(List()))))
+    parse("'#f") should be(List(Quote(False)))
   }
 
   it should "fail to parse invalid quoted expressions" in {
@@ -122,20 +111,9 @@ class ParserSpec extends FlatSpec with Matchers {
   }
 
   it should "parse valid strings" in {
-    parse(""""hi"""") should be(List(StringExpr("hi")))
-    parse(""""1 2 3"""") should be(List(StringExpr("1 2 3")))
-    parse(""""1""2""3"""") should be(
-      List(
-        StringExpr("1"),
-        StringExpr("2"),
-        StringExpr("3")
-      ))
-
-    parse(""""1" "2" "3"""") should be(
-      List(
-        StringExpr("1"),
-        StringExpr("2"),
-        StringExpr("3")
-      ))
+    parse(""""hi"""") should be(List(Str("hi")))
+    parse(""""1 2 3"""") should be(List(Str("1 2 3")))
+    parse(""""1""2""3"""") should be(List(Str("1"), Str("2"), Str("3")))
+    parse(""""1" "2" "3"""") should be(List(Str("1"), Str("2"), Str("3")))
   }
 }
