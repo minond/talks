@@ -6,17 +6,34 @@
   (lambda (n)
     (equal? n 0)))
 
+(define true?
+  (lambda (b)
+    (equal? b #t)))
+
+(define false?
+  (lambda (b)
+    (equal? b #f)))
+
 (define map
   (lambda (f xs)
     (cond
       ((null? xs) '())
       (#t (cons (f (car xs)) (map f (cdr xs)))))))
 
-(define reduce
+(define fold
   (lambda (id f xs)
     (cond
       ((null? xs) id)
-      (#t (reduce (f id (car xs)) f (cdr xs))))))
+      (#t (fold (f id (car xs)) f (cdr xs))))))
+
+(define filter
+  (lambda (f xs)
+    (cond
+      ((null? xs) '())
+      ((f (car xs))
+       (cons (car xs)
+             (filter f (cdr xs))))
+      (#t (filter f (cdr xs))))))
 
 (define first
   (lambda (xs)
@@ -39,6 +56,12 @@
       ((null? (cdr (cdr xs))) (error "third expects a three-item list"))
       (#t (car (cdr (cdr xs)))))))
 
+(define length
+  (lambda (xs)
+    (cond
+      ((null? xs) 0)
+      (#t (+ 1 (length (cdr xs)))))))
+
 (define nth
   (lambda (i xs)
     (cond
@@ -53,3 +76,13 @@
 (define triple
   (lambda (x)
     (+ x x x)))
+
+(define assert
+  (lambda (ret)
+    (cond
+      ((true? ret) 'ok)
+      (#t (error "Assertion error")))))
+
+(define assert-eq
+  (lambda (expected ret)
+    (assert (equal? expected ret))))
