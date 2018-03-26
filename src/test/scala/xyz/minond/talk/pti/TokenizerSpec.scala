@@ -32,6 +32,23 @@ class TokenizerSpec extends FlatSpec with Matchers {
     """) should be(List())
   }
 
+  it should "skips comments" in {
+    scan("""
+    ; comment
+    ; comment
+    ; comment
+    ; comment
+    """) should be(List.empty)
+
+    scan("""
+    ; comment
+    ; comment
+    name
+    ; comment
+    ; comment
+    """) should be(List(Token(IDENTIFIER, Some("name"))))
+  }
+
   it should "tokenize identifiers" in {
     scan("name") should be(List(Token(IDENTIFIER, Some("name"))))
     scan("dot.dot") should be(List(Token(IDENTIFIER, Some("dot.dot"))))

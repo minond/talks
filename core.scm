@@ -1,3 +1,7 @@
+;;; Standard Library
+
+;; Core
+
 (define null?
   (lambda (xs)
     (equal? xs (list))))
@@ -35,6 +39,8 @@
              (filter f (cdr xs))))
       (#t (filter f (cdr xs))))))
 
+;; List and Pair functions
+
 (define first
   (lambda (xs)
     (cond
@@ -69,6 +75,8 @@
       ((zero? i) (car xs))
       (#t (nth (dec i) (cdr xs))))))
 
+;; Math functions
+
 (define double
   (lambda (x)
     (+ x x)))
@@ -76,6 +84,8 @@
 (define triple
   (lambda (x)
     (+ x x x)))
+
+;; Testing functions
 
 (define assert
   (lambda (ret)

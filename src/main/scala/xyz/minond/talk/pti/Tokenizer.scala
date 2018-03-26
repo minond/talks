@@ -33,7 +33,12 @@ class Tokenizer(raw: String) extends Iterator[Either[Tokenizer.Error, Token]] {
 
   type CharComp = Char => Boolean
 
-  val src = raw.trim.toList.toIterator.buffered
+  val src = raw.trim
+    .split("\n")
+    .filter(!_.trim.startsWith(";"))
+    .flatMap(_.toList)
+    .toIterator
+    .buffered
 
   def hasNext(): Boolean =
     src.hasNext
