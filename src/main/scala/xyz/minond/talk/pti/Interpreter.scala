@@ -16,6 +16,8 @@ object Interpreter {
       s"${label} is undefined."
     def ERR_ARITY_MISMATCH(expected: Int, got: Int) =
       s"Arity mismatch, expected ${expected} arguments but got ${got}."
+    def ERR_BAD_ARGS(args: String*) =
+      s"Bad arguments, expecting ${args.mkString(", ")}"
     def ERR_INVALID_ERROR(exprs: List[Expression]) =
       s"Cannot use `(${exprs.mkString(" ")})` as an error message."
     def ERR_INVALID_ADD(a: Expression, b: Expression) =
@@ -50,6 +52,22 @@ object Interpreter {
         case head :: tail :: Nil => Pair(head.unQuote, tail.unQuote)
         case _ :: _ :: _ :: Nil => Error(Message.ERR_ARITY_MISMATCH(2, args.size))
         case _ => Error(Message.ERR_INTERNAL)
+      }
+    }),
+    "car" -> Builtin({ (args, env) =>
+      safeEval(args, env) match {
+        case SExpr(head :: _) :: Nil => head
+        case Pair(head, _) :: Nil => head
+        case _ :: Nil => Error(Message.ERR_BAD_ARGS("pair", "list"))
+        case _ => Error(Message.ERR_ARITY_MISMATCH(1, args.size))
+      }
+    }),
+    "cdr" -> Builtin({ (args, env) =>
+      safeEval(args, env) match {
+        case SExpr(_ :: tail) :: Nil => SExpr(tail)
+        case Pair(_, tail) :: Nil => tail
+        case _ :: Nil => Error(Message.ERR_BAD_ARGS("pair", "list"))
+        case _ => Error(Message.ERR_ARITY_MISMATCH(1, args.size))
       }
     }),
     "cond" -> Builtin({ (args, env) =>
