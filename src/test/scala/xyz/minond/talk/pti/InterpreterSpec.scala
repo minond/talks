@@ -68,11 +68,6 @@ class InterpreterSpec extends FreeSpec with Matchers {
   }
 
   "Builtin Function" - {
-    "list creates a list" in {
-      eval("(list 1 2 3)")._1 should be(
-        List(SExpr(List(Integer(1), Integer(2), Integer(3)))))
-    }
-
     "error creates an error" in {
       eval("""(error "1 2 3")""")._1 should be(List(Error("1 2 3")))
     }

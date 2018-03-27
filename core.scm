@@ -41,6 +41,9 @@
 
 ;; List and Pair functions
 
+(define list
+  (lambda (. xs) xs))
+
 (define first
   (lambda (xs)
     (cond

@@ -107,9 +107,6 @@ object Interpreter {
         case _ => Error(Message.ERR_ARITY_MISMATCH(2, args.size))
       }
     }),
-    "list" -> Builtin({ (args, env) =>
-      SExpr(safeEval(args, env))
-    }),
     "error" -> Builtin({ (args, env) =>
       safeEval(args, env) match {
         case Str(msg) :: Nil => Error(msg)
