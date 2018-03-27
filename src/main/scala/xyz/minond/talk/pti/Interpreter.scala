@@ -135,7 +135,7 @@ object Interpreter {
 
         if (dups.size > 0) Error(Message.ERR_LAMBDA_DUP_ARGS(dups.toList))
         else if (errs.size > 0) Error(Message.ERR_LAMBDA_NON_ID_ARG)
-        else Lambda(names.toSet, body, env, delayed)
+        else Lambda(names, body, env, delayed)
       }
 
       args match {

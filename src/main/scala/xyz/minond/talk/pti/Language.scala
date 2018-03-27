@@ -67,7 +67,7 @@ case class Error(message: String, prev: Option[Error] = None) extends Expression
 }
 
 case class Lambda(
-    args: Set[String],
+    args: List[String],
     body: Expression,
     env: Environment,
     delayed: Boolean = false)
@@ -76,17 +76,29 @@ case class Lambda(
       vals: List[Expression],
       local: Environment,
       global: Environment): Environment =
-    // XXX Add support for varargs
-    args.zip(vals).foldLeft[Environment](local.pushBack(global)) {
+    zipArgVals(vals).foldLeft[Environment](local.pushBack(global)) {
       case (env: Environment, (name: String, expr: Expression)) =>
         env.define(name, expr)
 
       case _ => local
     }
 
+  def zipArgVals(vals: List[Expression]): List[(String, Expression)] = {
+    if (!isVariadic)
+      args.zip(vals)
+    else
+      args.filter(_ != ".").zip(vals) ++ List((
+        args(args.indexOf(".") + 1),
+        SExpr(vals.drop(args.indexOf(".")))
+      ))
+  }
+
   def validArity(count: Int): Boolean =
-    // XXX Add support for varargs
-    count == args.size
+    if (!isVariadic) count == args.size
+    else count >= args.indexOf(".") - 1
+
+  def isVariadic =
+    args.nonEmpty && args.contains(".") && args.last != "."
 }
 
 case class Environment(
