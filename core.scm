@@ -10,6 +10,14 @@
   (lambda (n)
     (equal? n 0)))
 
+(define builtin?
+  (lambda (x)
+    (equal? (type/name x) "builtin")))
+
+(define error?
+  (lambda (x)
+    (equal? (type/name x) "error")))
+
 (define true?
   (lambda (b)
     (equal? b #t)))
@@ -17,6 +25,38 @@
 (define false?
   (lambda (b)
     (equal? b #f)))
+
+(define boolean?
+  (lambda (x)
+    (equal? (type/name x) "boolean")))
+
+(define integer?
+  (lambda (x)
+    (equal? (type/name x) "integer")))
+
+(define lambda?
+  (lambda (x)
+    (equal? (type/name x) "lambda")))
+
+(define pair?
+  (lambda (x)
+    (equal? (type/name x) "pair")))
+
+(define quote?
+  (lambda (x)
+    (equal? (type/name x) "quote")))
+
+(define real?
+  (lambda (x)
+    (equal? (type/name x) "real")))
+
+(define list?
+  (lambda (x)
+    (equal? (type/name x) "sexpr")))
+
+(define string?
+  (lambda (x)
+    (equal? (type/name x) "string")))
 
 (define map
   (lambda (f xs)

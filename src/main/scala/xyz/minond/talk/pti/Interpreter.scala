@@ -107,6 +107,24 @@ object Interpreter {
         case _ => Error(Message.ERR_ARITY_MISMATCH(2, args.size))
       }
     }),
+    "type/name" -> Builtin({ (args, env) =>
+      safeEval(args, env) match {
+        case Builtin(_) :: Nil => Str("builtin")
+        case Error(_, _) :: Nil => Str("error")
+        case False :: Nil => Str("boolean")
+        case Identifier(_) :: Nil => Str("identifier")
+        case Integer(_) :: Nil => Str("integer")
+        case Lambda(_, _, _, _) :: Nil => Str("lambda")
+        case Pair(_, _) :: Nil => Str("pair")
+        case Quote(_) :: Nil => Str("quote")
+        case Real(_) :: Nil => Str("real")
+        case SExpr(_) :: Nil => Str("sexpr")
+        case Str(_) :: Nil => Str("string")
+        case True :: Nil => Str("boolean")
+        case _ :: _ => Error(Message.ERR_ARITY_MISMATCH(1, args.size))
+        case Nil => Error(Message.ERR_ARITY_MISMATCH(1, 0))
+      }
+    }),
     "error" -> Builtin({ (args, env) =>
       safeEval(args, env) match {
         case Str(msg) :: Nil => Error(msg)
