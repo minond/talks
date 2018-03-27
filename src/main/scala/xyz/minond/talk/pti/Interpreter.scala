@@ -119,27 +119,29 @@ object Interpreter {
       }
     }),
     "lambda" -> Builtin({ (args, env) =>
+      def aux(raw: List[Expression], body: Expression, delayed: Boolean): Expression = {
+        val (args, errs) = raw.partition {
+          case Identifier(_) => true
+          case _ => false
+        }
+
+        val names = args.map {
+          case Identifier(name) => name
+        }
+
+        val dups = names.groupBy(identity) collect {
+          case (x, xs) if xs.size > 1 => x
+        }
+
+        if (dups.size > 0) Error(Message.ERR_LAMBDA_DUP_ARGS(dups.toList))
+        else if (errs.size > 0) Error(Message.ERR_LAMBDA_NON_ID_ARG)
+        else Lambda(names.toSet, body, env, delayed)
+      }
+
       args match {
-        case SExpr(raw) :: body :: Nil =>
-          val (args, errs) = raw.partition {
-            case Identifier(_) => true
-            case _ => false
-          }
-
-          val names = args.map {
-            case Identifier(name) => name
-          }
-
-          val dups = names.groupBy(identity) collect {
-            case (x, xs) if xs.size > 1 => x
-          }
-
-          if (dups.size > 0) Error(Message.ERR_LAMBDA_DUP_ARGS(dups.toList))
-          else if (errs.size > 0) Error(Message.ERR_LAMBDA_NON_ID_ARG)
-          else Lambda(names.toSet, body, env)
-
-        case _ =>
-          Error(Message.ERR_BAD_SYNTAX("lambda"))
+        case Identifier("lazy") :: SExpr(raw) :: body :: Nil => aux(raw, body, true)
+        case SExpr(raw) :: body :: Nil => aux(raw, body, false)
+        case _ => Error(Message.ERR_BAD_SYNTAX("lambda"))
       }
     })
   )
@@ -209,6 +211,8 @@ object Interpreter {
       case proc: Lambda =>
         if (!proc.validArity(args.size))
           (Error(Message.ERR_ARITY_MISMATCH(proc.args.size, args.size)), env)
+        else if (proc.delayed)
+          (safeEval(proc.body, proc.scope(args, proc.env, env)), env)
         else
           // XXX Check that all arguments were evaluated
           (safeEval(proc.body, proc.scope(safeEval(args, env), proc.env, env)), env)

@@ -8,12 +8,16 @@ abstract class Expression {
       case Error(message, _) => s"""(error "$message")"""
       case Identifier(value) => value
       case Integer(value) => value.toString
-      case Lambda(_, _, _) => "#<procedure>"
       case Pair(a, b) => s"($a . $b)"
       case Quote(value) => s"'$value"
       case Real(value) => value.toString
       case SExpr(values) => s"(${values.map(_.toString).mkString(" ")})"
       case Str(value) => value
+
+      case Lambda(_, _, _, delayed) =>
+        if (delayed) "#<procedure...>"
+        else "#<procedure>"
+
       case Builtin(fn) =>
         val name = Interpreter.builtin
           .filter({ case (_, b) => b == Builtin(fn) })
@@ -62,7 +66,11 @@ case class Error(message: String, prev: Option[Error] = None) extends Expression
   }
 }
 
-case class Lambda(args: Set[String], body: Expression, env: Environment)
+case class Lambda(
+    args: Set[String],
+    body: Expression,
+    env: Environment,
+    delayed: Boolean = false)
     extends Expression {
   def scope(
       vals: List[Expression],
