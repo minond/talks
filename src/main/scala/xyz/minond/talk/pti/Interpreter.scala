@@ -78,6 +78,8 @@ object Interpreter {
             case False => false
             case _ => true
           }
+
+        case _ => false
       } match {
         case None => SExpr(List.empty)
         case Some(SExpr(_ :: Nil)) => SExpr(List.empty)
@@ -142,6 +144,7 @@ object Interpreter {
 
         val names = args.map {
           case Identifier(name) => name
+          case _ => ""
         }
 
         val dups = names.groupBy(identity) collect {

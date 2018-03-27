@@ -1,6 +1,6 @@
 package xyz.minond.talk.pti
 
-abstract class Expression {
+sealed abstract class Expression {
   override final def toString =
     this match {
       case True => "#t"
@@ -49,7 +49,7 @@ object BooleanExpr {
     else False
 }
 
-trait BooleanExpr extends Expression
+sealed trait BooleanExpr extends Expression
 case object True extends BooleanExpr
 case object False extends BooleanExpr
 
