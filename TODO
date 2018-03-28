@@ -1,0 +1,3 @@
+- Fix stack overflows on lookups.
+- Add support for negative numbers and negating numbers.
+- Add more builtin equality functions and the rest in core.
