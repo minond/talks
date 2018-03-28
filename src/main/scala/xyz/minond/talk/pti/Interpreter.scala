@@ -1,5 +1,9 @@
 package xyz.minond.talk.pti
 
+import java.nio.charset.Charset
+import java.nio.file.{Files, Paths}
+import scala.util.{Try, Failure, Success}
+
 object Interpreter {
   object Message {
     def GIVEN(thing: String) =
@@ -164,6 +168,9 @@ object Interpreter {
     })
   )
 
+  def eval(code: String, env: Environment): (List[Expression], Environment) =
+    eval(new Parser(new Tokenizer(code)).toList, env)
+
   def eval(
       exprs: List[Either[Parser.Error, Expression]],
       origEnv: Environment): (List[Expression], Environment) = {
@@ -188,6 +195,19 @@ object Interpreter {
       case Right(Quote(Identifier(name))) =>
         (Quote(Identifier(name)), env)
       case Right(Quote(value)) => (value, env)
+
+      case Right(SExpr(Identifier("load") :: Str(path) :: Nil)) =>
+        Try { Files.readAllBytes(Paths.get(path)) } match {
+          case Success(bytes) =>
+            val code = new String(bytes, Charset.defaultCharset())
+            val (_, next) = Interpreter.eval(code, env)
+
+            // XXX Check for errors
+            (Quote(Identifier("ok")), next)
+
+          case Failure(_) =>
+            (Error(s"Missing file: $path"), env)
+        }
 
       case Right(SExpr(Identifier("define") :: Identifier(name) :: value :: Nil)) =>
         define(name, value, env)

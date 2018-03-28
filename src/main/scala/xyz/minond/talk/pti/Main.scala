@@ -20,8 +20,7 @@ object Main {
           if (!balanced(text))
             aux(env, text)
           else {
-            val src = new Parser(new Tokenizer(text))
-            val (vals, next) = Interpreter.eval(src.toList, env)
+            val (vals, next) = Interpreter.eval(text, env)
 
             vals foreach {
               case err: Error => println(err.stringify())

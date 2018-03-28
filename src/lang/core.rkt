@@ -34,13 +34,16 @@
 (define integer? (thunk/type/equal? "integer"))
 (define lambda? (thunk/type/equal? "lambda"))
 (define list? (thunk/type/equal? "sexpr"))
-(define null? (thunk/equal? (list)))
 (define pair? (thunk/type/equal? "pair"))
 (define quote? (thunk/type/equal? "quote"))
 (define real? (thunk/type/equal? "real"))
 (define string? (thunk/type/equal? "string"))
 (define true? (thunk/equal? #t))
 (define zero? (thunk/equal? 0))
+
+(define null?
+  (lambda (xs)
+    (equal? (list) xs)))
 
 (define map
   (lambda (f xs)

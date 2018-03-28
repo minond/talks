@@ -87,10 +87,11 @@ case class Lambda(
     if (!isVariadic)
       args.zip(vals)
     else
-      args.filter(_ != ".").zip(vals) ++ List((
-        args(args.indexOf(".") + 1),
-        SExpr(vals.drop(args.indexOf(".")))
-      ))
+      args.filter(_ != ".").zip(vals) ++ List(
+        (
+          args(args.indexOf(".") + 1),
+          SExpr(vals.drop(args.indexOf(".")))
+        ))
   }
 
   def validArity(count: Int): Boolean =
