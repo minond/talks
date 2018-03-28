@@ -161,7 +161,7 @@ object Interpreter {
       }
 
       args match {
-        case Identifier("lazy") :: SExpr(raw) :: body :: Nil => aux(raw, body, true)
+        case Identifier(":lazy") :: SExpr(raw) :: body :: Nil => aux(raw, body, true)
         case SExpr(raw) :: body :: Nil => aux(raw, body, false)
         case _ => Error(Message.ERR_BAD_SYNTAX("lambda"))
       }
