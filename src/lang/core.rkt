@@ -6,6 +6,7 @@
 ;; 3. List and pars
 ;; 4. Math
 ;; 5. Test helpers
+;; 6. Macros
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -137,3 +138,25 @@
 (define assert-eq
   (lambda (expected ret)
     (assert (equal? expected ret))))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Macros
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+; Clojure's thread-first macro
+; https://clojure.org/guides/threading_macros
+(define ->
+  (lambda :lazy (arg . fns)
+    (cond
+      ((null? fns) arg)
+      (#t (->lambda arg fns)))))
+
+(define ->lambda
+  (lambda (arg fns)
+    (cond
+      ((null? fns) arg)
+      (#t
+       (->lambda (eval (cons (car (car fns))
+                             (cons arg (cdr (car fns)))))
+                 (cdr fns))))))
