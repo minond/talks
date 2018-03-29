@@ -1,13 +1,15 @@
 #lang slideshow
 
 (require slideshow/code)
+(require slideshow/text)
 
 (current-main-font "Baskerville")
 (current-code-font "IBM Plex Mono")
 (code-colorize-enabled #f)
 
 (define (mono code)
-  (text code (list* (current-code-font)) (current-font-size)))
+  (text code
+        (list* (current-code-font)) (current-font-size)))
 
 (slide
   #:layout 'center
@@ -37,7 +39,25 @@
 
 (slide
   #:title "Code"
+  #:gap-size 1
 
-  (mono
-    (string-join '("one"
-                   "two"))))
+  ; (para (mono "one")
+  ;       (blank-line)
+  ;       (mono "two")
+  ;       (blank-line)
+  ;       (mono "three"))
+
+  (mono "one")
+  (mono "two")
+  (mono "three")
+
+  ; (mono "one")
+  ; (blank-line)
+  ; (mono "two")
+  ; (blank-line)
+  ; (mono "three")
+  ;
+  ; (mono
+  ;   (string-join '("one"
+  ;                  "two")))
+  )
