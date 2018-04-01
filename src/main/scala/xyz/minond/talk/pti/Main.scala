@@ -17,23 +17,27 @@ object Main {
       (prefix + " " + reader.readLine).trim match {
         case "(exit)" => return
         case text =>
-          if (!balanced(text))
-            aux(env, text)
-          else {
-            val (vals, next) = Interpreter.eval(text, env)
-
-            vals foreach {
-              case err: Error => println(err.stringify())
-              case res => println(res)
-            }
-
-            aux(next, "")
-          }
+          if (!balanced(text)) aux(env, text)
+          else aux(run(text, env), "")
       }
     }
 
-    aux(Environment(Map()), "")
+    println("Welcome to PTI <https://github.com/minond/talk-parse-to-interpretation>")
+    println("Loading core...")
+    aux(run("""(load "src/lang/core.rkt")"""), "")
   }
+
+  def run(code: String, env: Environment = Environment(Map())): Environment = {
+    val (vals, next) = Interpreter.eval(code, env)
+    show(vals)
+    next
+  }
+
+  def show(vals: List[Expression]): Unit =
+    vals foreach {
+      case err: Error => println(err.stringify())
+      case res => println(res)
+    }
 
   def balanced(src: String): Boolean =
     src.foldLeft(0)({

@@ -176,6 +176,9 @@ object Interpreter {
     })
   )
 
+  def eval(code: String): (List[Expression], Environment) =
+    eval(new Parser(new Tokenizer(code)).toList, Environment(Map()))
+
   def eval(code: String, env: Environment): (List[Expression], Environment) =
     eval(new Parser(new Tokenizer(code)).toList, env)
 
