@@ -23,7 +23,7 @@ object Main {
     }
 
     println("Welcome to PTI <https://github.com/minond/talk-parse-to-interpretation>")
-    println("Loading core...")
+    print("Loading core... ")
     aux(run("""(load "src/lang/core.rkt")"""), "")
   }
 
