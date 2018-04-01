@@ -113,5 +113,38 @@ class InterpreterSpec extends FreeSpec with Matchers {
           (#t (define c 3)))
       """)._2 should be(Environment(Map()))
     }
+
+    "let* does not leak definitions" in {
+      eval("""
+        (let* ((x 1))
+          2)
+      """)._2 should be(Environment(Map()))
+    }
+
+    "let* allows access to definitions" in {
+      eval("""
+        (let* ((x 2))
+          x)
+      """)._1 should be(List(Integer(2)))
+
+      eval("""
+        (let* ((x 2))
+          (mult x x))
+      """)._1 should be(List(Integer(4)))
+    }
+
+    "let* allows access to definitions in other definitions" in {
+      eval("""
+        (let* ((x 2)
+               (y x))
+          y)
+      """)._1 should be(List(Integer(2)))
+
+      eval("""
+        (let* ((x 2)
+               (y (mult x x)))
+          (add y 1))
+      """)._1 should be(List(Integer(5)))
+    }
   }
 }

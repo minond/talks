@@ -147,6 +147,19 @@ object Interpreter {
         case expr => Error(Message.ERR_INVALID_ERROR(expr))
       }
     }),
+    "let*" -> Builtin({ (args, env) =>
+      args match {
+        case SExpr(defs) :: body :: Nil =>
+          safeEval(body, defs.foldLeft(env) {
+            case (env, SExpr(Identifier(name) :: body :: Nil)) =>
+              env.define(name, safeEval(body, env))
+
+            case _ => env
+          })
+
+        case _ => Error(Message.ERR_BAD_SYNTAX("let*"))
+      }
+    }),
     "lambda" -> Builtin({ (args, env) =>
       def aux(raw: List[Expression], body: Expression, delayed: Boolean): Expression = {
         val (args, errs) = raw.partition {
