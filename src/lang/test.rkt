@@ -4,8 +4,10 @@
 ;; 1. Internal functions
 ;; 2. Core functions
 ;; 3. List and pars
-;; 4. Math
-;; 5. Test helpers
+;; 4. Logic
+;; 5. Math
+;; 6. Test helpers
+;; 7. Macros
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -46,6 +48,23 @@
 
 (assert-eq '(1 2 3) (list 1 2 3))
 (assert-eq '(1 2 3) (list (+ 1) (+ 1 1) (+ 1 1 1)))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Logic
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(assert-eq #t (or #f #f #t invalid invalid invalid))
+(assert-eq #t (or 1 2 3 4))
+(assert-eq #f (and #f #f #t))
+(assert-eq #t (and #t #t #t))
+(assert-eq #t (and 1 2 3 4))
+(assert-eq #t (not #f))
+(assert-eq #f (not #t))
+(assert-eq #f (not '()))
+(assert-eq #f (not 0))
+(assert-eq #f (not ""))
+(assert-eq #f (not 'ok))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

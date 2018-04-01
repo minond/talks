@@ -4,9 +4,10 @@
 ;; 1. Internal functions
 ;; 2. Core functions
 ;; 3. List and pars
-;; 4. Math
-;; 5. Test helpers
-;; 6. Macros
+;; 4. Logic
+;; 5. Math
+;; 6. Test helpers
+;; 7. Macros
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -111,6 +112,33 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Logic
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(define and
+  (lambda :lazy (. checks)
+    (let* ((aux (lambda (checks)
+                  (cond
+                    ((null? checks) #t)
+                    ((false? (eval (car checks))) #f)
+                    (#t (aux (cdr checks)))))))
+      (aux checks))))
+
+(define or
+  (lambda :lazy (. checks)
+    (let* ((aux (lambda (checks)
+                  (cond
+                    ((null? checks) #f)
+                    ((false? (eval (car checks))) (aux (cdr checks)))
+                    (#t #t)))))
+      (aux checks))))
+
+(define not
+  (lambda (x)
+    (if (false? x) #t #f)))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Math
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -189,3 +217,9 @@
        (->lambda (eval (cons (car (car fns))
                              (cons arg (cdr (car fns)))))
                  (cdr fns))))))
+
+(define if
+  (lambda :lazy (check pass fail)
+    (cond
+      ((false? (eval check)) (eval fail))
+      (#t (eval pass)))))
