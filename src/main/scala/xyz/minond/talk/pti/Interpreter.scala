@@ -20,12 +20,10 @@ object Interpreter {
       s"${label} is undefined."
     def ERR_ARITY_MISMATCH(expected: Int, got: Int) =
       s"Arity mismatch, expected ${expected} arguments but got ${got}."
-    def ERR_BAD_ARGS(args: String*) =
-      s"Bad arguments, expecting ${args.mkString(", ")}"
+    def ERR_BAD_ARGS(fn: String, args: String*) =
+      s"Bad arguments passed to $fn proc, expecting ${args.mkString(", ")}."
     def ERR_INVALID_ERROR(exprs: List[Expression]) =
       s"Cannot use `(${exprs.mkString(" ")})` as an error message."
-    def ERR_INVALID_ADD(a: Expression, b: Expression) =
-      s"Cannot add a(n) ${a} and a(n) ${b} together."
 
     val ERR_INTERNAL =
       "Internal error"
@@ -63,7 +61,7 @@ object Interpreter {
       safeEval(args, env) match {
         case SExpr(head :: _) :: Nil => head
         case Pair(head, _) :: Nil => head
-        case _ :: Nil => Error(Message.ERR_BAD_ARGS("pair", "list"))
+        case _ :: Nil => Error(Message.ERR_BAD_ARGS("car", "pair", "list"))
         case _ => Error(Message.ERR_ARITY_MISMATCH(1, args.size))
       }
     }),
@@ -71,7 +69,7 @@ object Interpreter {
       safeEval(args, env) match {
         case SExpr(_ :: tail) :: Nil => SExpr(tail)
         case Pair(_, tail) :: Nil => tail
-        case _ :: Nil => Error(Message.ERR_BAD_ARGS("pair", "list"))
+        case _ :: Nil => Error(Message.ERR_BAD_ARGS("cdr", "pair", "list"))
         case _ => Error(Message.ERR_ARITY_MISMATCH(1, args.size))
       }
     }),
@@ -91,21 +89,31 @@ object Interpreter {
         case Some(expr) => Error(Message.ERR_EVAL_EXPR(expr))
       }
     }),
-    "+" -> Builtin({ (args, env) =>
-      def aux(exprs: List[Expression]): Expression =
-        exprs match {
-          case Nil => Integer(0)
-          case h :: rest =>
-            (h, aux(rest)) match {
-              case (Integer(a), Integer(b)) => Integer(a + b)
-              case (Real(a), Real(b)) => Real(a + b)
-              case (Real(a), Integer(b)) => Real(a + b.toDouble)
-              case (Integer(a), Real(b)) => Real(a.toDouble + b)
-              case (a, b) => Error(Message.ERR_INVALID_ADD(a, b))
-            }
-        }
-
-      aux(safeEval(args, env))
+    "add" -> Builtin({ (args, env) =>
+      safeEval(args, env) match {
+        case Nil => Integer(0)
+        case Integer(a) :: Nil => Integer(a)
+        case Real(a) :: Nil => Real(a)
+        case Real(a) :: Real(b) :: Nil => Real(a + b)
+        case Integer(a) :: Integer(b) :: Nil => Integer(a + b)
+        case Integer(a) :: Real(b) :: Nil => Real(a.toDouble + b)
+        case Real(a) :: Integer(b) :: Nil => Real(a + b.toDouble)
+        case _ :: _ :: _ :: Nil => Error(Message.ERR_ARITY_MISMATCH(args.size, 2))
+        case _ => Error(Message.ERR_BAD_ARGS("add", "real", "interger"))
+      }
+    }),
+    "mult" -> Builtin({ (args, env) =>
+      safeEval(args, env) match {
+        case Nil => Integer(1)
+        case Integer(a) :: Nil => Integer(a)
+        case Real(a) :: Nil => Real(a)
+        case Real(a) :: Real(b) :: Nil => Real(a * b)
+        case Integer(a) :: Integer(b) :: Nil => Integer(a * b)
+        case Integer(a) :: Real(b) :: Nil => Real(a.toDouble * b)
+        case Real(a) :: Integer(b) :: Nil => Real(a * b.toDouble)
+        case _ :: _ :: _ :: Nil => Error(Message.ERR_ARITY_MISMATCH(args.size, 2))
+        case _ => Error(Message.ERR_BAD_ARGS("mult", "real", "interger"))
+      }
     }),
     "equal?" -> Builtin({ (args, env) =>
       safeEval(args, env) match {

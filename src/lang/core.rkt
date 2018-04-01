@@ -114,6 +114,35 @@
 ;; Math
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(define +
+  (lambda (. xs)
+    (fold 0 add xs)))
+
+(define *
+  (lambda (. xs)
+    (fold 1 mult xs)))
+
+(define -
+  (lambda (. xs)
+    (cond
+      ((equal? 0 (length xs)) 0)
+      ((equal? 1 (length xs)) (* -1 (car xs)))
+      (#t (fold (car xs)
+                sub
+                (cdr xs))))))
+
+(define sub
+  (lambda (a b)
+    (add a (mult -1 b))))
+
+(define inc
+  (lambda (x)
+    (add x 1)))
+
+(define dec
+  (lambda (x)
+    (sub x 1)))
+
 (define double
   (lambda (x)
     (+ x x)))
