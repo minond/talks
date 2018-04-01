@@ -86,7 +86,7 @@ class InterpreterSpec extends FreeSpec with Matchers {
     }
 
     "eval evaluates s-expressions" in {
-      eval("(eval '(+ 2 4))")._1 should be(List(Integer(6)))
+      eval("(eval '(add 2 4))")._1 should be(List(Integer(6)))
     }
 
     "cond does not evaluate expressions in false conditions" in {
