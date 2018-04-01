@@ -139,6 +139,14 @@ object Interpreter {
         case Nil => Error(Message.ERR_ARITY_MISMATCH(1, 0))
       }
     }),
+    "halt" -> Builtin({ (args, env) =>
+      throw new RuntimeException(safeEval(args, env) match {
+        case Str(msg) :: Nil => msg
+        case Quote(Identifier(msg)) :: Nil => msg
+        case Quote(Str(msg)) :: Nil => msg
+        case _ => "Halt"
+      })
+    }),
     "error" -> Builtin({ (args, env) =>
       safeEval(args, env) match {
         case Str(msg) :: Nil => Error(msg)

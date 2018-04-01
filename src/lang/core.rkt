@@ -190,7 +190,7 @@
   (lambda (ret)
     (cond
       ((true? ret) 'ok)
-      (#t (error "Assertion error")))))
+      (#t (halt "Assertion error")))))
 
 (define assert-eq
   (lambda (expected ret)
