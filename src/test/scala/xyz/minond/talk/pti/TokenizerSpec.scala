@@ -113,6 +113,13 @@ class TokenizerSpec extends FlatSpec with Matchers {
     scan("9876543210") should be(List(Token(INTEGER, Some("9876543210"))))
   }
 
+  it should "tokenize negative integers" in {
+    scan("-1") should be(List(Token(INTEGER, Some("-1"))))
+    scan("-123") should be(List(Token(INTEGER, Some("-123"))))
+    scan("-0123456789") should be(List(Token(INTEGER, Some("-0123456789"))))
+    scan("-9876543210") should be(List(Token(INTEGER, Some("-9876543210"))))
+  }
+
   it should "tokenize real numbers" in {
     scan("0.0001") should be(List(Token(REAL, Some("0.0001"))))
     scan("1.0") should be(List(Token(REAL, Some("1.0"))))
@@ -120,10 +127,11 @@ class TokenizerSpec extends FlatSpec with Matchers {
     scan(".999") should be(List(Token(REAL, Some(".999"))))
   }
 
-  it should "tokenize invalid numbers as errors" in {
-    a[Exception] should be thrownBy {
-      scan("0.000.1")
-    }
+  it should "tokenize negative real numbers" in {
+    scan("-0.0001") should be(List(Token(REAL, Some("-0.0001"))))
+    scan("-1.0") should be(List(Token(REAL, Some("-1.0"))))
+    scan("-9.999") should be(List(Token(REAL, Some("-9.999"))))
+    scan("-.999") should be(List(Token(REAL, Some("-.999"))))
   }
 
   it should "tokenize parentheses" in {
