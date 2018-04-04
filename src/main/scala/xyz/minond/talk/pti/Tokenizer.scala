@@ -2,7 +2,22 @@ package xyz.minond.talk.pti
 
 import scala.util.{Try, Success}
 
-case class Token(id: Tokenizer.Id, lexeme: Option[String] = None)
+case class Token(id: Tokenizer.Id, lexeme: Option[String] = None) {
+  import Tokenizer._
+
+  override def toString =
+    id match {
+      case IDENTIFIER => s"(id ${lexeme.getOrElse("")})"
+      case INTEGER => s"(int ${lexeme.getOrElse("")})"
+      case REAL => s"(real ${lexeme.getOrElse("")})"
+      case STRING => s"""(string "${lexeme.getOrElse("")}")"""
+      case OPEN_PAREN => """"(""""
+      case CLOSE_PAREN => """")""""
+      case POUND => """"#""""
+      case QUOTE => """"'""""
+      case DOT => """".""""
+    }
+}
 
 object Tokenizer extends Enumeration {
   type Id = Value
