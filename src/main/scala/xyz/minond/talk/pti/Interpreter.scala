@@ -115,6 +115,16 @@ object Interpreter {
         case _ => Error(Message.ERR_BAD_ARGS("mult", "real", "interger"))
       }
     }),
+    ">" -> Builtin({ (args, env) =>
+      safeEval(args, env) match {
+        case Integer(lhs) :: Integer(rhs) :: Nil => BooleanExpr(lhs > rhs)
+        case Real(lhs) :: Real(rhs) :: Nil => BooleanExpr(lhs > rhs)
+        case Real(lhs) :: Integer(rhs) :: Nil => BooleanExpr(lhs > rhs)
+        case Integer(lhs) :: Real(rhs) :: Nil => BooleanExpr(lhs > rhs)
+        case _ :: _ :: Nil => Error(Message.ERR_BAD_ARGS(">", "interger", "real"))
+        case _ => Error(Message.ERR_ARITY_MISMATCH(2, args.size))
+      }
+    }),
     "equal?" -> Builtin({ (args, env) =>
       safeEval(args, env) match {
         case lhs :: rhs :: Nil => BooleanExpr(lhs.unQuote == rhs.unQuote)

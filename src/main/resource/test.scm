@@ -4,10 +4,11 @@
 ;; 1. Internal functions
 ;; 2. Core functions
 ;; 3. List and pars
-;; 4. Logic
-;; 5. Math
-;; 6. Test helpers
-;; 7. Macros
+;; 4. Comparison
+;; 5. Logic
+;; 6. Math
+;; 7. Test helpers
+;; 8. Macros
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -37,6 +38,10 @@
 (assert (string? "ok"))
 (assert (true? #t))
 (assert (zero? 0))
+(assert (number? -1))
+(assert (number? 0))
+(assert (number? 1))
+(assert (number? 1.0))
 
 (assert-eq '(2 4 6 8) (map double '(1 2 3 4)))
 (assert-eq 10 (fold 0 + '(1 2 3 4)))
@@ -51,9 +56,36 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Comparison
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(assert-eq #t (= 1 1))
+(assert-eq #f (= 0 1))
+(assert-eq #t (= 0 0))
+(assert-eq #f (= "0" 0))
+(assert-eq #f (= 0 "0"))
+(assert-eq #f (= "0" "0"))
+(assert-eq #f (!= 1 1))
+(assert-eq #t (!= 0 1))
+(assert-eq #f (!= 0 0))
+(assert-eq #f (>= 0 1))
+(assert-eq #t (>= 1 1))
+(assert-eq #t (>= 2 1))
+(assert-eq #f (< 2 1))
+(assert-eq #f (< 2 2))
+(assert-eq #t (< 1 2))
+(assert-eq #f (<= 2 1))
+(assert-eq #t (<= 2 2))
+(assert-eq #t (<= 1 2))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Logic
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(assert-eq #t (all? integer? 1 2 3 4 5))
+(assert-eq #f (all? integer? 1 2 3 4 5.0))
+(assert-eq #t (all? integer?))
 (assert-eq #t (or #f #f #t invalid invalid invalid))
 (assert-eq #t (or 1 2 3 4))
 (assert-eq #f (and #f #f #t))

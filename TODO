@@ -1,2 +1,1 @@
 - Fix stack overflows on lookups.
-- Add more builtin equality functions and the rest in core.

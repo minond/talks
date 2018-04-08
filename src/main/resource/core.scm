@@ -4,10 +4,11 @@
 ;; 1. Internal functions
 ;; 2. Core functions
 ;; 3. List and pars
-;; 4. Logic
-;; 5. Math
-;; 6. Test helpers
-;; 7. Macros
+;; 4. Comparison
+;; 5. Logic
+;; 6. Math
+;; 7. Test helpers
+;; 8. Macros
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -42,6 +43,10 @@
 (define string? (thunk/type/equal? "string"))
 (define true? (thunk/equal? #t))
 (define zero? (thunk/equal? 0))
+
+(define number?
+  (lambda (x)
+    (or (integer? x) (real? x))))
 
 (define null?
   (lambda (xs)
@@ -112,8 +117,45 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Comparison
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(define =
+  (lambda (a b)
+    (and (all? number? a b)
+         (equal? a b))))
+
+(define !=
+  (lambda (a b)
+    (not (= a b))))
+
+(define >=
+  (lambda (a b)
+    (or (= a b)
+        (> a b))))
+
+(define <
+  (lambda (a b)
+    (not (>= a b))))
+
+(define <=
+  (lambda (a b)
+    (or (= a b)
+        (< a b))))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Logic
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(define all?
+  (lambda (f . xs)
+    (let* ((aux (lambda (xs)
+                  (cond
+                    ((null? xs) #t)
+                    ((f (car xs)) (aux (cdr xs)))
+                    (#t #f)))))
+      (aux xs))))
 
 (define and
   (lambda :lazy (. checks)

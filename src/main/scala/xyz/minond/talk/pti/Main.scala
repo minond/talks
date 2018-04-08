@@ -24,7 +24,7 @@ object Main {
 
     println("Welcome to PTI <https://github.com/minond/talk-parse-to-interpretation>")
     print("Loading core... ")
-    aux(run("""(load "src/lang/core.rkt")"""), "")
+    aux(run("""(load "src/main/resource/core.scm")"""), "")
   }
 
   def run(code: String, env: Environment = Environment(Map())): Environment = {
