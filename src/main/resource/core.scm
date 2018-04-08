@@ -3,7 +3,7 @@
 ;;
 ;; 1. Internal functions
 ;; 2. Core functions
-;; 3. List and pars
+;; 3. List and pairs
 ;; 4. Comparison
 ;; 5. Logic
 ;; 6. Math
@@ -75,7 +75,7 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; List and pars
+;; List and pairs
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define list
@@ -114,6 +114,10 @@
       ((null? xs) '())
       ((zero? i) (car xs))
       (#t (nth (dec i) (cdr xs))))))
+
+(define last
+  (lambda (xs)
+    (nth (dec (length xs)) xs)))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

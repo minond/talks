@@ -3,7 +3,7 @@
 ;;
 ;; 1. Internal functions
 ;; 2. Core functions
-;; 3. List and pars
+;; 3. List and pairs
 ;; 4. Comparison
 ;; 5. Logic
 ;; 6. Math
@@ -48,11 +48,17 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; List and pars
+;; List and pairs
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (assert-eq '(1 2 3) (list 1 2 3))
 (assert-eq '(1 2 3) (list (+ 1) (+ 1 1) (+ 1 1 1)))
+(assert-eq 1 (first '(1 2 3 4)))
+(assert-eq 2 (second '(1 2 3 4)))
+(assert-eq 3 (third '(1 2 3 4)))
+(assert-eq 4 (length '(1 2 3 4)))
+(assert-eq 4 (nth 3 '(1 2 3 4)))
+(assert-eq 4 (last '(1 2 3 4)))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
