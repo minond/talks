@@ -146,5 +146,17 @@ class InterpreterSpec extends FreeSpec with Matchers {
           (add y 1))
       """)._1 should be(List(Integer(5)))
     }
+
+    "begin expressions are evaluated in their own scope" in {
+      eval("""
+        (define x 321)
+
+        (begin
+          (define x 1)
+          (define x 12)
+          (define x 123)
+          (add x 1))
+      """)._1 should be(List(Integer(321), Integer(124)))
+    }
   }
 }

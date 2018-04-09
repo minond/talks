@@ -149,6 +149,25 @@ object Interpreter {
         case Nil => Error(Message.ERR_ARITY_MISMATCH(1, 0))
       }
     }),
+    "begin" -> Builtin({ (args, env) =>
+      args
+        .foldLeft[(Expression, Environment)]((ok, env)) {
+          case ((_, env), expr) =>
+            eval(Right(expr), env)
+        }
+        ._1
+    }),
+    "printf" -> Builtin({ (args, env) =>
+      safeEval(args, env) match {
+        case Str(fmt) :: args =>
+          Try { printf(fmt, args: _*) } match {
+            case Failure(ex) => Error(s"format error: ${ex.getMessage}")
+            case _ => ok
+          }
+
+        case _ => Error(Message.ERR_BAD_ARGS("printf", "string"))
+      }
+    }),
     "halt" -> Builtin({ (args, env) =>
       throw new RuntimeException(safeEval(args, env) match {
         case Str(msg) :: Nil => msg
@@ -245,7 +264,7 @@ object Interpreter {
             val (_, next) = Interpreter.eval(code, env)
 
             // XXX Check for errors
-            (Quote(Identifier("ok")), next)
+            (ok, next)
 
           case Failure(_) =>
             (Error(s"Missing file: $path"), env)
@@ -307,4 +326,7 @@ object Interpreter {
             Some(Error(Message.GIVEN(fn.toString)))),
           env)
     }
+
+  def ok: Expression =
+    Quote(Identifier("ok"))
 }
