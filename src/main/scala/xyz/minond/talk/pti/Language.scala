@@ -9,7 +9,7 @@ sealed abstract class Expression {
       case Identifier(value) => value
       case Integer(value) => value.toString
       case Pair(a, b) => s"($a . $b)"
-      case Quote(value) => s"'$value"
+      case Quote(value, _) => s"'$value"
       case Real(value) => value.toString
       case SExpr(values) => s"(${values.map(_.toString).mkString(" ")})"
       case Str(value) => value
@@ -30,7 +30,7 @@ sealed abstract class Expression {
 
   def unQuote: Expression =
     this match {
-      case Quote(expr) => expr
+      case Quote(expr, _) => expr
       case expr => expr
     }
 }
@@ -38,10 +38,15 @@ sealed abstract class Expression {
 case class Identifier(value: String) extends Expression
 case class Integer(value: Int) extends Expression
 case class Pair(a: Expression, b: Expression) extends Expression
-case class Quote(value: Expression) extends Expression
 case class Real(value: Double) extends Expression
 case class SExpr(values: List[Expression]) extends Expression
 case class Str(value: String) extends Expression
+
+sealed trait QuoteInfo
+case object UserSpace extends QuoteInfo
+case object Internal extends QuoteInfo
+case object PrintfNl extends QuoteInfo
+case class Quote(value: Expression, info: QuoteInfo = UserSpace) extends Expression
 
 object BooleanExpr {
   def apply(value: Boolean): BooleanExpr =

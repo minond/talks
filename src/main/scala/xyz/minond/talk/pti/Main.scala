@@ -23,7 +23,6 @@ object Main {
     }
 
     println("Welcome to PTI <https://github.com/minond/talk-parse-to-interpretation>")
-    print("Loading core... ")
     aux(run("""(load "src/main/resource/core.scm")"""), "")
   }
 
@@ -34,9 +33,16 @@ object Main {
   }
 
   def show(vals: List[Expression]): Unit =
-    vals foreach {
-      case err: Error => println(err.stringify())
-      case res => println(res)
+    vals match {
+      case Quote(_, PrintfNl) :: Nil => println("")
+      case Quote(_, Internal) :: Nil => print("")
+      case _ =>
+        vals foreach {
+          case err: Error => println(err.stringify())
+          case Quote(_, PrintfNl) => print("")
+          case Quote(_, Internal) => print("")
+          case res => println(res)
+        }
     }
 
   def balanced(src: String): Boolean =

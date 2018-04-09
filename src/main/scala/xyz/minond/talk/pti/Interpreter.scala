@@ -51,7 +51,7 @@ object Interpreter {
     "cons" -> Builtin({ (args, env) =>
       safeEval(args, env) match {
         case head :: SExpr(tail) :: Nil => Quote(SExpr(head.unQuote :: tail))
-        case head :: Quote(SExpr(tail)) :: Nil => Quote(SExpr(head.unQuote :: tail))
+        case head :: Quote(SExpr(tail), _) :: Nil => Quote(SExpr(head.unQuote :: tail))
         case head :: tail :: Nil => Pair(head.unQuote, tail.unQuote)
         case _ :: _ :: _ :: Nil => Error(Message.ERR_ARITY_MISMATCH(2, args.size))
         case _ => Error(Message.ERR_INTERNAL)
@@ -140,7 +140,7 @@ object Interpreter {
         case Integer(_) :: Nil => Str("integer")
         case Lambda(_, _, _, _) :: Nil => Str("lambda")
         case Pair(_, _) :: Nil => Str("pair")
-        case Quote(_) :: Nil => Str("quote")
+        case Quote(_, _) :: Nil => Str("quote")
         case Real(_) :: Nil => Str("real")
         case SExpr(_) :: Nil => Str("sexpr")
         case Str(_) :: Nil => Str("string")
@@ -151,7 +151,7 @@ object Interpreter {
     }),
     "begin" -> Builtin({ (args, env) =>
       args
-        .foldLeft[(Expression, Environment)]((ok, env)) {
+        .foldLeft[(Expression, Environment)]((ok(Internal), env)) {
           case ((_, env), expr) =>
             eval(Right(expr), env)
         }
@@ -162,7 +162,7 @@ object Interpreter {
         case Str(fmt) :: args =>
           Try { printf(fmt, args: _*) } match {
             case Failure(ex) => Error(s"format error: ${ex.getMessage}")
-            case _ => ok
+            case _ => ok(PrintfNl)
           }
 
         case _ => Error(Message.ERR_BAD_ARGS("printf", "string"))
@@ -171,16 +171,16 @@ object Interpreter {
     "halt" -> Builtin({ (args, env) =>
       throw new RuntimeException(safeEval(args, env) match {
         case Str(msg) :: Nil => msg
-        case Quote(Identifier(msg)) :: Nil => msg
-        case Quote(Str(msg)) :: Nil => msg
+        case Quote(Identifier(msg), _) :: Nil => msg
+        case Quote(Str(msg), _) :: Nil => msg
         case _ => "Halt"
       })
     }),
     "error" -> Builtin({ (args, env) =>
       safeEval(args, env) match {
         case Str(msg) :: Nil => Error(msg)
-        case Quote(Identifier(msg)) :: Nil => Error(msg)
-        case Quote(Str(msg)) :: Nil => Error(msg)
+        case Quote(Identifier(msg), _) :: Nil => Error(msg)
+        case Quote(Str(msg), _) :: Nil => Error(msg)
         case expr => Error(Message.ERR_INVALID_ERROR(expr))
       }
     }),
@@ -253,9 +253,9 @@ object Interpreter {
       case Right(Real(value)) => (Real(value), env)
       case Right(Str(value)) => (Str(value), env)
 
-      case Right(Quote(Identifier(name))) =>
+      case Right(Quote(Identifier(name), _)) =>
         (Quote(Identifier(name)), env)
-      case Right(Quote(value)) => (value, env)
+      case Right(Quote(value, _)) => (value, env)
 
       case Right(SExpr(Identifier("load") :: Str(path) :: Nil)) =>
         Try { Files.readAllBytes(Paths.get(path)) } match {
@@ -264,7 +264,7 @@ object Interpreter {
             val (_, next) = Interpreter.eval(code, env)
 
             // XXX Check for errors
-            (ok, next)
+            (ok(Internal), next)
 
           case Failure(_) =>
             (Error(s"Missing file: $path"), env)
@@ -327,6 +327,6 @@ object Interpreter {
           env)
     }
 
-  def ok: Expression =
-    Quote(Identifier("ok"))
+  def ok(info: QuoteInfo = UserSpace): Expression =
+    Quote(Identifier("ok"), info)
 }
