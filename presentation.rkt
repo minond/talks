@@ -7,9 +7,21 @@
 (current-code-font "IBM Plex Mono")
 (code-colorize-enabled #f)
 
-(define (mono code)
-  (text code
-        (list* (current-code-font)) (current-font-size)))
+(define (unmargin line)
+  (let ([parts (string-split line "|")])
+    (string-trim (if (= 1 (length parts))
+                   (car parts)
+                   (car (cdr parts))))))
+
+(define (mono texts)
+  (apply vc-append 1
+         (for/list ([line (string-split (string-trim texts) "\n")])
+           (with-size ((get-current-code-font-size))
+                      (with-font (current-code-font)
+                                 (para #:fill? #t
+                                       #:width (* 1.1 (current-para-width))
+                                       #:align 'left
+                                       line))))))
 
 (slide
   #:layout 'center
@@ -22,42 +34,32 @@
   (para "Our Lisp will have familiar characteristics like variables, higher-order functions, conditionals, and lexical scope."))
 
 (slide
-  #:title "Code"
-  (code
-    (define ->
-      (lambda :lazy (arg . fns)
-        (cond
-          ((null? fns) arg)
-          (#t (->lambda arg fns)))))))
+  #:title "Scala Code"
+  (mono #<<EOL
+"cdr" -> Builtin({ (args, env) =>
+  safeEval(args, env) match {
+    case SExpr(_ :: tail) :: Nil =>
+      SExpr(tail)
+
+    case Pair(_, tail) :: Nil => tail
+    case _ :: Nil => Error(...)
+    case _ => Error(...)
+  }
+})
+EOL
+))
 
 (slide
-  #:title "Code"
-  (code
-    _import java.nio.charset.Charset
-    _import java.nio.file.{Files, Paths}
-    _import scala.util.{Try, Failure, Success}))
-
-(slide
-  #:title "Code"
-  #:gap-size 1
-
-  ; (para (mono "one")
-  ;       (blank-line)
-  ;       (mono "two")
-  ;       (blank-line)
-  ;       (mono "three"))
-
-  (mono "one")
-  (mono "two")
-  (mono "three")
-
-  ; (mono "one")
-  ; (blank-line)
-  ; (mono "two")
-  ; (blank-line)
-  ; (mono "three")
-  ;
-  ; (mono
-  ;   (string-join '("one"
-  ;                  "two")))
-  )
+  #:title "Lisp Code"
+  (mono #<<CODE
+(define -
+  (lambda (. xs)
+    (cond
+      ((equal? 0 (length xs)) 0)
+      ((equal? 1 (length xs))
+       (* -1 (car xs)))
+      (#t (fold (car xs)
+                sub
+                (cdr xs))))))
+CODE
+))
