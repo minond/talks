@@ -30,17 +30,17 @@
 ;; Core functions
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(define boolean? (thunk/type/equal? "boolean"))
-(define builtin? (thunk/type/equal? "builtin"))
-(define error? (thunk/type/equal? "error"))
+(define boolean? (thunk/type/equal? 'boolean))
+(define builtin? (thunk/type/equal? 'builtin))
+(define error? (thunk/type/equal? 'error))
 (define false? (thunk/equal? #f))
-(define integer? (thunk/type/equal? "integer"))
-(define lambda? (thunk/type/equal? "lambda"))
-(define list? (thunk/type/equal? "sexpr"))
-(define pair? (thunk/type/equal? "pair"))
-(define quote? (thunk/type/equal? "quote"))
-(define real? (thunk/type/equal? "real"))
-(define string? (thunk/type/equal? "string"))
+(define integer? (thunk/type/equal? 'integer))
+(define lambda? (thunk/type/equal? 'lambda))
+(define list? (thunk/type/equal? 'sexpr))
+(define pair? (thunk/type/equal? 'pair))
+(define quote? (thunk/type/equal? 'quote))
+(define real? (thunk/type/equal? 'real))
+(define string? (thunk/type/equal? 'string))
 (define true? (thunk/equal? #t))
 (define zero? (thunk/equal? 0))
 
@@ -232,15 +232,20 @@
 
 (define ok? (thunk/equal? 'ok))
 
-(define assert
-  (lambda (ret)
-    (cond
-      ((true? ret) 'ok)
-      (#t (halt "Assertion error")))))
+; (define assert
+;   (lambda (fn . args)
+;     (map eval args)))
 
-(define assert-eq
-  (lambda (expected ret)
-    (assert (equal? expected ret))))
+(define assert
+  (lambda (fn . args)
+    (if (apply (eval fn) (map eval args))
+      (begin (printf "pass: (apply %s '%s)" fn args)
+             (newline))
+      (begin (printf "Assertion error!")
+             (newline)
+             (printf "fail (apply %s '%s)" fn args)
+             (newline)
+             (halt "Assertion error.")))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

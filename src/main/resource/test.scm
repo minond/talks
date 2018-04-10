@@ -20,113 +20,121 @@
 ;; Core functions
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(assert (boolean? #f))
-(assert (boolean? #t))
-(assert (builtin? eval))
-(assert (error? (error 'ok)))
-(assert (false? #f))
-(assert (integer? 123))
-(assert (lambda? (lambda () 'ok)))
-(assert (list? '()))
-(assert (list? '(1 2 3)))
-(assert (list? (list 1 2 3)))
-(assert (list? (list)))
-(assert (null? '()))
-(assert (pair? (cons 1 2)))
-(assert (quote? 'ok))
-(assert (real? 1.2))
-(assert (string? "ok"))
-(assert (true? #t))
-(assert (zero? 0))
-(assert (number? -1))
-(assert (number? 0))
-(assert (number? 1))
-(assert (number? 1.0))
+(assert 'true? '(boolean? #f))
+(assert 'true? '(boolean? #t))
+(assert 'true? '(builtin? eval))
+(assert 'true? '(error? (error 'ok)))
+(assert 'true? '(false? #f))
+(assert 'true? '(integer? 123))
+(assert 'true? '(lambda? (lambda () 'ok)))
+(assert 'true? '(list? '()))
+(assert 'true? '(list? '(1 2 3)))
+(assert 'true? '(list? (list 1 2 3)))
+(assert 'true? '(list? (list)))
+(assert 'true? '(null? '()))
+(assert 'true? '(pair? (cons 1 2)))
+(assert 'true? '(quote? 'ok))
+(assert 'true? '(real? 1.2))
+(assert 'true? '(string? "ok"))
+(assert 'true? '(true? #t))
+(assert 'true? '(zero? 0))
+(assert 'true? '(number? -1))
+(assert 'true? '(number? 0))
+(assert 'true? '(number? 1))
+(assert 'true? '(number? 1.0))
 
-(assert-eq '(2 4 6 8) (map double '(1 2 3 4)))
-(assert-eq 10 (fold 0 + '(1 2 3 4)))
+(assert 'equal? '(list 2 4 6 8) '(map double '(1 2 3 4)))
+(assert 'equal? 10 '(fold 0 + '(1 2 3 4)))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; List and pairs
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(assert-eq '(1 2 3) (list 1 2 3))
-(assert-eq '(1 2 3) (list (+ 1) (+ 1 1) (+ 1 1 1)))
-(assert-eq 1 (first '(1 2 3 4)))
-(assert-eq 2 (second '(1 2 3 4)))
-(assert-eq 3 (third '(1 2 3 4)))
-(assert-eq 4 (length '(1 2 3 4)))
-(assert-eq 4 (nth 3 '(1 2 3 4)))
-(assert-eq 4 (last '(1 2 3 4)))
+(assert 'equal? '(list 1 2 3) '(list 1 2 3))
+(assert 'equal? '(list 1 2 3) '(list (+ 1) (+ 1 1) (+ 1 1 1)))
+(assert 'equal? 1 '(first '(1 2 3 4)))
+(assert 'equal? 2 '(second '(1 2 3 4)))
+(assert 'equal? 3 '(third '(1 2 3 4)))
+(assert 'equal? 4 '(length '(1 2 3 4)))
+(assert 'equal? 4 '(nth 3 '(1 2 3 4)))
+(assert 'equal? 4 '(last '(1 2 3 4)))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Comparison
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(assert-eq #t (= 1 1))
-(assert-eq #f (= 0 1))
-(assert-eq #t (= 0 0))
-(assert-eq #f (= "0" 0))
-(assert-eq #f (= 0 "0"))
-(assert-eq #f (= "0" "0"))
-(assert-eq #f (!= 1 1))
-(assert-eq #t (!= 0 1))
-(assert-eq #f (!= 0 0))
-(assert-eq #f (>= 0 1))
-(assert-eq #t (>= 1 1))
-(assert-eq #t (>= 2 1))
-(assert-eq #f (< 2 1))
-(assert-eq #f (< 2 2))
-(assert-eq #t (< 1 2))
-(assert-eq #f (<= 2 1))
-(assert-eq #t (<= 2 2))
-(assert-eq #t (<= 1 2))
+(assert 'equal? #t '(= 1 1))
+(assert 'equal? #f '(= 0 1))
+(assert 'equal? #t '(= 0 0))
+(assert 'equal? #f '(= "0" 0))
+(assert 'equal? #f '(= 0 "0"))
+(assert 'equal? #f '(= "0" "0"))
+(assert 'equal? #f '(!= 1 1))
+(assert 'equal? #t '(!= 0 1))
+(assert 'equal? #f '(!= 0 0))
+(assert 'equal? #f '(>= 0 1))
+(assert 'equal? #t '(>= 1 1))
+(assert 'equal? #t '(>= 2 1))
+(assert 'equal? #f '(< 2 1))
+(assert 'equal? #f '(< 2 2))
+(assert 'equal? #t '(< 1 2))
+(assert 'equal? #f '(<= 2 1))
+(assert 'equal? #t '(<= 2 2))
+(assert 'equal? #t '(<= 1 2))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Logic
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(assert-eq #t (all? integer? 1 2 3 4 5))
-(assert-eq #f (all? integer? 1 2 3 4 5.0))
-(assert-eq #t (all? integer?))
-(assert-eq #t (or #f #f #t invalid invalid invalid))
-(assert-eq #t (or 1 2 3 4))
-(assert-eq #f (and #f #f #t))
-(assert-eq #t (and #t #t #t))
-(assert-eq #t (and 1 2 3 4))
-(assert-eq #t (not #f))
-(assert-eq #f (not #t))
-(assert-eq #f (not '()))
-(assert-eq #f (not 0))
-(assert-eq #f (not ""))
-(assert-eq #f (not 'ok))
+(assert 'equal? #t '(all? integer? 1 2 3 4 5))
+(assert 'equal? #f '(all? integer? 1 2 3 4 5.0))
+(assert 'equal? #t '(all? integer?))
+(assert 'equal? #t '(or #f #f #t invalid invalid invalid))
+(assert 'equal? #t '(or 1 2 3 4))
+(assert 'equal? #f '(and #f #f #t))
+(assert 'equal? #t '(and #t #t #t))
+(assert 'equal? #t '(and 1 2 3 4))
+(assert 'equal? #t '(not #f))
+(assert 'equal? #f '(not #t))
+(assert 'equal? #f '(not '()))
+(assert 'equal? #f '(not 0))
+(assert 'equal? #f '(not ""))
+(assert 'equal? #f '(not 'ok))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Math
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(assert-eq 4 (double 2))
-(assert-eq 16 (double 8))
-(assert-eq 9 (triple 3))
+(assert 'equal? 4 '(double 2))
+(assert 'equal? 16 '(double 8))
+(assert 'equal? 9 '(triple 3))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Test helpers
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(assert (ok? 'ok))
+(assert 'true? '(ok? 'ok))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Macros
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(assert-eq 24
-  (-> 2
+(assert 'equal? 24
+  '(-> 2
       (double)
       (double)
       (triple)))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Finish
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(printf "done.")
+(newline)
