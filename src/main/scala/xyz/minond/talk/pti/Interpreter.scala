@@ -57,7 +57,7 @@ object Interpreter {
               case head :: tail =>
                 (head :: tail).lastOption match {
                   case Some(last) =>
-                    last match {
+                    last.unQuote match {
                       case SExpr(rest) => (head :: tail).init ++ rest
                       case _ => head :: tail
                     }
