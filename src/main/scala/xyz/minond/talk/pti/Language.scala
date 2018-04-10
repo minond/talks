@@ -28,6 +28,12 @@ sealed abstract class Expression {
         s"#<procedure:$name>"
     }
 
+  def quote: Expression =
+    this match {
+      case expr: Quote => expr
+      case expr => Quote(expr)
+    }
+
   def unQuote: Expression =
     this match {
       case Quote(expr, _) => expr
