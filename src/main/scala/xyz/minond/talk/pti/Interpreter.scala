@@ -157,6 +157,10 @@ object Interpreter {
         }
         ._1
     }),
+    "newline" -> Builtin({ (args, env) =>
+      println("")
+      ok(PrintfNl)
+    }),
     "printf" -> Builtin({ (args, env) =>
       safeEval(args, env) match {
         case Str(fmt) :: args =>
