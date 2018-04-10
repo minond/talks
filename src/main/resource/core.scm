@@ -232,10 +232,6 @@
 
 (define ok? (thunk/equal? 'ok))
 
-; (define assert
-;   (lambda (fn . args)
-;     (map eval args)))
-
 (define assert
   (lambda (fn . args)
     (if (apply (eval fn) (map eval args))
