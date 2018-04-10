@@ -48,6 +48,31 @@ object Interpreter {
         case exprs => Error(Message.ERR_ARITY_MISMATCH(1, exprs.size))
       }
     }),
+    "apply" -> Builtin({ (args, env) =>
+      args match {
+        case fn :: args =>
+          procCall(
+            fn,
+            safeEval(args, env) match {
+              case head :: tail =>
+                (head :: tail).lastOption match {
+                  case Some(last) =>
+                    last match {
+                      case SExpr(rest) => (head :: tail).init ++ rest
+                      case _ => head :: tail
+                    }
+
+                  case None => List(head)
+                }
+
+              case Nil => List.empty
+            },
+            env
+          )._1
+
+        case _ => Error(Message.ERR_BAD_SYNTAX("apply"))
+      }
+    }),
     "cons" -> Builtin({ (args, env) =>
       safeEval(args, env) match {
         case head :: SExpr(tail) :: Nil => Quote(SExpr(head.unQuote :: tail))

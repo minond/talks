@@ -158,5 +158,33 @@ class InterpreterSpec extends FreeSpec with Matchers {
           (add x 1))
       """)._1 should be(List(Integer(321), Integer(124)))
     }
+
+    "apply functions works like Racket's" in {
+      eval("""
+        (apply add)
+      """)._1 should be(List(Integer(0)))
+
+      eval("""
+        (apply add 1 2)
+      """)._1 should be(List(Integer(3)))
+
+      eval("""
+        (apply add 1 '(2))
+      """)._1 should be(List(Integer(3)))
+
+      eval("""
+        (apply add '(1 2))
+      """)._1 should be(List(Integer(3)))
+
+      eval("""
+        (define list (lambda (. xs) xs))
+        (apply add 1 (list 2))
+      """)._1(1) should be(Integer(3))
+
+      eval("""
+        (define list (lambda (. xs) xs))
+        (apply add (list 1 2))
+      """)._1(1) should be(Integer(3))
+    }
   }
 }
