@@ -142,17 +142,17 @@ object Interpreter {
     }),
     ">" -> Builtin({ (args, env) =>
       safeEval(args, env) match {
-        case Integer(lhs) :: Integer(rhs) :: Nil => BooleanExpr(lhs > rhs)
-        case Real(lhs) :: Real(rhs) :: Nil => BooleanExpr(lhs > rhs)
-        case Real(lhs) :: Integer(rhs) :: Nil => BooleanExpr(lhs > rhs)
-        case Integer(lhs) :: Real(rhs) :: Nil => BooleanExpr(lhs > rhs)
+        case Integer(lhs) :: Integer(rhs) :: Nil => Bool(lhs > rhs)
+        case Real(lhs) :: Real(rhs) :: Nil => Bool(lhs > rhs)
+        case Real(lhs) :: Integer(rhs) :: Nil => Bool(lhs > rhs)
+        case Integer(lhs) :: Real(rhs) :: Nil => Bool(lhs > rhs)
         case _ :: _ :: Nil => Error(Message.ERR_BAD_ARGS(">", "interger", "real"))
         case _ => Error(Message.ERR_ARITY_MISMATCH(2, args.size))
       }
     }),
     "equal?" -> Builtin({ (args, env) =>
       safeEval(args, env) match {
-        case lhs :: rhs :: Nil => BooleanExpr(lhs.unQuote == rhs.unQuote)
+        case lhs :: rhs :: Nil => Bool(lhs.unQuote == rhs.unQuote)
         case _ => Error(Message.ERR_ARITY_MISMATCH(2, args.size))
       }
     }),
@@ -164,7 +164,7 @@ object Interpreter {
     }),
     "type/proc/vararg" -> Builtin({ (args, env) =>
       safeEval(args, env) match {
-        case (proc: Proc) :: Nil => BooleanExpr(proc.isVariadic)
+        case (proc: Proc) :: Nil => Bool(proc.isVariadic)
         case _ => Error(Message.ERR_BAD_ARGS("type/arity", "procedure"))
       }
     }),

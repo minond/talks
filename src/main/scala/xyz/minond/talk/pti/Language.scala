@@ -54,15 +54,15 @@ case object Internal extends QuoteInfo
 case object PrintfNl extends QuoteInfo
 case class Quote(value: Expression, info: QuoteInfo = UserSpace) extends Expression
 
-object BooleanExpr {
-  def apply(value: Boolean): BooleanExpr =
+object Bool {
+  def apply(value: Boolean): Bool =
     if (value) True
     else False
 }
 
-sealed trait BooleanExpr extends Expression
-case object True extends BooleanExpr
-case object False extends BooleanExpr
+sealed trait Bool extends Expression
+case object True extends Bool
+case object False extends Bool
 
 case class Builtin(fn: (List[Expression], Environment) => Expression) extends Expression
 
