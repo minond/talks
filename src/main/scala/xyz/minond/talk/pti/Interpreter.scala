@@ -156,6 +156,18 @@ object Interpreter {
         case _ => Error(Message.ERR_ARITY_MISMATCH(2, args.size))
       }
     }),
+    "type/proc/arity" -> Builtin({ (args, env) =>
+      safeEval(args, env) match {
+        case Proc(args, _, _, _) :: Nil => Integer(args.size)
+        case _ => Error(Message.ERR_BAD_ARGS("type/arity", "procedure"))
+      }
+    }),
+    "type/proc/vararg" -> Builtin({ (args, env) =>
+      safeEval(args, env) match {
+        case (proc: Proc) :: Nil => BooleanExpr(proc.isVariadic)
+        case _ => Error(Message.ERR_BAD_ARGS("type/arity", "procedure"))
+      }
+    }),
     "type/name" -> Builtin({ (args, env) =>
       safeEval(args, env) match {
         case Builtin(_) :: Nil => Identifier("builtin").quote
