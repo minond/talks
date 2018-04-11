@@ -327,7 +327,6 @@ object Interpreter {
           (builtin.getOrElse(label, env.lookup(label)), env)
         } catch {
           case _: StackOverflowError => (Error(Message.ERR_REC_LOOKUP), env)
-          case err: Exception => (Error(err.getMessage), env)
         }
 
       case Right(SExpr(fn :: args)) => procCall(fn, args, env)
