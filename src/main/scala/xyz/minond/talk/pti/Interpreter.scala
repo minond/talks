@@ -184,7 +184,7 @@ object Interpreter {
     }),
     "newline" -> Builtin({ (args, env) =>
       println("")
-      ok(PrintfNl)
+      ok(Internal)
     }),
     "printf" -> Builtin({ (args, env) =>
       safeEval(args, env) match {
@@ -196,6 +196,10 @@ object Interpreter {
 
         case _ => Error(Message.ERR_BAD_ARGS("printf", "string"))
       }
+    }),
+    "exit" -> Builtin({ (args, env) =>
+      System.exit(0)
+      ok(Internal)
     }),
     "halt" -> Builtin({ (args, env) =>
       throw new RuntimeException(safeEval(args, env) match {
