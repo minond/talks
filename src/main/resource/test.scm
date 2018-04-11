@@ -26,7 +26,7 @@
 (assert 'true? '(error? (error 'ok)))
 (assert 'true? '(false? #f))
 (assert 'true? '(integer? 123))
-(assert 'true? '(lambda? (lambda () 'ok)))
+(assert 'true? '(procedure? (lambda () 'ok)))
 (assert 'true? '(list? '()))
 (assert 'true? '(list? '(1 2 3)))
 (assert 'true? '(list? (list 1 2 3)))

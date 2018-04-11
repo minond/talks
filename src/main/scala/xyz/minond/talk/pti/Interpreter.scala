@@ -30,13 +30,13 @@ object Interpreter {
     def ERR_EVAL_EXPR(expr: Expression) =
       s"Error evaluating $expr."
 
-    val ERR_LAMBDA_EMPTY_CALL =
+    val ERR_PROC_EMPTY_CALL =
       "Missing procedure expression"
-    val ERR_LAMBDA_NON_PROC_CALL =
+    val ERR_PROC_NON_PROC_CALL =
       "Call made to non-procedure."
-    val ERR_LAMBDA_NON_ID_ARG =
+    val ERR_PROC_NON_ID_ARG =
       "Found non-identifier argument(s) in lambda expression."
-    def ERR_LAMBDA_DUP_ARGS(dups: List[String]) =
+    def ERR_PROC_DUP_ARGS(dups: List[String]) =
       s"Found duplicate argument name(s): ${dups.mkString(", ")}."
   }
 
@@ -163,7 +163,7 @@ object Interpreter {
         case False :: Nil => Identifier("boolean").quote
         case Identifier(_) :: Nil => Identifier("identifier").quote
         case Integer(_) :: Nil => Identifier("integer").quote
-        case Lambda(_, _, _, _) :: Nil => Identifier("lambda").quote
+        case Proc(_, _, _, _) :: Nil => Identifier("procedure").quote
         case Pair(_, _) :: Nil => Identifier("pair").quote
         case Quote(_, _) :: Nil => Identifier("quote").quote
         case Real(_) :: Nil => Identifier("real").quote
@@ -246,9 +246,9 @@ object Interpreter {
           case (x, xs) if xs.size > 1 => x
         }
 
-        if (dups.size > 0) Error(Message.ERR_LAMBDA_DUP_ARGS(dups.toList))
-        else if (errs.size > 0) Error(Message.ERR_LAMBDA_NON_ID_ARG)
-        else Lambda(names, body, env, delayed)
+        if (dups.size > 0) Error(Message.ERR_PROC_DUP_ARGS(dups.toList))
+        else if (errs.size > 0) Error(Message.ERR_PROC_NON_ID_ARG)
+        else Proc(names, body, env, delayed)
       }
 
       args match {
@@ -312,7 +312,7 @@ object Interpreter {
         (builtin.getOrElse(label, env.lookup(label)), env)
 
       case Right(SExpr(fn :: args)) => procCall(fn, args, env)
-      case Right(SExpr(Nil)) => (Error(Message.ERR_LAMBDA_EMPTY_CALL), env)
+      case Right(SExpr(Nil)) => (Error(Message.ERR_PROC_EMPTY_CALL), env)
 
       case Right(expr) => (Error(Message.ERR_EXPRESSION(expr)), env)
       case Left(err) => (Error(Message.ERR_SYNTAX(err)), env)
@@ -340,7 +340,7 @@ object Interpreter {
       args: List[Expression],
       env: Environment): (Expression, Environment) =
     safeEval(fn, env) match {
-      case proc: Lambda =>
+      case proc: Proc =>
         if (!proc.validArity(args.size))
           (Error(Message.ERR_ARITY_MISMATCH(proc.args.size, args.size)), env)
         else if (proc.delayed)
@@ -354,9 +354,7 @@ object Interpreter {
 
       case _ =>
         (
-          Error(
-            Message.ERR_LAMBDA_NON_PROC_CALL,
-            Some(Error(Message.GIVEN(fn.toString)))),
+          Error(Message.ERR_PROC_NON_PROC_CALL, Some(Error(Message.GIVEN(fn.toString)))),
           env)
     }
 

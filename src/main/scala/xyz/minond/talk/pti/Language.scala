@@ -14,7 +14,7 @@ sealed abstract class Expression {
       case SExpr(values) => s"(${values.map(_.toString).mkString(" ")})"
       case Str(value) => s""""$value""""
 
-      case Lambda(_, _, _, delayed) =>
+      case Proc(_, _, _, delayed) =>
         if (delayed) "#<procedure...>"
         else "#<procedure>"
 
@@ -77,7 +77,7 @@ case class Error(message: String, prev: Option[Error] = None) extends Expression
   }
 }
 
-case class Lambda(
+case class Proc(
     args: List[String],
     body: Expression,
     env: Environment,
