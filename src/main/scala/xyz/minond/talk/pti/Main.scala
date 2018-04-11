@@ -3,6 +3,10 @@ package xyz.minond.talk.pti
 import java.io.{BufferedReader, InputStreamReader}
 
 object Main {
+  val welcome = "Welcome to PTI <https://github.com/minond/talk-parse-to-interpretation>"
+  val coreFile = """(load "src/main/resource/core.scm")"""
+  val testFile = """(load "src/main/resource/test.scm")"""
+
   def main(args: Array[String]): Unit =
     repl
 
@@ -15,34 +19,38 @@ object Main {
       else print("  ")
 
       (prefix + " " + reader.readLine).trim match {
-        case "(exit)" => return
+        case ".quit" => return
+        case ".test" => aux(run(testFile, env), "")
+        case ".reset" => aux(run(coreFile), "")
         case text =>
           if (!balanced(text)) aux(env, text)
           else aux(run(text, env), "")
       }
     }
 
-    println("Welcome to PTI <https://github.com/minond/talk-parse-to-interpretation>")
-    aux(run("""(load "src/main/resource/core.scm")"""), "")
+    println(welcome)
+    aux(run(coreFile), "")
   }
 
-  def run(code: String, env: Environment = Environment(Map())): Environment = {
-    val (vals, next) = Interpreter.eval(code, env)
-    show(vals)
-    next
-  }
+  def run(code: String, env: Environment = Environment(Map())): Environment =
+    new Parser(new Tokenizer(code)).toList.foldLeft(env) { (env, expr) =>
+      val (ret, next) = Interpreter.eval(expr, env)
 
-  def show(vals: List[Expression]): Unit =
-    vals match {
-      case Quote(_, PrintfNl) :: Nil => println("")
-      case Quote(_, Internal) :: Nil => print("")
-      case _ =>
-        vals foreach {
-          case err: Error => println(err.stringify())
-          case Quote(_, PrintfNl) => print("")
-          case Quote(_, Internal) => print("")
-          case res => println(res)
-        }
+      (expr, ret) match {
+        case (_, err: Error) => show(err)
+        case (Right(SExpr(Identifier("define") :: _)), _) =>
+        case _ => show(ret)
+      }
+
+      next
+    }
+
+  def show(ret: Expression): Unit =
+    ret match {
+      case err: Error => println(err.stringify())
+      case Quote(_, PrintfNl) => println("")
+      case Quote(_, Internal) => print("")
+      case res => println(res)
     }
 
   def balanced(src: String): Boolean =
