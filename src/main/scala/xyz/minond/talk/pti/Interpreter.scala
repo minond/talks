@@ -16,6 +16,8 @@ object Interpreter {
     def ERR_EXPRESSION(expr: Expression) =
       s"Expression error: ${expr}"
 
+    val ERR_REC_LOOKUP =
+      "Detected recursive lookup. Haltin evaluation."
     def ERR_UNDEFINED_LOOKUP(label: String) =
       s"${label} is undefined."
     def ERR_ARITY_MISMATCH(expected: Int, got: Int) =
@@ -321,7 +323,12 @@ object Interpreter {
         (Error(Message.ERR_BAD_SYNTAX("define")), env)
 
       case Right(Identifier(label)) =>
-        (builtin.getOrElse(label, env.lookup(label)), env)
+        try {
+          (builtin.getOrElse(label, env.lookup(label)), env)
+        } catch {
+          case _: StackOverflowError => (Error(Message.ERR_REC_LOOKUP), env)
+          case err: Exception => (Error(err.getMessage), env)
+        }
 
       case Right(SExpr(fn :: args)) => procCall(fn, args, env)
       case Right(SExpr(Nil)) => (Error(Message.ERR_PROC_EMPTY_CALL), env)
