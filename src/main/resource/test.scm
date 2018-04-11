@@ -46,6 +46,10 @@
 (assert 'equal? '(list 2 4 6 8) '(map double '(1 2 3 4)))
 (assert 'equal? 10 '(fold 0 + '(1 2 3 4)))
 
+(assert 'equal? 5 ((compose - -) 5))
+(assert 'equal? -4 ((compose - *) 2 2))
+(assert 'equal? 0 ((compose * -) 2 2))
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; List and pairs
@@ -59,6 +63,10 @@
 (assert 'equal? 4 '(length '(1 2 3 4)))
 (assert 'equal? 4 '(nth 3 '(1 2 3 4)))
 (assert 'equal? 4 '(last '(1 2 3 4)))
+(assert 'equal? '(list 1 2 3 4 5 6) '(join '() '(1 2 3 4 5 6)))
+(assert 'equal? '(list 1 2 3 4 5 6) '(join '(1 2 3 4 5 6) '()))
+(assert 'equal? '(list 1 2 3 4 5 6) '(join '(1 2 3) '(4 5 6)))
+(assert 'equal? '(list) '(join '() '()))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

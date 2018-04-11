@@ -73,6 +73,11 @@
              (filter f (cdr xs))))
       (#t (filter f (cdr xs))))))
 
+(define compose
+  (lambda (f g)
+    (lambda (. args)
+      (apply f (apply g args)))))
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; List and pairs
@@ -118,6 +123,12 @@
 (define last
   (lambda (xs)
     (nth (dec (length xs)) xs)))
+
+(define join
+  (lambda (xs ys)
+    (cond
+      ((null? xs) ys)
+      (#t (cons (car xs) (join (cdr xs) ys))))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
