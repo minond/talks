@@ -309,17 +309,21 @@ object Interpreter {
         (Error(Message.ERR_BAD_SYNTAX("define")), env)
 
       case Right(Identifier(label)) =>
-        try {
-          (builtin.getOrElse(label, env.lookup(label)), env)
-        } catch {
-          case _: StackOverflowError => (Error(Message.ERR_REC_LOOKUP), env)
-        }
+        (safe(builtin.getOrElse(label, env.lookup(label))), env)
 
       case Right(SExpr(fn :: args)) => procCall(fn, args, env)
       case Right(SExpr(Nil)) => (Error(Message.ERR_PROC_EMPTY_CALL), env)
 
       case Right(expr) => (Error(Message.ERR_EXPRESSION(expr)), env)
       case Left(err) => (Error(Message.ERR_SYNTAX(err)), env)
+    }
+  }
+
+  def safe(work: => Expression): Expression = {
+    try {
+      work
+    } catch {
+      case _: StackOverflowError => Error(Message.ERR_REC_LOOKUP)
     }
   }
 
@@ -362,10 +366,10 @@ object Interpreter {
         if (!proc.validArity(args.size))
           (Error(Message.ERR_ARITY_MISMATCH(proc.args.size, args.size)), env)
         else if (proc.delayed)
-          (eval(proc.body, proc.scope(args, proc.env, env)), env)
+          (safe(eval(proc.body, proc.scope(args, proc.env, env))), env)
         else
           // XXX Check that all arguments were evaluated
-          (eval(proc.body, proc.scope(eval(args, env), proc.env, env)), env)
+          (safe(eval(proc.body, proc.scope(eval(args, env), proc.env, env))), env)
 
       case Builtin(fn) => (fn(args, env), env)
       case err: Error => (err, env)
