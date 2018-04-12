@@ -17,7 +17,7 @@ object Interpreter {
       s"Expression error: ${expr}"
 
     val ERR_REC_LOOKUP =
-      "Detected recursive lookup. Haltin evaluation."
+      "Detected recursive lookup. Stopping evaluation."
     def ERR_UNDEFINED_LOOKUP(label: String) =
       s"${label} is undefined."
     def ERR_ARITY_MISMATCH(expected: Int, got: Int) =
