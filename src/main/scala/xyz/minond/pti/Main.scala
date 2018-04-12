@@ -4,8 +4,8 @@ import java.io.{BufferedReader, InputStreamReader}
 
 object Main {
   val welcome = "Welcome to PTI <https://github.com/minond/parse-to-interpretation>"
-  val coreFile = """(load "src/pti/core.pti")"""
-  val testFile = """(load "src/pti/test.pti")"""
+  val coreFile = """(load "lang/core.pti")"""
+  val testFile = """(load "lang/test.pti")"""
 
   def main(args: Array[String]): Unit =
     repl
