@@ -1,4 +1,4 @@
-package xyz.minond.talk.pti
+package xyz.minond.pti
 
 import java.nio.charset.Charset
 import java.nio.file.{Files, Paths}

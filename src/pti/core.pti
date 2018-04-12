@@ -281,3 +281,5 @@
     (cond
       ((false? (eval check)) (eval fail))
       (#t (eval pass)))))
+
+ ; vim:ft=racket

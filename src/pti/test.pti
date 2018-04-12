@@ -146,3 +146,5 @@
 
 (printf "done.")
 (newline)
+
+; vim:ft=racket

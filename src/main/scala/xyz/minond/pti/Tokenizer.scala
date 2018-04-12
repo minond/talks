@@ -1,4 +1,4 @@
-package xyz.minond.talk.pti
+package xyz.minond.pti
 
 import scala.util.{Try, Success}
 

@@ -8,4 +8,4 @@ interesting and oddly simple algorithms employed in making a language.
 Our Lisp will have familiar characteristics like variables, higher-order
 functions, conditionals, and lexical scope.
 
-[![Build Status](https://travis-ci.org/minond/talk-parse-to-interpretation.svg?branch=master)](https://travis-ci.org/minond/talk-parse-to-interpretation)
+[![Build Status](https://travis-ci.org/minond/parse-to-interpretation.svg?branch=master)](https://travis-ci.org/minond/parse-to-interpretation)

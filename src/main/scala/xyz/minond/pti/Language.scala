@@ -1,4 +1,4 @@
-package xyz.minond.talk.pti
+package xyz.minond.pti
 
 sealed abstract class Expression {
   override final def toString =

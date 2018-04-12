@@ -1,11 +1,11 @@
-package xyz.minond.talk.pti
+package xyz.minond.pti
 
 import java.io.{BufferedReader, InputStreamReader}
 
 object Main {
-  val welcome = "Welcome to PTI <https://github.com/minond/talk-parse-to-interpretation>"
-  val coreFile = """(load "src/main/resource/core.scm")"""
-  val testFile = """(load "src/main/resource/test.scm")"""
+  val welcome = "Welcome to PTI <https://github.com/minond/parse-to-interpretation>"
+  val coreFile = """(load "src/pti/core.pti")"""
+  val testFile = """(load "src/pti/test.pti")"""
 
   def main(args: Array[String]): Unit =
     repl
