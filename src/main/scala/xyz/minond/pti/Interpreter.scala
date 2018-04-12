@@ -44,8 +44,8 @@ object Interpreter {
 
   val builtin = Map(
     "eval" -> Builtin({ (args, env) =>
-      safeEval(args, env) match {
-        case expr :: Nil => safeEval(expr.unQuote, env)
+      eval(args, env) match {
+        case expr :: Nil => eval(expr.unQuote, env)
         case Nil => Error(Message.ERR_ARITY_MISMATCH(1, 0))
         case exprs => Error(Message.ERR_ARITY_MISMATCH(1, exprs.size))
       }
@@ -55,7 +55,7 @@ object Interpreter {
         case fn :: args =>
           procCall(
             fn,
-            safeEval(args, env) match {
+            eval(args, env) match {
               case head :: tail =>
                 (head :: tail).lastOption match {
                   case Some(last) =>
@@ -76,7 +76,7 @@ object Interpreter {
       }
     }),
     "cons" -> Builtin({ (args, env) =>
-      safeEval(args, env) match {
+      eval(args, env) match {
         case head :: SExpr(tail) :: Nil => Quote(SExpr(head.unQuote :: tail))
         case head :: Quote(SExpr(tail), _) :: Nil => Quote(SExpr(head.unQuote :: tail))
         case head :: tail :: Nil => Pair(head.unQuote, tail.unQuote)
@@ -85,7 +85,7 @@ object Interpreter {
       }
     }),
     "car" -> Builtin({ (args, env) =>
-      safeEval(args, env) match {
+      eval(args, env) match {
         case SExpr(head :: _) :: Nil => head
         case Pair(head, _) :: Nil => head
         case _ :: Nil => Error(Message.ERR_BAD_ARGS("car", "pair", "list"))
@@ -93,7 +93,7 @@ object Interpreter {
       }
     }),
     "cdr" -> Builtin({ (args, env) =>
-      safeEval(args, env) match {
+      eval(args, env) match {
         case SExpr(_ :: tail) :: Nil => SExpr(tail)
         case Pair(_, tail) :: Nil => tail
         case _ :: Nil => Error(Message.ERR_BAD_ARGS("cdr", "pair", "list"))
@@ -103,7 +103,7 @@ object Interpreter {
     "cond" -> Builtin({ (args, env) =>
       args.find {
         case SExpr(cond :: _) =>
-          safeEval(cond, env) match {
+          eval(cond, env) match {
             case False => false
             case _ => true
           }
@@ -112,12 +112,12 @@ object Interpreter {
       } match {
         case None => SExpr(List.empty)
         case Some(SExpr(_ :: Nil)) => SExpr(List.empty)
-        case Some(SExpr(_ :: exprs)) => exprs.map(safeEval(_, env)).last
+        case Some(SExpr(_ :: exprs)) => exprs.map(eval(_, env)).last
         case Some(expr) => Error(Message.ERR_EVAL_EXPR(expr))
       }
     }),
     "add" -> Builtin({ (args, env) =>
-      safeEval(args, env) match {
+      eval(args, env) match {
         case Nil => Integer(0)
         case Integer(a) :: Nil => Integer(a)
         case Real(a) :: Nil => Real(a)
@@ -130,7 +130,7 @@ object Interpreter {
       }
     }),
     "mult" -> Builtin({ (args, env) =>
-      safeEval(args, env) match {
+      eval(args, env) match {
         case Nil => Integer(1)
         case Integer(a) :: Nil => Integer(a)
         case Real(a) :: Nil => Real(a)
@@ -143,7 +143,7 @@ object Interpreter {
       }
     }),
     ">" -> Builtin({ (args, env) =>
-      safeEval(args, env) match {
+      eval(args, env) match {
         case Integer(lhs) :: Integer(rhs) :: Nil => Bool(lhs > rhs)
         case Real(lhs) :: Real(rhs) :: Nil => Bool(lhs > rhs)
         case Real(lhs) :: Integer(rhs) :: Nil => Bool(lhs > rhs)
@@ -153,25 +153,25 @@ object Interpreter {
       }
     }),
     "equal?" -> Builtin({ (args, env) =>
-      safeEval(args, env) match {
+      eval(args, env) match {
         case lhs :: rhs :: Nil => Bool(lhs.unQuote == rhs.unQuote)
         case _ => Error(Message.ERR_ARITY_MISMATCH(2, args.size))
       }
     }),
     "type/proc/arity" -> Builtin({ (args, env) =>
-      safeEval(args, env) match {
+      eval(args, env) match {
         case Proc(args, _, _, _) :: Nil => Integer(args.size)
         case _ => Error(Message.ERR_BAD_ARGS("type/arity", "procedure"))
       }
     }),
     "type/proc/vararg" -> Builtin({ (args, env) =>
-      safeEval(args, env) match {
+      eval(args, env) match {
         case (proc: Proc) :: Nil => Bool(proc.isVariadic)
         case _ => Error(Message.ERR_BAD_ARGS("type/arity", "procedure"))
       }
     }),
     "type/name" -> Builtin({ (args, env) =>
-      safeEval(args, env) match {
+      eval(args, env) match {
         case Builtin(_) :: Nil => Identifier("builtin").quote
         case Error(_, _) :: Nil => Identifier("error").quote
         case False :: Nil => Identifier("boolean").quote
@@ -201,7 +201,7 @@ object Interpreter {
       ok(Internal)
     }),
     "printf" -> Builtin({ (args, env) =>
-      safeEval(args, env) match {
+      eval(args, env) match {
         case Str(fmt) :: args =>
           Try { printf(fmt, args: _*) } match {
             case Failure(ex) => Error(s"format error: ${ex.getMessage}")
@@ -216,7 +216,7 @@ object Interpreter {
       ok(Internal)
     }),
     "halt" -> Builtin({ (args, env) =>
-      throw new RuntimeException(safeEval(args, env) match {
+      throw new RuntimeException(eval(args, env) match {
         case Str(msg) :: Nil => msg
         case Quote(Identifier(msg), _) :: Nil => msg
         case Quote(Str(msg), _) :: Nil => msg
@@ -224,7 +224,7 @@ object Interpreter {
       })
     }),
     "error" -> Builtin({ (args, env) =>
-      safeEval(args, env) match {
+      eval(args, env) match {
         case Str(msg) :: Nil => Error(msg)
         case Quote(Identifier(msg), _) :: Nil => Error(msg)
         case Quote(Str(msg), _) :: Nil => Error(msg)
@@ -234,9 +234,9 @@ object Interpreter {
     "let*" -> Builtin({ (args, env) =>
       args match {
         case SExpr(defs) :: body :: Nil =>
-          safeEval(body, defs.foldLeft(env) {
+          eval(body, defs.foldLeft(env) {
             case (env, SExpr(Identifier(name) :: body :: Nil)) =>
-              env.define(name, safeEval(body, env))
+              env.define(name, eval(body, env))
 
             case _ => env
           })
@@ -245,50 +245,32 @@ object Interpreter {
       }
     }),
     "lambda" -> Builtin({ (args, env) =>
-      def aux(raw: List[Expression], body: Expression, delayed: Boolean): Expression = {
-        val (args, errs) = raw.partition {
-          case Identifier(_) => true
-          case _ => false
-        }
-
-        val names = args.map {
-          case Identifier(name) => name
-          case _ => ""
-        }
-
-        val dups = names.groupBy(identity) collect {
-          case (x, xs) if xs.size > 1 => x
-        }
-
-        if (dups.size > 0) Error(Message.ERR_PROC_DUP_ARGS(dups.toList))
-        else if (errs.size > 0) Error(Message.ERR_PROC_NON_ID_ARG)
-        else Proc(names, body, env, delayed)
-      }
-
       args match {
-        case Identifier(":lazy") :: SExpr(raw) :: body :: Nil => aux(raw, body, true)
-        case SExpr(raw) :: body :: Nil => aux(raw, body, false)
+        case Identifier(":lazy") :: SExpr(raw) :: body :: Nil =>
+          procDef(raw, body, env, true)
+        case SExpr(raw) :: body :: Nil => procDef(raw, body, env)
         case _ => Error(Message.ERR_BAD_SYNTAX("lambda"))
       }
     })
   )
 
-  def eval(code: String): (List[Expression], Environment) =
-    eval(new Parser(new Tokenizer(code)).toList, Environment(Map()))
-
   def eval(code: String, env: Environment): (List[Expression], Environment) =
     eval(new Parser(new Tokenizer(code)).toList, env)
 
+  def eval(expr: Expression, env: Environment): Expression =
+    eval(Right(expr), env)._1
+
+  def eval(exprs: List[Expression], env: Environment): List[Expression] =
+    exprs.map(eval(_, env))
+
   def eval(
       exprs: List[Either[Parser.Error, Expression]],
-      origEnv: Environment): (List[Expression], Environment) = {
-    var env = origEnv
-    (exprs.map { expr =>
-      val (value, newEnv) = eval(expr, env)
-      env = newEnv
-      value
-    }, env)
-  }
+      env: Environment): (List[Expression], Environment) =
+    exprs.foldLeft[(List[Expression], Environment)]((List.empty, env)) {
+      case ((ret, env), expr) =>
+        val (value, next) = eval(expr, env)
+        (ret :+ value, next)
+    }
 
   def eval(
       expr: Either[Parser.Error, Expression],
@@ -341,14 +323,6 @@ object Interpreter {
     }
   }
 
-  def safeEval(expr: Expression, env: Environment): Expression =
-    eval(Right(expr), env)._1
-
-  def safeEval(exprs: List[Expression], env: Environment): List[Expression] =
-    exprs.map { expr =>
-      safeEval(expr, env)
-    }
-
   def define(
       name: String,
       value: Expression,
@@ -383,15 +357,15 @@ object Interpreter {
       fn: Expression,
       args: List[Expression],
       env: Environment): (Expression, Environment) =
-    safeEval(fn, env) match {
+    eval(fn, env) match {
       case proc: Proc =>
         if (!proc.validArity(args.size))
           (Error(Message.ERR_ARITY_MISMATCH(proc.args.size, args.size)), env)
         else if (proc.delayed)
-          (safeEval(proc.body, proc.scope(args, proc.env, env)), env)
+          (eval(proc.body, proc.scope(args, proc.env, env)), env)
         else
           // XXX Check that all arguments were evaluated
-          (safeEval(proc.body, proc.scope(safeEval(args, env), proc.env, env)), env)
+          (eval(proc.body, proc.scope(eval(args, env), proc.env, env)), env)
 
       case Builtin(fn) => (fn(args, env), env)
       case err: Error => (err, env)
