@@ -317,8 +317,12 @@ object Interpreter {
             (Error(s"Missing file: $path"), env)
         }
 
+      case Right(
+          SExpr(
+            Identifier("define") :: SExpr(Identifier(name) :: args) :: body :: Nil)) =>
+        define(name, procDef(args, body, env), env)
       case Right(SExpr(Identifier("define") :: Identifier(name) :: value :: Nil)) =>
-        define(name, value, env)
+        define(name, eval(value, env), env)
       case Right(SExpr(Identifier("define") :: _)) =>
         (Error(Message.ERR_BAD_SYNTAX("define")), env)
 
@@ -348,9 +352,31 @@ object Interpreter {
   def define(
       name: String,
       value: Expression,
-      env: Environment): (Expression, Environment) = {
-    val res = safeEval(value, env)
-    (res, env.define(name, res))
+      env: Environment): (Expression, Environment) =
+    (value, env.define(name, value))
+
+  def procDef(
+      rawArgs: List[Expression],
+      body: Expression,
+      env: Environment,
+      delayed: Boolean = false): Expression = {
+    val (args, errs) = rawArgs.partition {
+      case Identifier(_) => true
+      case _ => false
+    }
+
+    val names = args.map {
+      case Identifier(name) => name
+      case _ => ""
+    }
+
+    val dups = names.groupBy(identity) collect {
+      case (x, xs) if xs.size > 1 => x
+    }
+
+    if (dups.size > 0) Error(Message.ERR_PROC_DUP_ARGS(dups.toList))
+    else if (errs.size > 0) Error(Message.ERR_PROC_NON_ID_ARG)
+    else Proc(names, body, env, delayed)
   }
 
   def procCall(
