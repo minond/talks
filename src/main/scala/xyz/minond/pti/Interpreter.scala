@@ -50,6 +50,12 @@ object Interpreter {
         case exprs => Error(Message.ERR_ARITY_MISMATCH(1, exprs.size))
       }
     }),
+    "unquote" -> Builtin({ (args, env) =>
+      eval(args, env) match {
+        case expr :: Nil => expr.unQuote
+        case _ => Error(Message.ERR_ARITY_MISMATCH(1, args.size))
+      }
+    }),
     "apply" -> Builtin({ (args, env) =>
       args match {
         case fn :: args =>
