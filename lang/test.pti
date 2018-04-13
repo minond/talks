@@ -152,6 +152,10 @@
       (double)
       (triple)))
 
+(assert 'equal? 123 '(case "hi" (else 123)))
+(assert 'equal? 321 '(case "hi" (else bad) ("hi" 321) (bad bad)))
+(assert 'equal? '(list) '(case "S"))
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Finish

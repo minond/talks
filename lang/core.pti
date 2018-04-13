@@ -275,4 +275,15 @@
       ((false? (eval check)) (eval fail))
       (#t (eval pass)))))
 
+(define case
+  (lambda :lazy (item . conds)
+    (let* ((is-item (lambda (x) (equal? (car x) item)))
+           (is-else (lambda (y) (equal? (car y) 'else)))
+           (item-expr (unquote (filter is-item conds)))
+           (else-expr (unquote (filter is-else conds))))
+      (cond
+        ((not (null? item-expr)) (eval (cadar item-expr)))
+        ((not (null? else-expr)) (eval (cadar else-expr)))
+        (#t '())))))
+
  ; vim:ft=racket
