@@ -30,7 +30,6 @@
 
 (define boolean? (thunk/type/equal? 'boolean))
 (define builtin? (thunk/type/equal? 'builtin))
-(define error? (thunk/type/equal? 'error))
 (define false? (thunk/equal? #f))
 (define integer? (thunk/type/equal? 'integer))
 (define procedure? (thunk/type/equal? 'procedure))

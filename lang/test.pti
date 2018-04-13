@@ -23,7 +23,6 @@
 (assert 'true? '(boolean? #f))
 (assert 'true? '(boolean? #t))
 (assert 'true? '(builtin? eval))
-(assert 'true? '(error? (error 'ok)))
 (assert 'true? '(false? #f))
 (assert 'true? '(integer? 123))
 (assert 'true? '(procedure? (lambda () 'ok)))

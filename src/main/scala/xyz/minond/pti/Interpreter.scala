@@ -264,6 +264,15 @@ object Interpreter {
     exprs.map(eval(_, env))
 
   def eval(
+      exprs: List[Expression],
+      env: Environment,
+      pf: PartialFunction[Expression, Expression])
+    : (List[Expression], List[Expression]) = {
+    val vals = eval(exprs, env)
+    (vals, vals.collect(pf))
+  }
+
+  def eval(
       exprs: List[Either[Parser.Error, Expression]],
       env: Environment): (List[Expression], Environment) =
     exprs.foldLeft[(List[Expression], Environment)]((List.empty, env)) {
@@ -367,9 +376,15 @@ object Interpreter {
           (Error(Message.ERR_ARITY_MISMATCH(proc.args.size, args.size)), env)
         else if (proc.delayed)
           (safe(eval(proc.body, proc.scope(args, proc.env, env))), env)
-        else
-          // XXX Check that all arguments were evaluated
-          (safe(eval(proc.body, proc.scope(eval(args, env), proc.env, env))), env)
+        else {
+          eval(args, env, {
+            case err: Error => err
+          }) match {
+            case (values, Nil) =>
+              (safe(eval(proc.body, proc.scope(values, proc.env, env))), env)
+            case (_, err :: _) => (err, env)
+          }
+        }
 
       case Builtin(fn) => (fn(args, env), env)
       case err: Error => (err, env)
