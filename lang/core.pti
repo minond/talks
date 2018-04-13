@@ -114,6 +114,28 @@
     ((null? xs) ys)
     (#t (cons (car xs) (join (cdr xs) ys)))))
 
+(define (take n xs)
+  (cond
+    ((null? xs) '())
+    ((zero? n) '())
+    (#t (cons (car xs) (take (dec n) (cdr xs))))))
+
+(define (drop n xs)
+  (cond
+    ((null? xs) '())
+    ((zero? n) xs)
+    (#t (drop (dec n) (cdr xs)))))
+
+(define (split n xs)
+  (cons (take n xs)
+        (cons (drop n xs) '())))
+
+(define (member? elem xs)
+  (cond
+    ((null? xs) #f)
+    ((equal? elem (car xs)) #t)
+    (#t (member? elem (cdr xs)))))
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Comparison
