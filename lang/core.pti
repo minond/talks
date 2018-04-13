@@ -183,12 +183,12 @@
 
 (define or
   (lambda :lazy (. checks)
-    (let* ((aux (lambda (checks)
-                  (cond
-                    ((null? checks) #f)
-                    ((false? (eval (car checks))) (aux (cdr checks)))
-                    (#t #t)))))
-      (aux checks))))
+    (if (null? checks)
+      #f
+      (let* ((value (eval (car checks))))
+        (if (false? value)
+          (apply or (cdr checks))
+          value)))))
 
 (define (not x)
   (if (false? x) #t #f))
