@@ -1,5 +1,9 @@
 package xyz.minond.pti
 
+trait Loader {
+  def load(env: Environment): Environment
+}
+
 sealed abstract class Expression {
   override final def toString =
     this match {
@@ -13,19 +17,10 @@ sealed abstract class Expression {
       case Real(value) => value.toString
       case SExpr(values) => s"(${values.map(_.toString).mkString(" ")})"
       case Str(value) => s""""$value""""
-
+      case Procedure(_) => "#<procedure>"
       case Proc(_, _, _, delayed) =>
         if (delayed) "#<procedure...>"
         else "#<procedure>"
-
-      case Builtin(fn) =>
-        val name = Interpreter.builtin
-          .filter({ case (_, b) => b == Builtin(fn) })
-          .keys
-          .headOption
-          .getOrElse("???")
-
-        s"#<procedure:$name>"
     }
 
   def quote: Expression =
@@ -64,8 +59,6 @@ sealed trait Bool extends Expression
 case object True extends Bool
 case object False extends Bool
 
-case class Builtin(fn: (List[Expression], Environment) => Expression) extends Expression
-
 case class Error(message: String, prev: Option[Error] = None) extends Expression {
   def stringify(prefix: String = ""): String = {
     val next = prev match {
@@ -76,6 +69,8 @@ case class Error(message: String, prev: Option[Error] = None) extends Expression
     s"; ${prefix}- ${message}${next}"
   }
 }
+
+case class Procedure(fn: (List[Expression], Environment) => Expression) extends Expression
 
 case class Proc(
     args: List[String],

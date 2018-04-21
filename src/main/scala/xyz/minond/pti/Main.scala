@@ -32,7 +32,9 @@ object Main {
     aux(run(coreFile), "")
   }
 
-  def run(code: String, env: Environment = Environment(Map())): Environment =
+  def run(
+      code: String,
+      env: Environment = Builtins.load(Environment(Map()))): Environment =
     new Parser(new Tokenizer(code)).toList.foldLeft(env) { (env, expr) =>
       val (ret, next) = Interpreter.eval(expr, env)
 
