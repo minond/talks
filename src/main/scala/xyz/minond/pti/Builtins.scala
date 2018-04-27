@@ -55,9 +55,8 @@ object Builtins extends Loader {
         "cons",
         Procedure({ (args, env) =>
           eval(args, env) match {
-            case head :: SExpr(tail) :: Nil => Quote(SExpr(head.unQuote :: tail))
-            case head :: Quote(SExpr(tail), _) :: Nil =>
-              Quote(SExpr(head.unQuote :: tail))
+            case head :: SExpr(tail) :: Nil => SExpr(head.unQuote :: tail)
+            case head :: Quote(SExpr(tail), _) :: Nil => SExpr(head.unQuote :: tail)
             case head :: tail :: Nil => Pair(head.unQuote, tail.unQuote)
             case _ :: _ :: _ :: Nil => Error(Message.ERR_ARITY_MISMATCH(2, args.size))
             case _ => Error(Message.ERR_INTERNAL)
