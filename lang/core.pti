@@ -138,6 +138,12 @@
     ((equal? elem (car xs)) #t)
     (#t (member? elem (cdr xs)))))
 
+(define (range from . to)
+  (cond
+    ((null? to) (range 0 from))
+    ((equal? from (car to)) (list (car to)))
+    (#t (cons from (range (inc from) (car to))))))
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Comparison
