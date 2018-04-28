@@ -76,6 +76,19 @@
 (define (list . xs)
   xs)
 
+(define (pair a b)
+  (cons a b))
+
+(define (set . xs)
+  (let* ((aux (lambda (xs acc)
+                (cond
+                  ((null? xs) acc)
+                  ((member? (car xs) acc) (aux (cdr xs) acc))
+                  (#t (aux (cdr xs) (cons (car xs) acc)))))))
+    (if (list? (car xs))
+      (aux (car xs) '())
+      (aux xs '()))))
+
 (define (cadar xs)
   (car (cdr (car xs))))
 
