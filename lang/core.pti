@@ -244,11 +244,11 @@
 
 (define (assert fn . args)
   (if (apply (eval fn) (map eval args))
-    (begin (printf "pass: (apply %s '%s)" fn args)
+    (begin (printf "; pass: (apply %s '%s)" fn args)
            (newline))
-    (begin (printf "Assertion error!")
+    (begin (printf "; Assertion error!")
            (newline)
-           (printf "fail (apply %s '%s)" fn args)
+           (printf "; fail (apply %s '%s)" fn args)
            (newline)
            (halt "Assertion error."))))
 

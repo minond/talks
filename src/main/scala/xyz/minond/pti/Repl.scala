@@ -1,6 +1,7 @@
 package xyz.minond.pti
 
 import java.io.BufferedReader
+import scala.util.{Try, Success, Failure}
 
 object Repl {
   val welcome = "Welcome to PTI <https://github.com/minond/parse-to-interpretation>"
@@ -30,15 +31,20 @@ object Repl {
       code: String,
       env: Environment = Builtins.load(Environment(Map()))): Environment =
     new Parser(new Tokenizer(code)).toList.foldLeft(env) { (env, expr) =>
-      val (ret, next) = Interpreter.eval(expr, env)
+      Try { Interpreter.eval(expr, env) } match {
+        case Success((ret, next)) =>
+          (expr, ret) match {
+            case (_, err: Error) => show(err)
+            case (Right(SExpr(Identifier("define") :: _)), _) =>
+            case _ => show(ret)
+          }
 
-      (expr, ret) match {
-        case (_, err: Error) => show(err)
-        case (Right(SExpr(Identifier("define") :: _)), _) =>
-        case _ => show(ret)
+          next
+
+        case Failure(err) =>
+          printf("; Caught %s: %s\n", err.getClass.toString, err.getMessage)
+          env
       }
-
-      next
     }
 
   def show(ret: Expression): Unit =
