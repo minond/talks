@@ -16,7 +16,7 @@ sealed abstract class Expression {
       case Quote(value, _) => s"'$value"
       case Real(value) => value.toString
       case SExpr(values) => s"(${values.map(_.toString).mkString(" ")})"
-      case Str(value) => s""""$value""""
+      case Str(value) => value
       case Procedure(_) => "#<procedure>"
       case Proc(_, _, _, delayed) =>
         if (delayed) "#<procedure...>"
