@@ -112,6 +112,17 @@ case class Proc(
     args.nonEmpty && args.contains(".") && args.last != "."
 }
 
+object Args {
+  val Vararg = Identifier(".")
+
+  def unapply(expr: Expression): Option[List[Expression]] =
+    expr match {
+      case SExpr(ids) => Some(ids)
+      case Identifier(id) => Some(List(Vararg, Identifier(id)))
+      case _ => None
+    }
+}
+
 case class Environment(
     vars: Map[String, Expression],
     parent: Option[Environment] = None) {

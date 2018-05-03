@@ -68,13 +68,13 @@
     (#t (filter f (cdr xs)))))
 
 (define (compose f g)
-  (lambda (. args)
+  (lambda args
     (apply f (apply g args))))
 
 (define (curry f)
   (let* ((n (type/proc/arity f))
          (aux (lambda (buff)
-                (lambda (. args)
+                (lambda args
                   (let* ((all (join buff args)))
                     (if (equal? n (length all))
                       (apply f all)
@@ -216,7 +216,7 @@
       (aux checks))))
 
 (define or
-  (lambda :lazy (. checks)
+  (lambda :lazy checks
     (if (null? checks)
       #f
       (let* ((value (eval (car checks))))
@@ -317,4 +317,4 @@
         ((not (null? else-expr)) (eval (cadar else-expr)))
         (#t '())))))
 
- ; vim:ft=racket
+; vim:ft=racket

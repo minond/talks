@@ -56,7 +56,8 @@ object Builtins extends Loader {
         Procedure({ (args, env) =>
           eval(args, env) match {
             case head :: SExpr(tail) :: Nil => Quote(SExpr(head.unQuote :: tail))
-            case head :: Quote(SExpr(tail), _) :: Nil => Quote(SExpr(head.unQuote :: tail))
+            case head :: Quote(SExpr(tail), _) :: Nil =>
+              Quote(SExpr(head.unQuote :: tail))
             case head :: tail :: Nil => Pair(head.unQuote, tail.unQuote)
             case _ :: _ :: _ :: Nil => Error(Message.ERR_ARITY_MISMATCH(2, args.size))
             case _ => Error(Message.ERR_INTERNAL)
@@ -277,9 +278,9 @@ object Builtins extends Loader {
         "lambda",
         Procedure({ (args, env) =>
           args match {
-            case Identifier(":lazy") :: SExpr(raw) :: body :: Nil =>
-              procDef(raw, body, env, true)
-            case SExpr(raw) :: body :: Nil => procDef(raw, body, env)
+            case Identifier(":lazy") :: Args(args) :: body :: Nil =>
+              procDef(args, body, env, true)
+            case Args(args) :: body :: Nil => procDef(args, body, env)
             case _ => Error(Message.ERR_BAD_SYNTAX("lambda"))
           }
         })
