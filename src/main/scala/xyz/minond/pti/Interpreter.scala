@@ -79,9 +79,11 @@ object Interpreter {
       case Right(Real(value)) => (Real(value), env)
       case Right(Str(value)) => (Str(value), env)
 
-      case Right(Quote(Identifier(name), _)) =>
-        (Quote(Identifier(name)), env)
-      case Right(Quote(value, _)) => (value, env)
+      case Right(Quote(Identifier(name), _)) => (Quote(Identifier(name)), env)
+      case Right(Quote(Real(value), _)) => (Real(value), env)
+      case Right(Quote(Integer(value), _)) => (Integer(value), env)
+      case Right(Quote(Bool(value), _)) => (Bool(value), env)
+      case Right(Quote(value, _)) => (Quote(value), env)
 
       case Right(SExpr(Identifier("load") :: Str(path) :: Nil)) =>
         Try { Files.readAllBytes(Paths.get(path)) } match {

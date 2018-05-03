@@ -67,9 +67,13 @@ object Builtins extends Loader {
         "car",
         Procedure({ (args, env) =>
           eval(args, env) match {
-            case SExpr(head :: _) :: Nil => head
-            case Pair(head, _) :: Nil => head
-            case _ :: Nil => Error(Message.ERR_BAD_ARGS("car", "pair", "list"))
+            case head :: Nil =>
+              head.unQuote match {
+                case SExpr(head :: _) => head
+                case Pair(head, _) => head
+                case _ => Error(Message.ERR_BAD_ARGS("car", "pair", "list"))
+              }
+
             case _ => Error(Message.ERR_ARITY_MISMATCH(1, args.size))
           }
         })
@@ -78,9 +82,13 @@ object Builtins extends Loader {
         "cdr",
         Procedure({ (args, env) =>
           eval(args, env) match {
-            case SExpr(_ :: tail) :: Nil => SExpr(tail)
-            case Pair(_, tail) :: Nil => tail
-            case _ :: Nil => Error(Message.ERR_BAD_ARGS("cdr", "pair", "list"))
+            case head :: Nil =>
+              head.unQuote match {
+                case SExpr(_ :: tail) => SExpr(tail)
+                case Pair(_, tail) => tail
+                case _ => Error(Message.ERR_BAD_ARGS("cdr", "pair", "list"))
+              }
+
             case _ => Error(Message.ERR_ARITY_MISMATCH(1, args.size))
           }
         })

@@ -59,11 +59,12 @@ class InterpreterSpec extends FreeSpec with Matchers {
 
     "evaluates quoted expressions" in {
       eval("'abc")._1 should be(List(Quote(Identifier("abc"))))
+      eval("'(1 2 3)")._1 should be(
+        List(Quote(SExpr(List(Integer(1), Integer(2), Integer(3))))))
       eval("'123")._1 should be(List(Integer(123)))
       eval("'123.456")._1 should be(List(Real(123.456)))
       eval("'#t")._1 should be(List(True))
       eval("'#f")._1 should be(List(False))
-      eval("'(1 2 3)")._1 should be(List(SExpr(List(Integer(1), Integer(2), Integer(3)))))
     }
   }
 }

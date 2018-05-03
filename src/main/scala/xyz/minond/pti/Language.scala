@@ -12,7 +12,7 @@ sealed abstract class Expression {
       case Error(message, _) => s"""(error "$message")"""
       case Identifier(value) => value
       case Integer(value) => value.toString
-      case Pair(a, b) => s"($a . $b)"
+      case Pair(a, b) => s"'($a . $b)"
       case Quote(value, _) => s"'$value"
       case Real(value) => value.toString
       case SExpr(values) => s"(${values.map(_.toString).mkString(" ")})"
@@ -53,6 +53,10 @@ object Bool {
   def apply(value: Boolean): Bool =
     if (value) True
     else False
+
+  def unapply(value: Bool): Option[Boolean] =
+    if (value == True) Some(true)
+    else Some(false)
 }
 
 sealed trait Bool extends Expression
