@@ -71,6 +71,16 @@
   (lambda (. args)
     (apply f (apply g args))))
 
+(define (curry f)
+  (let* ((n (type/proc/arity f))
+         (aux (lambda (buff)
+                (lambda (. args)
+                  (let* ((all (join buff args)))
+                    (if (equal? n (length all))
+                      (apply f all)
+                      (aux all)))))))
+    (aux '())))
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; List and pairs
