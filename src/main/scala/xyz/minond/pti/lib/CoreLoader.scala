@@ -1,10 +1,12 @@
-package xyz.minond.pti
+package xyz.minond.pti.lib
+
+import xyz.minond.pti._
 
 import java.nio.charset.Charset
 import java.nio.file.{Files, Paths}
 import scala.util.{Try, Failure, Success}
 
-object Builtins extends Loader {
+object CoreLoader extends Loader {
   import Interpreter._
 
   def define(

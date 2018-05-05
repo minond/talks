@@ -1,4 +1,4 @@
-package xyz.minond.pti
+package xyz.minond.pti.repl
 
 import java.io.{BufferedReader, InputStreamReader}
 

@@ -1,12 +1,14 @@
 package xyz.minond.pti
 
+import xyz.minond.pti.lib.CoreLoader
+
 import org.scalatest._
 
 class BuiltinsSpec extends FreeSpec with Matchers {
   def eval(src: String) =
     Interpreter.eval(
       new Parser(new Tokenizer(src)).toList,
-      Builtins.load(Environment(Map())))
+      CoreLoader.load(Environment(Map())))
 
   "Builtins" - {
     "error creates an error" in {

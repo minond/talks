@@ -1,12 +1,15 @@
-package xyz.minond.pti
+package xyz.minond.pti.repl
+
+import xyz.minond.pti._
+import xyz.minond.pti.lib.CoreLoader
 
 import java.io.BufferedReader
 import scala.util.{Try, Success, Failure}
 
 object Repl {
   val welcome = "Welcome to PTI <https://github.com/minond/parse-to-interpretation>"
-  val coreFile = """(load "lang/core.pti")"""
-  val testFile = """(load "lang/test.pti")"""
+  val coreFile = """(load "src/lib/core.pti")"""
+  val testFile = """(load "src/lib/test.pti")"""
 
   def run(reader: BufferedReader): Unit = {
     def aux(env: Environment, prefix: String): Unit = {
@@ -29,7 +32,7 @@ object Repl {
 
   def run(
       code: String,
-      env: Environment = Builtins.load(Environment(Map()))): Environment =
+      env: Environment = CoreLoader.load(Environment(Map()))): Environment =
     new Parser(new Tokenizer(code)).toList.foldLeft(env) { (env, expr) =>
       Try { Interpreter.eval(expr, env) } match {
         case Success((ret, next)) =>
