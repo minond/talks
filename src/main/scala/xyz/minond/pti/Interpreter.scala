@@ -69,23 +69,16 @@ object Interpreter {
       expr: Either[Parser.Error, Expression],
       env: Environment): (Expression, Environment) = {
     expr match {
-      case Right(True) => (True, env)
-      case Right(False) => (False, env)
+      case Right(Bool(value)) => (Bool(value), env)
       case Right(Integer(value)) => (Integer(value), env)
       case Right(Real(value)) => (Real(value), env)
       case Right(Str(value)) => (Str(value), env)
-
       case Right(Quote(Identifier(name), _)) => (Quote(Identifier(name)), env)
-      case Right(Quote(Real(value), _)) => (Real(value), env)
-      case Right(Quote(Integer(value), _)) => (Integer(value), env)
-      case Right(Quote(Bool(value), _)) => (Bool(value), env)
-      case Right(Quote(value, _)) => (Quote(value), env)
-
+      case Right(Quote(SExpr(xs), _)) => (Quote(SExpr(xs)), env)
+      case Right(Quote(value, _)) => (value.unQuote, env)
       case Right(Identifier(label)) => (safe(env.lookup(label)), env)
-
       case Right(SExpr(fn :: args)) => procCall(fn, args, env)
       case Right(SExpr(Nil)) => (Error(Message.ERR_PROC_EMPTY_CALL), env)
-
       case Right(expr) => (Error(Message.ERR_EXPRESSION(expr)), env)
       case Left(err) => (Error(Message.ERR_SYNTAX(err)), env)
     }
