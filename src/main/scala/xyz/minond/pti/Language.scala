@@ -137,11 +137,11 @@ case class Environment(
     }
   }
 
-  def lookup(name: String): Expression = {
+  def lookup(name: String): Option[Expression] = {
     (vars.get(name), parent) match {
-      case (Some(expr), _) => expr
+      case (Some(expr), _) => Some(expr)
       case (None, Some(env)) => env.lookup(name)
-      case (None, None) => Error(Interpreter.Message.ERR_UNDEFINED_LOOKUP(name))
+      case (None, None) => None
     }
   }
 

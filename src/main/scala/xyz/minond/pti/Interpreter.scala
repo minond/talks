@@ -12,6 +12,8 @@ object Interpreter {
     def ERR_EXPRESSION(expr: Expression) =
       s"Expression error: ${expr}"
 
+    def ERR_NO_ASSIGNMENT(fn: String) =
+      s"Assignment disallowed with $fn"
     val ERR_REC_LOOKUP =
       "Detected recursive lookup. Stopping evaluation."
     def ERR_UNDEFINED_LOOKUP(label: String) =
@@ -76,7 +78,7 @@ object Interpreter {
       case Right(Quote(Identifier(name), _)) => (Quote(Identifier(name)), env)
       case Right(Quote(SExpr(xs), _)) => (Quote(SExpr(xs)), env)
       case Right(Quote(value, _)) => (value.unQuote, env)
-      case Right(Identifier(label)) => (safe(env.lookup(label)), env)
+      case Right(Identifier(name)) => (lookup(name, env), env)
       case Right(SExpr(fn :: args)) => procCall(fn, args, env)
       case Right(SExpr(Nil)) => (Error(Message.ERR_PROC_EMPTY_CALL), env)
       case Right(expr) => (Error(Message.ERR_EXPRESSION(expr)), env)
@@ -115,6 +117,9 @@ object Interpreter {
     else if (errs.size > 0) Error(Message.ERR_PROC_NON_ID_ARG)
     else Proc(names, body, env, delayed)
   }
+
+  def lookup(name: String, env: Environment): Expression =
+    safe(env.lookup(name).getOrElse(Error(Message.ERR_UNDEFINED_LOOKUP(name))))
 
   def procCall(
       fn: Expression,

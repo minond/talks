@@ -29,6 +29,19 @@ object CoreLoader extends Loader {
         })
       )
       .define(
+        "set!",
+        Procedure({ (args, env) =>
+          args match {
+            case Identifier(name) :: value :: Nil =>
+              env.lookup(name) match {
+                case None => (Error(Message.ERR_NO_ASSIGNMENT("set!")), env)
+                case _ => define(name, eval(value, env), env)
+              }
+            case _ => (Error(Message.ERR_BAD_SYNTAX("set!")), env)
+          }
+        })
+      )
+      .define(
         "load",
         Procedure({ (args, env) =>
           eval(args, env) match {
