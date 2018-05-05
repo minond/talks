@@ -207,12 +207,14 @@
     (aux xs)))
 
 (define and
-  (lambda :lazy (. checks)
-    (let* ((aux (lambda (checks)
+  (lambda :lazy checks
+    (let* ((aux (lambda (next)
                   (cond
-                    ((null? checks) #t)
-                    ((false? (eval (car checks))) #f)
-                    (#t (aux (cdr checks)))))))
+                    ((null? next)
+                     (if (equal? 0 (length checks)) #t
+                       (last checks)))
+                    ((false? (eval (car next))) #f)
+                    (#t (aux (cdr next)))))))
       (aux checks))))
 
 (define or
