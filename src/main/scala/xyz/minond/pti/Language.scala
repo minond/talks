@@ -16,7 +16,7 @@ sealed abstract class Expression {
       case Quote(value, _) => s"'$value"
       case Real(value) => value.toString
       case SExpr(values) => s"(${values.map(_.toString).mkString(" ")})"
-      case Str(value) => value
+      case Str(value) => s""""$value""""
       case Procedure(_) => "#<procedure>"
       case Proc(_, _, _, delayed) =>
         if (delayed) "#<procedure...>"
@@ -74,7 +74,8 @@ case class Error(message: String, prev: Option[Error] = None) extends Expression
   }
 }
 
-case class Procedure(fn: (List[Expression], Environment) => Expression) extends Expression
+case class Procedure(fn: (List[Expression], Environment) => (Expression, Environment))
+    extends Expression
 
 case class Proc(
     args: List[String],

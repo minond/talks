@@ -1,9 +1,5 @@
 package xyz.minond.pti
 
-import java.nio.charset.Charset
-import java.nio.file.{Files, Paths}
-import scala.util.{Try, Failure, Success}
-
 object Interpreter {
   object Message {
     def GIVEN(thing: String) =
@@ -85,30 +81,7 @@ object Interpreter {
       case Right(Quote(Bool(value), _)) => (Bool(value), env)
       case Right(Quote(value, _)) => (Quote(value), env)
 
-      case Right(SExpr(Identifier("load") :: Str(path) :: Nil)) =>
-        Try { Files.readAllBytes(Paths.get(path)) } match {
-          case Success(bytes) =>
-            val code = new String(bytes, Charset.defaultCharset())
-            val (_, next) = Interpreter.eval(code, env)
-
-            // XXX Check for errors
-            (ok(Internal), next)
-
-          case Failure(_) =>
-            (Error(s"Missing file: $path"), env)
-        }
-
-      case Right(
-          SExpr(
-            Identifier("define") :: SExpr(Identifier(name) :: args) :: body :: Nil)) =>
-        define(name, procDef(args, body, env), env)
-      case Right(SExpr(Identifier("define") :: Identifier(name) :: value :: Nil)) =>
-        define(name, eval(value, env), env)
-      case Right(SExpr(Identifier("define") :: _)) =>
-        (Error(Message.ERR_BAD_SYNTAX("define")), env)
-
-      case Right(Identifier(label)) =>
-        (safe(env.lookup(label)), env)
+      case Right(Identifier(label)) => (safe(env.lookup(label)), env)
 
       case Right(SExpr(fn :: args)) => procCall(fn, args, env)
       case Right(SExpr(Nil)) => (Error(Message.ERR_PROC_EMPTY_CALL), env)
@@ -125,12 +98,6 @@ object Interpreter {
       case _: StackOverflowError => Error(Message.ERR_REC_LOOKUP)
     }
   }
-
-  def define(
-      name: String,
-      value: Expression,
-      env: Environment): (Expression, Environment) =
-    (value, env.define(name, value))
 
   def procDef(
       rawArgs: List[Expression],
@@ -176,7 +143,7 @@ object Interpreter {
           }
         }
 
-      case Procedure(fn) => (fn(args, env), env)
+      case Procedure(fn) => fn(args, env)
       case err: Error => (err, env)
 
       case _ =>
