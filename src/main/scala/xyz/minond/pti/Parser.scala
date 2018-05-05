@@ -48,7 +48,7 @@ object Parser {
         case None => ""
       }
 
-      s"; ${prefix}- ${message}${next}"
+      s"; ${prefix}${message}${next}"
     }
   }
 }

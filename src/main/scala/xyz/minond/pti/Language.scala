@@ -70,7 +70,7 @@ case class Error(message: String, prev: Option[Error] = None) extends Expression
       case None => ""
     }
 
-    s"; ${prefix}- ${message}${next}"
+    s"; ${prefix}${message}${next}"
   }
 }
 
