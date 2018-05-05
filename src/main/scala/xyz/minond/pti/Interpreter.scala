@@ -77,6 +77,7 @@ object Interpreter {
       case Right(Str(value)) => (Str(value), env)
       case Right(Quote(Identifier(name), _)) => (Quote(Identifier(name)), env)
       case Right(Quote(SExpr(xs), _)) => (Quote(SExpr(xs)), env)
+      case Right(Quote(Quote(xs, _), _)) => (Quote(Quote(xs)), env)
       case Right(Quote(value, _)) => (value.unQuote, env)
       case Right(Identifier(name)) => (lookup(name, env), env)
       case Right(SExpr(fn :: args)) => procCall(fn, args, env)
