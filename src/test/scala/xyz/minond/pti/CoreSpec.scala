@@ -1,16 +1,17 @@
 package xyz.minond.pti
 
+import xyz.minond.pti.Interpreter.Message._
 import xyz.minond.pti.lib.CoreLoader
 
 import org.scalatest._
 
-class BuiltinsSpec extends FreeSpec with Matchers {
+class CoreSpec extends FreeSpec with Matchers {
   def eval(src: String) =
     Interpreter.eval(
       new Parser(new Tokenizer(src)).toList,
       CoreLoader.load(Environment(Map())))
 
-  "Builtins" - {
+  "Core" - {
     "error creates an error" in {
       eval("""(error "1 2 3")""")._1 should be(List(Error("1 2 3")))
     }
@@ -130,6 +131,20 @@ class BuiltinsSpec extends FreeSpec with Matchers {
         (define list (lambda (. xs) xs))
         (apply add (list 1 2))
       """)._1(1) should be(Integer(3))
+    }
+
+    "dict builer and helper functions" in {
+      eval("""(dict)""")._1(0) should be(Dict(Map()))
+      eval("""(dict 'a)""")._1(0) should be(Error(ERR_BAD_ARGS("dict", "symbol", "any")))
+      eval("""(dict 'a 'b)""")._1(0) should be(Dict(Map("a" -> Quote(Identifier("b")))))
+      eval("""(dict 'a 'b 'c)""")._1(0) should be(
+        Error(ERR_BAD_ARGS("dict", "symbol", "any")))
+      eval("""(dict 'a "B" 'c "D")""")._1(0) should be(
+        Dict(Map("a" -> Str("B"), "c" -> Str("D"))))
+      eval("""(dict-get (dict 'a "B") 'a)""")._1(0) should be(Str("B"))
+      eval("""(dict-get (dict 'a "B") 'b)""")._1(0) should be(Error("missing key: b"))
+      eval("""(dict-set (dict 'a "B") 'c "D")""")._1(0) should be(
+        Dict(Map("a" -> Str("B"), "c" -> Str("D"))))
     }
   }
 }

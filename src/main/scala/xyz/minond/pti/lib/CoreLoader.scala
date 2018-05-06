@@ -343,4 +343,40 @@ object CoreLoader extends Loader {
           }
         })
       )
+      .define(
+        "dict",
+        Procedure({ (args, env) =>
+          type DT = Map[String, Expression]
+          def joiner(exprs: List[Expression], acc: DT): Expression =
+            exprs match {
+              case Quote(Identifier(key), _) :: value :: rest =>
+                joiner(rest, acc + (key -> value))
+              case Nil => Dict(acc)
+              case _ => Error(Message.ERR_BAD_ARGS("dict", "symbol", "any"))
+            }
+
+          (joiner(eval(args, env), Map()), env)
+        })
+      )
+      .define(
+        "dict-get",
+        Procedure({ (args, env) =>
+          eval(args, env) match {
+            case Dict(vals) :: Quote(Identifier(key), _) :: Nil =>
+              (vals.get(key).getOrElse(Error(s"missing key: $key")), env)
+            case _ => (Error(Message.ERR_BAD_ARGS("dict-get", "dict", "symbol")), env)
+          }
+        })
+      )
+      .define(
+        "dict-set",
+        Procedure({ (args, env) =>
+          eval(args, env) match {
+            case Dict(vals) :: Quote(Identifier(key), _) :: value :: Nil =>
+              (Dict(vals + (key -> value)), env)
+            case _ =>
+              (Error(Message.ERR_BAD_ARGS("dict-set", "dict", "symbol", "any")), env)
+          }
+        })
+      )
 }

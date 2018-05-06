@@ -17,6 +17,7 @@ sealed abstract class Expression {
       case Real(value) => value.toString
       case SExpr(values) => s"(${values.map(_.toString).mkString(" ")})"
       case Str(value) => s""""$value""""
+      case Dict(values) => s"{${values.keys.mkString(" ")}}"
       case Procedure(_) => "#<procedure>"
       case Proc(_, _, _, delayed) =>
         if (delayed) "#<procedure...>"
@@ -42,6 +43,7 @@ case class Pair(a: Expression, b: Expression) extends Expression
 case class Real(value: Double) extends Expression
 case class SExpr(values: List[Expression]) extends Expression
 case class Str(value: String) extends Expression
+case class Dict(values: Map[String, Expression]) extends Expression
 
 sealed trait QuoteInfo
 case object UserSpace extends QuoteInfo
