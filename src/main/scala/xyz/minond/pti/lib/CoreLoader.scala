@@ -239,7 +239,7 @@ object CoreLoader extends Loader {
                 case values => (SExpr(values), env)
               }
 
-            case _ => (Error(Message.ERR_BAD_ARGS("read", "string")), env)
+            case _ => (Error(Message.ERR_BAD_ARGS("parse", "string")), env)
           }
         })
       )
