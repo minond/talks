@@ -227,6 +227,35 @@ object CoreLoader extends Loader {
         })
       )
       .define(
+        "parse",
+        Procedure({ (args, env) =>
+          eval(args, env) match {
+            case Str(src) :: Nil =>
+              new Parser(new Tokenizer(src)).toList collect {
+                case Right(expr) => expr
+                case Left(err) => Error(Message.ERR_SYNTAX(err))
+              } match {
+                case value :: Nil => (value, env)
+                case values => (SExpr(values), env)
+              }
+
+            case _ => (Error(Message.ERR_BAD_ARGS("read", "string")), env)
+          }
+        })
+      )
+      .define(
+        "type/proc/source",
+        Procedure({ (args, env) =>
+          eval(args, env) match {
+            case Proc(args, body, _, _) :: Nil =>
+              (Str(s"""(lambda (${args.mkString(" ")}) $body)"""), env)
+            case Procedure(_) :: Nil => (Str("(lambda () builtin)"), env)
+            case value :: Nil => (value, env)
+            case _ => (Error(Message.ERR_BAD_ARGS("type/proc/source", "procedure")), env)
+          }
+        })
+      )
+      .define(
         "type/proc/arity",
         Procedure({ (args, env) =>
           eval(args, env) match {
