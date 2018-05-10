@@ -335,6 +335,24 @@ object CoreLoader extends Loader {
         })
       )
       .define(
+        "real->integer",
+        Procedure({ (args, env) =>
+          eval(args, env) match {
+            case Real(num) :: Nil => (Integer(num.toInt), env)
+            case _ => (Error(Message.ERR_BAD_ARGS("real->integer", "real")), env)
+          }
+        })
+      )
+      .define(
+        "integer->real",
+        Procedure({ (args, env) =>
+          eval(args, env) match {
+            case Integer(num) :: Nil => (Real(num.toDouble), env)
+            case _ => (Error(Message.ERR_BAD_ARGS("integer->real", "integer")), env)
+          }
+        })
+      )
+      .define(
         "error",
         Procedure({ (args, env) =>
           eval(args, env) match {
