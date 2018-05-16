@@ -24,6 +24,9 @@ sealed abstract class Expression {
         else "#<procedure>"
     }
 
+  def stringify: String =
+    toString
+
   def quote: Expression =
     this match {
       case expr: Quote => expr
@@ -42,8 +45,11 @@ case class Integer(value: Int) extends Expression
 case class Pair(a: Expression, b: Expression) extends Expression
 case class Real(value: Double) extends Expression
 case class SExpr(values: List[Expression]) extends Expression
-case class Str(value: String) extends Expression
 case class Dict(values: Map[String, Expression]) extends Expression
+
+case class Str(value: String) extends Expression {
+  override def stringify = value
+}
 
 sealed trait QuoteInfo
 case object UserSpace extends QuoteInfo
