@@ -9,8 +9,6 @@ object Interpreter {
       s"Syntax error:\n${err.stringify("  ")}"
     def ERR_BAD_SYNTAX(thing: String) =
       s"${thing}: bad syntax"
-    def ERR_EXPRESSION(expr: Expression) =
-      s"Expression error: ${expr}"
 
     def ERR_NO_ASSIGNMENT(fn: String) =
       s"Assignment disallowed with $fn"
@@ -82,7 +80,11 @@ object Interpreter {
       case Right(Identifier(name)) => (lookup(name, env), env)
       case Right(SExpr(fn :: args)) => procCall(fn, args, env)
       case Right(SExpr(Nil)) => (Error(Message.ERR_PROC_EMPTY_CALL), env)
-      case Right(expr) => (Error(Message.ERR_EXPRESSION(expr)), env)
+      case Right(Dict(vals)) => (Dict(vals), env)
+      case Right(Pair(a, b)) => (Pair(a, b), env)
+      case Right(Proc(args, body, env, del)) => (Proc(args, body, env, del), env)
+      case Right(Procedure(fn)) => (Procedure(fn), env)
+      case Right(Error(msg, prev)) => (Error(msg, prev), env)
       case Left(err) => (Error(Message.ERR_SYNTAX(err)), env)
     }
   }
