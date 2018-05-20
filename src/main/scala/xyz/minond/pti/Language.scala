@@ -159,6 +159,6 @@ case class Environment(
       case _ => List.empty
     })
 
-    s"Environment{${text.mkString(", ")}}"
+    s"Environment{${text.sorted.mkString(", ")}}"
   }
 }

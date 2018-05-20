@@ -5,13 +5,13 @@ import xyz.minond.pti.lib.CoreLoader
 
 import org.scalatest._
 
-class CoreSpec extends FreeSpec with Matchers {
+class CoreLoaderSpec extends FreeSpec with Matchers {
   def eval(src: String) =
     Interpreter.eval(
       new Parser(new Tokenizer(src)).toList,
       CoreLoader.load(Environment(Map())))
 
-  "Core" - {
+  "Scala Core" - {
     "error creates an error" in {
       eval("""(error "1 2 3")""")._1 should be(List(Error("1 2 3")))
     }
@@ -145,6 +145,17 @@ class CoreSpec extends FreeSpec with Matchers {
       eval("""(dict-get (dict 'a "B") 'b)""")._1(0) should be(Error("missing key: b"))
       eval("""(dict-set (dict 'a "B") 'c "D")""")._1(0) should be(
         Dict(Map("a" -> Str("B"), "c" -> Str("D"))))
+    }
+  }
+
+  "PTI Core" - {
+    "core tests run" in {
+      eval("""
+        (load "src/lib/core.pti")
+        (define *silent-assert* #t)
+        (load "src/lib/test.pti")
+      """)
+      true should be(true)
     }
   }
 }

@@ -326,7 +326,7 @@ object CoreLoader extends Loader {
         Procedure({ (args, env) =>
           eval(args, env) match {
             case Str(fmt) :: args =>
-              Try { printf(fmt, args map(_.stringify): _*) } match {
+              Try { printf(fmt, args map (_.stringify): _*) } match {
                 case Failure(ex) => (Error(s"format error: ${ex.getMessage}"), env)
                 case _ => (ok(PrintfNl), env)
               }
