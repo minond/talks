@@ -42,6 +42,22 @@ object CoreLoader extends Loader {
         })
       )
       .define(
+        "slurp",
+        Procedure({ (args, env) =>
+          eval(args, env) match {
+            case Str(path) :: Nil =>
+              Try { Files.readAllBytes(Paths.get(path)) } match {
+                case Success(bytes) =>
+                  (Str(new String(bytes, Charset.defaultCharset())), env)
+                case Failure(_) =>
+                  (Error(s"Missing file: $path"), env)
+              }
+
+            case _ => (Error(Message.ERR_BAD_ARGS("slurp", "string")), env)
+          }
+        })
+      )
+      .define(
         "load",
         Procedure({ (args, env) =>
           eval(args, env) match {
