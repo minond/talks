@@ -66,7 +66,7 @@ object CoreLoader extends Loader {
         "eval",
         Procedure({ (args, env) =>
           eval(args, env) match {
-            case expr :: Nil => (eval(expr.unQuote, env), env)
+            case expr :: Nil => eval(Right(expr.unQuote), env)
             case Nil => (Error(Message.ERR_ARITY_MISMATCH(1, 0)), env)
             case exprs => (Error(Message.ERR_ARITY_MISMATCH(1, exprs.size)), env)
           }
