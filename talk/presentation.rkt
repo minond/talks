@@ -7,6 +7,28 @@
 (current-code-font "IBM Plex Mono")
 (code-colorize-enabled #f)
 
+; Outline:
+; - Topic introduction
+;   - What is this talk about?
+;   - Who is this talk for?
+;   - What are we building?
+;   - What is an interpreter?
+;   - What does our language look like?
+;   - Why does our language look the way it does?
+; - What are languages?
+; - Why one might care about languages?
+; - What one might get out of learning about languages?
+; - Overview of an interpreter
+; - Tokenizer
+;   - Tokenizer generators
+; - Parser
+;   - BNF/EBNF
+;   - Parser generators
+;   - Top down parsers
+;   - Recursive descent parsers
+; - Evaluator
+;   - Pattern matching in Scala
+
 (define (unmargin line)
   (let ([parts (string-split line "|")])
     (string-trim (if (= 1 (length parts))
