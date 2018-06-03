@@ -80,7 +80,9 @@
 (slide
   #:title "And why would we talk about that?"
   (p "Programming languages are tools. Can you think of a tool that you use
-     more often? Most likely no."))
+     more often?")
+  (blank)
+  (p "Most likely no."))
 
 (slide
   #:title "And why would we talk about that?"
@@ -98,31 +100,47 @@
   (t "Let's build an interpreter."))
 
 (slide
+  (scale (bitmap (build-path "assets" "interpreter-definitions.png")) .5))
+
+(slide
+  #:title "A program that can analyze a program"
+  (mono #<<CODE
+> 21 * 2
+...
+CODE
+))
+
+(slide
+  #:title "A program that can analyze a program"
+  (mono #<<CODE
+> 21 * 2
+< 42
+CODE
+))
+
+(slide
   #:title "Where do we start?"
   (p "How about with fancy buzzwords?"))
 
 (slide
+  #:title "Ohh, fancy."
   (item "Parsers")
   (item "Grammars")
   (item "BNF/EBNF")
   (item "Parser generators")
   (item "Recursive descent parsers")
   (item "Top down parser")
-  (item "Evaluation")
-  (item "Application")
-  (item "Scope"))
+  (item "Scope")
+  (item "Evaluation"))
 
-; (slide
-;   (scale (bitmap (build-path "assets" "interpreter-definitions.png")) .5))
-;
-; (slide
-;   #:title "Let's go back to that definition"
-;   (it "a program that can analyze and execute a program line by line."))
-;
-; (slide
-;   #:title "A program that can analyze a program"
-;   (mono #<<CODE
-; > 21 * 2
-; < 42
-; CODE
-; ))
+(slide
+  #:title "Where do we really start?"
+  (p "1 - Parse")
+  (p "2 - Evaluate"))
+
+(slide
+  #:title "Where do we really start?"
+  (p "1 - Define what our language looks like.")
+  (p "2 - Tokenize the input into a stream of valid tokens.")
+  (p "3 - Take the stream of tokens and compose them into complete expressions.")
+  (p "4 - Evaluate the expressions."))
