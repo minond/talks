@@ -4,7 +4,7 @@
   unmargin
   mono
   ordered
-  unrdered
+  unordered
   p)
 
 (require
@@ -36,7 +36,7 @@
              #:bullet (t (format "~s - " n))
              x))))
 
-(define (unrdered . items)
+(define (unordered . items)
   (apply vl-append gap-size
          (for/list ([x items])
            (item x))))

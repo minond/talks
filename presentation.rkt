@@ -35,7 +35,7 @@
 (slide
   #:layout 'center
   (titlet "From parsing to interpretation")
-  (t "Let's build a language"))
+  (t "Let’s build a language"))
 
 (slide
   #:title "What are we talking about?"
@@ -64,7 +64,6 @@
   #:title "And why would we talk about that?"
   (p "Programming languages are tools. Can you think of a tool that you use
      more often?")
-  (blank)
   (p "Most likely no."))
 
 (slide
@@ -80,7 +79,7 @@
 
 (slide
   #:layout 'center
-  (t "Let's build an interpreter."))
+  (t "Let’s build an interpreter."))
 
 (slide
   (scale (bitmap (build-path "assets" "interpreter-definitions.png")) .5))
@@ -111,7 +110,7 @@ CODE
 
 (slide
   #:title "Ohh, fancy."
-  (unrdered
+  (unordered
     "Parsers"
     "Grammars"
     "BNF/EBNF"
@@ -137,7 +136,7 @@ CODE
 
 (slide
   #:layout 'center
-  (t "Let's define a language."))
+  (t "Let’s define a language."))
 
 (slide
   #:layout 'center
@@ -194,20 +193,22 @@ CODE
 
 (slide
   #:layout 'center
-  (t "Let's build a BNF grammar."))
+  (t "Let’s build a BNF grammar."))
 
 (slide
   #:layout 'center
-  (t "Let's build an EBNF grammar."))
+  (t "Let’s build an EBNF grammar."))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; TODO ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (slide
   #:layout 'center
   (t "TODO TALK ABOUT EBNF HERE!!!"))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; TODO ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (slide
   #:title "Numbers"
   (mono #<<CODE
-number = [ "-" ], digit { digit } ;
+number = [ "-" ] , digit { digit } ;
 
 digit = 0 | 1 | 2 | 3 | 4 | 5 | 6
       | 7 | 8 | 9 ;
@@ -217,7 +218,7 @@ CODE
 (slide
   #:title "Strings"
   (mono #<<CODE
-string = '"' , { letter }, '"' ;
+string = '"' , { letter } , '"' ;
 
 letter = "A" | "B" | "C" | "D" | "E"
        | "F" | "G" | "H" | "I" | "J"
@@ -246,14 +247,15 @@ CODE
 symbol = "<" | ">" | "*" | "+" | "-"
        | "=" | "_" | "/" | "%" ;
 
-id = id, { letter | symbol | digit } ;
+identifier = identifier ,
+   { letter | symbol | digit } ;
 CODE
 ))
 
 (slide
   #:title "S-expressions"
   (mono #<<CODE
-atom = id | number | boolean ;
+atom = identifier | number | boolean ;
 
 exprs = [ "'" ] ( atom | sexpr ) ;
 
@@ -265,20 +267,37 @@ CODE
   #:title "All together now"
   (mono #<<CODE
 main    = { exprs } ;
-number  = [ "-" ], digit { digit } ;
+number  = [ "-" ] , digit { digit } ;
 digit   = 0 ... 9 ;
-string  = '"' , { letter }, '"' ;
+string  = '"' , { letter } , '"' ;
 letter  = "A" ... "z" ;
 boolean = "#t" | "#f" ;
-id      = id,
+identifier = identifier ,
         { letter | symbol | digit } ;
 symbol  = "<" | ">" | "*" | "+" | "-"
         | "=" | "_" | "/" | "%" ;
-atom    = id | number | boolean ;
+atom    = identifier | number
+        | boolean ;
 exprs   = [ "'" ] ( atom | sexpr ) ;
 sexpr   = "(" { exprs } ")" ;
 CODE
 ))
+
+(slide
+  #:title "What does this give us?"
+  (p "A reference for our ourselves or for a tool. A parser generator could
+     take our EBNF grammar and generate all of the code we need in order to
+     parse our language.")
+  (p "But that's not what we're here for."))
+
+(slide
+  #:layout 'center
+  (t "Let’s build a parser."))
+
+(slide
+  #:title "But wait!"
+  (p "Actually, let’s take a step back. Characters are hard but what if we had
+     ‘words’ instead?"))
 
 (slide
   #:title "Resources"
