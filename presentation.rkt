@@ -111,12 +111,12 @@ CODE
 (slide
   #:title "Ohh, fancy."
   (unordered
-    "Parsers"
     "Grammars"
     "BNF/EBNF"
+    "Lexer"
+    "Parsers"
     "Parser generators"
     "Recursive descent parsers"
-    "Top down parser"
     "Scope"
     "Evaluation"))
 
