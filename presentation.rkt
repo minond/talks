@@ -191,3 +191,95 @@ CODE
   #:title "It can apply functions to parameters"
   #:layout 'center
   (mono "(double 21)"))
+
+(slide
+  #:layout 'center
+  (t "Let's build a BNF grammar."))
+
+(slide
+  #:layout 'center
+  (t "Let's build an EBNF grammar."))
+
+(slide
+  #:layout 'center
+  (t "TODO TALK ABOUT EBNF HERE!!!"))
+
+(slide
+  #:title "Numbers"
+  (mono #<<CODE
+number = [ "-" ], digit { digit } ;
+
+digit = 0 | 1 | 2 | 3 | 4 | 5 | 6
+      | 7 | 8 | 9 ;
+CODE
+))
+
+(slide
+  #:title "Strings"
+  (mono #<<CODE
+string = '"' , { letter }, '"' ;
+
+letter = "A" | "B" | "C" | "D" | "E"
+       | "F" | "G" | "H" | "I" | "J"
+       | "K" | "L" | "M" | "N" | "O"
+       | "P" | "Q" | "R" | "S" | "T"
+       | "U" | "V" | "W" | "X" | "Y"
+       | "Z" | "a" | "b" | "c" | "d"
+       | "e" | "f" | "g" | "h" | "i"
+       | "j" | "k" | "l" | "m" | "n"
+       | "o" | "p" | "q" | "r" | "s"
+       | "t" | "u" | "v" | "w" | "x"
+       | "y" | "z" ;
+CODE
+))
+
+(slide
+  #:title "Booleans"
+  (mono #<<CODE
+boolean = "#t" | "#f" ;
+CODE
+))
+
+(slide
+  #:title "Identifiers"
+  (mono #<<CODE
+symbol = "<" | ">" | "*" | "+" | "-"
+       | "=" | "_" | "/" | "%" ;
+
+id = id, { letter | symbol | digit } ;
+CODE
+))
+
+(slide
+  #:title "S-expressions"
+  (mono #<<CODE
+atom = id | number | boolean ;
+
+exprs = [ "'" ] ( atom | sexpr ) ;
+
+sexpr = "(" { exprs } ")" ;
+CODE
+))
+
+(slide
+  #:title "All together now"
+  (mono #<<CODE
+main    = { exprs } ;
+number  = [ "-" ], digit { digit } ;
+digit   = 0 ... 9 ;
+string  = '"' , { letter }, '"' ;
+letter  = "A" ... "z" ;
+boolean = "#t" | "#f" ;
+id      = id,
+        { letter | symbol | digit } ;
+symbol  = "<" | ">" | "*" | "+" | "-"
+        | "=" | "_" | "/" | "%" ;
+atom    = id | number | boolean ;
+exprs   = [ "'" ] ( atom | sexpr ) ;
+sexpr   = "(" { exprs } ")" ;
+CODE
+))
+
+(slide
+  #:title "Resources"
+  (item "https://en.wikipedia.org/wiki/Extended_Backus-Naur_form"))
