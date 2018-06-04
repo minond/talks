@@ -36,20 +36,29 @@
                    (car parts)
                    (car (cdr parts))))))
 
-(define (mono texts #:ratio [ratio 1.1])
-  (apply vc-append 1
+(define (mono texts)
+  (apply vl-append 1
          (for/list ([line (string-split (string-trim texts) "\n")])
            (with-size ((get-current-code-font-size))
                       (with-font (current-code-font)
-                                 (para #:fill? #t
-                                       #:width (* ratio (current-para-width))
+                                 (para #:fill? #f
+                                       #:width (current-para-width)
                                        #:align 'left
                                        line))))))
 
-(define (code line)
-  (with-size ((get-current-code-font-size))
-             (with-font (current-code-font)
-                        (t line))))
+(define (ordered . items)
+  (apply vl-append gap-size
+         (for/list ([x items]
+                    [n (range 1 (+ 1 (length items)))])
+           (item
+             #:gap-size 0
+             #:bullet (t (format "~s - " n))
+             x))))
+
+(define (unrdered . items)
+  (apply vl-append gap-size
+         (for/list ([x items])
+           (item x))))
 
 (define (p txt)
   (para (string-normalize-spaces txt)))
@@ -133,26 +142,29 @@ CODE
 
 (slide
   #:title "Ohh, fancy."
-  (item "Parsers")
-  (item "Grammars")
-  (item "BNF/EBNF")
-  (item "Parser generators")
-  (item "Recursive descent parsers")
-  (item "Top down parser")
-  (item "Scope")
-  (item "Evaluation"))
+  (unrdered
+    "Parsers"
+    "Grammars"
+    "BNF/EBNF"
+    "Parser generators"
+    "Recursive descent parsers"
+    "Top down parser"
+    "Scope"
+    "Evaluation"))
 
 (slide
   #:title "Where do we really start?"
-  (p "1 - Parse")
-  (p "2 - Evaluate"))
+  (ordered
+    "Parse"
+    "Evaluate"))
 
 (slide
   #:title "This is where we start"
-  (p "1 - Define what our language looks like.")
-  (p "2 - Tokenize the input into a stream of valid tokens.")
-  (p "3 - Take the stream of tokens and compose them into complete expressions.")
-  (p "4 - Evaluate the expressions."))
+  (ordered
+    "Define what our language looks like."
+    "Tokenize the input into a stream of valid tokens."
+    "Take the stream of tokens and compose them into complete expressions."
+    "Evaluate the expressions."))
 
 (slide
   #:layout 'center
@@ -165,22 +177,22 @@ CODE
 (slide
   #:title "It can understand numbers"
   #:layout 'center
-  (code "7"))
+  (mono "7"))
 
 (slide
   #:title "It can understand strings"
   #:layout 'center
-  (code "\"Hello, world.\""))
+  (mono "\"Hello, world.\""))
 
 (slide
   #:title "It can understand something is logically true"
   #:layout 'center
-  (code "#t"))
+  (mono "#t"))
 
 (slide
   #:title "It can understand something is logically false"
   #:layout 'center
-  (code "#f"))
+  (mono "#f"))
 
 (slide
   #:title "It can run code conditionally"
@@ -196,17 +208,17 @@ CODE
 (slide
   #:title "It can express arithmetic operations"
   #:layout 'center
-  (code "(* 21 2)"))
+  (mono "(* 21 2)"))
 
 (slide
   #:title "It can define functions"
-  (code "(lambda (n) (* n 2))"))
+  (mono "(lambda (n) (* n 2))"))
 
 (slide
   #:title "It can store all of those values"
-  (code "(define double (lambda (n) (* n 2)))"))
+  (mono "(define double (lambda (n) (* n 2)))"))
 
 (slide
   #:title "It can apply functions to parameters"
   #:layout 'center
-  (code "(double 21)"))
+  (mono "(double 21)"))
