@@ -285,9 +285,9 @@ CODE
 
 (slide
   #:title "What does this give us?"
-  (p "A reference for our ourselves or for a tool. A parser generator could
-     take our EBNF grammar and generate all of the code we need in order to
-     parse our language.")
+  (p "A reference for our ourselves or for a tool. A parser generator (like
+     Yacc, GNU bison, ANTLR, etc.) could take our EBNF grammar and generate all
+     of the code we need in order to parse our language.")
   (p "But that's not what we're here for."))
 
 (slide
@@ -301,4 +301,8 @@ CODE
 
 (slide
   #:title "Resources"
-  (item "https://en.wikipedia.org/wiki/Extended_Backus-Naur_form"))
+  (unordered
+    "https://en.wikipedia.org/wiki/Extended_Backus-Naur_form"
+    "https://en.wikipedia.org/wiki/Yacc"
+    "https://en.wikipedia.org/wiki/GNU_bison"
+    "https://en.wikipedia.org/wiki/ANTLR"))
