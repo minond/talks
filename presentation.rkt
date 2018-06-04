@@ -36,15 +36,20 @@
                    (car parts)
                    (car (cdr parts))))))
 
-(define (mono texts)
+(define (mono texts #:ratio [ratio 1.1])
   (apply vc-append 1
          (for/list ([line (string-split (string-trim texts) "\n")])
            (with-size ((get-current-code-font-size))
                       (with-font (current-code-font)
                                  (para #:fill? #t
-                                       #:width (* 1.1 (current-para-width))
+                                       #:width (* ratio (current-para-width))
                                        #:align 'left
                                        line))))))
+
+(define (code line)
+  (with-size ((get-current-code-font-size))
+             (with-font (current-code-font)
+                        (t line))))
 
 (define (p txt)
   (para (string-normalize-spaces txt)))
@@ -92,10 +97,10 @@
      you throughout your career."))
 
 (slide
-  #:title "So what are we going to do about it?")
+  #:layout 'center
+  (t "So what are we going to do about it?"))
 
 (slide
-  #:title "So what are we going to do about it?"
   #:layout 'center
   (t "Let's build an interpreter."))
 
@@ -119,8 +124,12 @@ CODE
 ))
 
 (slide
-  #:title "Where do we start?"
-  (p "How about with fancy buzzwords?"))
+  #:layout 'center
+  (t "Where do we start?"))
+
+(slide
+  #:layout 'center
+  (t "How about with fancy buzzwords?"))
 
 (slide
   #:title "Ohh, fancy."
@@ -139,8 +148,65 @@ CODE
   (p "2 - Evaluate"))
 
 (slide
-  #:title "Where do we really start?"
+  #:title "This is where we start"
   (p "1 - Define what our language looks like.")
   (p "2 - Tokenize the input into a stream of valid tokens.")
   (p "3 - Take the stream of tokens and compose them into complete expressions.")
   (p "4 - Evaluate the expressions."))
+
+(slide
+  #:layout 'center
+  (t "Let's define a language."))
+
+(slide
+  #:layout 'center
+  (t "What can our language do?"))
+
+(slide
+  #:title "It can understand numbers"
+  #:layout 'center
+  (code "7"))
+
+(slide
+  #:title "It can understand strings"
+  #:layout 'center
+  (code "\"Hello, world.\""))
+
+(slide
+  #:title "It can understand something is logically true"
+  #:layout 'center
+  (code "#t"))
+
+(slide
+  #:title "It can understand something is logically false"
+  #:layout 'center
+  (code "#f"))
+
+(slide
+  #:title "It can run code conditionally"
+  (mono #<<CODE
+(cond (condition1 expression1)
+      (condition2 expression2)
+      (condition3 expression3)
+      (condition4 expression4)
+      (else default-expression))
+CODE
+))
+
+(slide
+  #:title "It can express arithmetic operations"
+  #:layout 'center
+  (code "(* 21 2)"))
+
+(slide
+  #:title "It can define functions"
+  (code "(lambda (n) (* n 2))"))
+
+(slide
+  #:title "It can store all of those values"
+  (code "(define double (lambda (n) (* n 2)))"))
+
+(slide
+  #:title "It can apply functions to parameters"
+  #:layout 'center
+  (code "(double 21)"))
