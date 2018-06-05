@@ -1,23 +1,5 @@
 import scala.collection.mutable.ListBuffer
 
-/* Grammar:
- *
- * main    = { exprs } ;
- * number  = [ "-" ] , digit { digit } ;
- * digit   = 0 ... 9 ;
- * string  = '"' , { letter } , '"' ;
- * letter  = "A" ... "z" ;
- * boolean = "#t" | "#f" ;
- * identifier = identifier ,
- *         { letter | symbol | digit } ;
- * symbol  = "<" | ">" | "*" | "+" | "-"
- *         | "=" | "_" | "/" | "%" ;
- * atom    = identifier | number
- *         | boolean ;
- * exprs   = [ "'" ] ( atom | sexpr ) ;
- * sexpr   = "(" { exprs } ")" ;
- */
-
 sealed trait Token
 case class InvalidToken(lexeme: String) extends Token
 case object SingleQuote extends Token
@@ -43,6 +25,10 @@ object Main {
     println(passLambdas(parse(tokenize("(lambda (a b) (+ a b))"))))
     println(passLambdas(parse(tokenize("(lambda (a b c) +)"))))
     println(passLambdas(parse(tokenize("#t"))))
+    println(passLambdas(parse(tokenize("123"))))
+    println(passLambdas(parse(tokenize("1 2 3"))))
+    println(passLambdas(parse(tokenize(""""a b c""""))))
+    println(passLambdas(parse(tokenize("''''(1 2 3)"))))
   }
 
   def passLambdas(expr: Expr): Expr = {
@@ -67,19 +53,14 @@ object Main {
     val tokens = ts.buffered
     val head = tokens.next
     head match {
-      case InvalidToken(lexeme) => InvalidExpr(s"unexpected '$lexeme'")
-      case InvalidExpr(msg) => InvalidExpr(msg)
-      case True => True
-      case False => False
-      case Number(n) => Number(n)
-      case Str(str) => Str(str)
-      case Identifier(id) => Identifier(id)
-      case SExpr(vals) => SExpr(vals)
-      case Quote(expr) => Quote(expr)
-      case Lambda(args, body) => Lambda(args, body)
+      case True | False | _: Str | _: Number | _: Identifier | _: SExpr
+          | _: Quote | _: Lambda | _: InvalidExpr =>
+        head.asInstanceOf[Expr]
+
       case SingleQuote =>
-        if (tokens.hasNext) Quote(parse(List(tokens.next).toIterator))
+        if (tokens.hasNext) Quote(parse(tokens))
         else InvalidExpr("missing expression after quote")
+
       case OpenParen =>
         def aux(tokens: BufferedIterator[Token]): List[Expr] =
           if (tokens.hasNext && tokens.head != CloseParen)
@@ -90,10 +71,14 @@ object Main {
 
         if (tokens.hasNext) {
           tokens.next
-          SExpr(values.toList)
+          SExpr(values)
         } else InvalidExpr("missing ')'")
 
-      case CloseParen => InvalidExpr("unexpected ')'")
+      case InvalidToken(lexeme) =>
+        InvalidExpr(s"unexpected '$lexeme'")
+
+      case CloseParen =>
+        InvalidExpr("unexpected ')'")
     }
   }
 
