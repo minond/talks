@@ -21,14 +21,15 @@ object Main {
   type Prediate[T] = T => Boolean
 
   def main(args: Array[String]): Unit = {
-    println(passLambdas(parse(tokenize("(d (+ 1 2))"))))
-    println(passLambdas(parse(tokenize("(lambda (a b) (+ a b))"))))
-    println(passLambdas(parse(tokenize("(lambda (a b c) +)"))))
-    println(passLambdas(parse(tokenize("#t"))))
-    println(passLambdas(parse(tokenize("123"))))
-    println(passLambdas(parse(tokenize("1 2 3"))))
-    println(passLambdas(parse(tokenize(""""a b c""""))))
-    println(passLambdas(parse(tokenize("''''(1 2 3)"))))
+    println(parse(tokenize("(d (+ 1 2))")))
+    println(parse(tokenize("(lambda (a b) (+ a b))")))
+    println(parse(tokenize("((lambda (a b) (+ a b)) 40 2)")))
+    println(parse(tokenize("(lambda (a b c) +)")))
+    println(parse(tokenize("#t")))
+    println(parse(tokenize("123")))
+    println(parse(tokenize("1 2 3")))
+    println(parse(tokenize(""""a b c"""")))
+    println(parse(tokenize("''''(1 2 3)")))
   }
 
   def passLambdas(expr: Expr): Expr = {
@@ -51,11 +52,10 @@ object Main {
 
   def parse(ts: Iterator[Token]): Expr = {
     val tokens = ts.buffered
-    val head = tokens.next
-    head match {
-      case True | False | _: Str | _: Number | _: Identifier | _: SExpr
-          | _: Quote | _: Lambda | _: InvalidExpr =>
-        head.asInstanceOf[Expr]
+    passLambdas(tokens.next match {
+      case expr @ (True | False | _: Str | _: Number | _: Identifier
+          | _: SExpr | _: Quote | _: Lambda | _: InvalidExpr) =>
+        expr.asInstanceOf[Expr]
 
       case SingleQuote =>
         if (tokens.hasNext) Quote(parse(tokens))
@@ -79,7 +79,7 @@ object Main {
 
       case CloseParen =>
         InvalidExpr("unexpected ')'")
-    }
+    })
   }
 
   def tokenize(str: String): Iterator[Token] = {
