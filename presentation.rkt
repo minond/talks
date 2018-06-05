@@ -300,6 +300,26 @@ CODE
      ‘words’ instead?"))
 
 (slide
+  #:title "A program that can analyze a program"
+  (mono #:ratio 1.3 #<<CODE
+def tokenize(str: String): Iterator[Token] = {
+  val src = str.toList.toIterator.buffered
+  for (c <- src if !c.isWhitespace)
+    yield c match {
+      case '(' => OpenParen
+      case ')' => CloseParen
+      case '\'' => SingleQuote
+      case '"' => ...
+      case n if isDigit(n) => ...
+      case c if isIdentifier(c) => ...
+      case '#' => ...
+      case c => ...
+    }
+}
+CODE
+))
+
+(slide
   #:title "Resources"
   (unordered
     "https://en.wikipedia.org/wiki/Extended_Backus-Naur_form"

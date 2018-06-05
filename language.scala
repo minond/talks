@@ -23,7 +23,7 @@ object Main {
   def main(args: Array[String]): Unit = {
     println(parse(tokenize("(d (+ 1 2))")))
     println(parse(tokenize("(lambda (a b) (+ a b))")))
-    println(parse(tokenize("((lambda (a b) (+ a b)) 40 2)")))
+    println(parse(tokenize("((lambda (a 1) (+ a b)) 40 2)")))
     println(parse(tokenize("(lambda (a b c) +)")))
     println(parse(tokenize("#t")))
     println(parse(tokenize("123")))
@@ -32,27 +32,45 @@ object Main {
     println(parse(tokenize("''''(1 2 3)")))
   }
 
-  def passLambdas(expr: Expr): Expr = {
+  def passErrors(expr: Expr): Expr =
+    expr match {
+      case SExpr(xs) =>
+        xs flatMap {
+          case err @ InvalidExpr(_) => Some(err)
+          case _ => None
+        } match {
+          case Nil => SExpr(xs)
+          case err :: _ => err
+        }
+
+      case err @ InvalidExpr(_) => err
+      case Quote(err @ InvalidExpr(_)) => err
+      case Lambda(_, err @ InvalidExpr(_)) => err
+      case expr => expr
+    }
+
+  def passLambdas(expr: Expr): Expr =
     expr match {
       case SExpr(Identifier("lambda") :: SExpr(args) :: body :: Nil) =>
         val (params, errs) = args.foldRight[(List[Identifier], List[InvalidExpr])](List.empty, List.empty){
           case (curr, (params, errs)) =>
             curr match {
               case id @ Identifier(_) => (id :: params, errs)
-              case x => (params, InvalidExpr("S") :: errs)
+              case x =>
+                val msg = s"expecting identifier in lambda argument but got $x"
+                (params, InvalidExpr(msg) :: errs)
             }
         }
 
         if (!errs.isEmpty) errs(0)
         else Lambda(params, body)
 
-      case e => e
+      case expr => expr
     }
-  }
 
   def parse(ts: Iterator[Token]): Expr = {
     val tokens = ts.buffered
-    passLambdas(tokens.next match {
+    passErrors(passLambdas(tokens.next match {
       case expr @ (True | False | _: Str | _: Number | _: Identifier
           | _: SExpr | _: Quote | _: Lambda | _: InvalidExpr) =>
         expr.asInstanceOf[Expr]
@@ -79,7 +97,7 @@ object Main {
 
       case CloseParen =>
         InvalidExpr("unexpected ')'")
-    })
+    }))
   }
 
   def tokenize(str: String): Iterator[Token] = {
@@ -90,7 +108,7 @@ object Main {
         case '(' => OpenParen
         case ')' => CloseParen
         case '\'' => SingleQuote
-        case '"' => Str(consumeUntil[Char](src, { c => c == '"' }).mkString)
+        case '"' => Str(consumeUntil(src, is('"')).mkString)
         case n if isDigit(n) => Number((n + consumeWhile(src, isDigit).mkString).toDouble)
         case c if isIdentifier(c) => Identifier(c + consumeWhile(src, isIdentifier).mkString)
 
@@ -136,4 +154,7 @@ object Main {
 
   def isWord(c: Char): Boolean =
     !c.isWhitespace && !isParen(c)
+
+  def is[T](x: T): Prediate[T] =
+    (y: T) => x == y
 }

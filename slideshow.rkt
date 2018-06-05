@@ -17,13 +17,13 @@
                    (car parts)
                    (car (cdr parts))))))
 
-(define (mono texts)
+(define (mono texts #:ratio [ratio 1])
   (apply vl-append 1
          (for/list ([line (string-split (string-trim texts) "\n")])
            (with-size ((get-current-code-font-size))
                       (with-font (current-code-font)
                                  (para #:fill? #f
-                                       #:width (current-para-width)
+                                       #:width (* ratio (current-para-width))
                                        #:align 'left
                                        line))))))
 
