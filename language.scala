@@ -1,3 +1,5 @@
+import scala.collection.mutable.ListBuffer
+
 /* Grammar:
  *
  * main    = { exprs } ;
@@ -18,7 +20,7 @@
 
 sealed trait Token
 case class InvalidToken(lexeme: String) extends Token
-// case object SingleQuote extends Token
+case object SingleQuote extends Token
 case object OpenParen extends Token
 case object CloseParen extends Token
 
@@ -30,49 +32,69 @@ case object True extends Expr
 case object False extends Expr
 case class Identifier(value: String) extends Expr
 case class SExpr(values: List[Expr]) extends Expr
-// case class Quote(value: Expr) extends Expr
-// case class Lambda(args: List[Identifier], body: Expr) extends Expr
+case class Quote(value: Expr) extends Expr
+case class Lambda(args: List[Identifier], body: Expr) extends Expr
 
 object Main {
   type Prediate[T] = T => Boolean
 
   def main(args: Array[String]): Unit = {
-    val sum = SExpr(List(Identifier("+"), Number(32), Number(43)))
-    println(sum)
-    // println(eval(sum))
-
-    println(tokenize("(123 123 1 2 3)").toList)
-    println(tokenize("""(display "hi")""").toList)
-    println(tokenize("""(display "hi 1 2 3")""").toList)
-    println(tokenize("""(display "hi 1 2 3" "1")""").toList)
-    println(tokenize("""(#t #f #a #)""").toList)
-    println(tokenize("(+ 1 2 3)").toList)
-    println(parse(tokenize("(+ 1 2 3)")).toList)
+    println(passLambdas(parse(tokenize("(d (+ 1 2))"))))
+    println(passLambdas(parse(tokenize("(lambda (a b) (+ a b))"))))
+    println(passLambdas(parse(tokenize("(lambda (a b c) +)"))))
+    println(passLambdas(parse(tokenize("#t"))))
   }
 
-  // def eval(expr: Expr): Expr = {
-  //   expr match {
-  //     case SExpr(sexpr) =>
-  //       sexpr match {
-  //         case Identifier("+") :: Number(a) :: Number(b) :: Nil =>
-  //           Number(a + b)
-  //       }
-  //   }
-  // }
+  def passLambdas(expr: Expr): Expr = {
+    expr match {
+      case SExpr(Identifier("lambda") :: SExpr(args) :: body :: Nil) =>
+        val (params, errs) = args.foldRight[(List[Identifier], List[InvalidExpr])](List.empty, List.empty){
+          case (curr, (params, errs)) =>
+            curr match {
+              case id @ Identifier(_) => (id :: params, errs)
+              case x => (params, InvalidExpr("S") :: errs)
+            }
+        }
 
-  def parse(ts: Iterator[Token]): Iterator[Expr] = {
+        if (!errs.isEmpty) errs(0)
+        else Lambda(params, body)
+
+      case e => e
+    }
+  }
+
+  def parse(ts: Iterator[Token]): Expr = {
     val tokens = ts.buffered
-    for (t <- tokens)
-      yield t match {
-        case True => True
-        case False => False
-        case Number(n) => Number(n)
-        case Str(str) => Str(str)
-        case Identifier(id) => Identifier(id)
-        case SExpr(vals) => SExpr(parse(vals.toIterator).toList)
-        case OpenParen => SExpr(parse(consumeUntil[Token](tokens, { t => t == CloseParen })).toList)
-        case CloseParen => InvalidExpr("unexpected closing paren")
-      }
+    val head = tokens.next
+    head match {
+      case InvalidToken(lexeme) => InvalidExpr(s"unexpected '$lexeme'")
+      case InvalidExpr(msg) => InvalidExpr(msg)
+      case True => True
+      case False => False
+      case Number(n) => Number(n)
+      case Str(str) => Str(str)
+      case Identifier(id) => Identifier(id)
+      case SExpr(vals) => SExpr(vals)
+      case Quote(expr) => Quote(expr)
+      case Lambda(args, body) => Lambda(args, body)
+      case SingleQuote =>
+        if (tokens.hasNext) Quote(parse(List(tokens.next).toIterator))
+        else InvalidExpr("missing expression after quote")
+      case OpenParen =>
+        def aux(tokens: BufferedIterator[Token]): List[Expr] =
+          if (tokens.hasNext && tokens.head != CloseParen)
+            parse(tokens) :: aux(tokens)
+          else List.empty
+
+        val values = aux(tokens)
+
+        if (tokens.hasNext) {
+          tokens.next
+          SExpr(values.toList)
+        } else InvalidExpr("missing ')'")
+
+      case CloseParen => InvalidExpr("unexpected ')'")
+    }
   }
 
   def tokenize(str: String): Iterator[Token] = {
@@ -82,6 +104,7 @@ object Main {
       yield c match {
         case '(' => OpenParen
         case ')' => CloseParen
+        case '\'' => SingleQuote
         case '"' => Str(consumeUntil[Char](src, { c => c == '"' }).mkString)
         case n if isDigit(n) => Number((n + consumeWhile(src, isDigit).mkString).toDouble)
         case c if isIdentifier(c) => Identifier(c + consumeWhile(src, isIdentifier).mkString)
@@ -97,15 +120,15 @@ object Main {
       }
   }
 
-  def consumeWhile[T](src: BufferedIterator[T], predicate: Prediate[T]): List[T] = {
+  def consumeWhile[T](src: BufferedIterator[T], predicate: Prediate[T]): Iterator[T] = {
     def aux(buff: List[T]): List[T] =
       if (src.hasNext && predicate(src.head)) {
         val curr = src.head
         src.next
-        aux(buff ++ List(curr))
+        aux(buff :+ curr)
       } else buff
 
-    aux(List.empty)
+    aux(List.empty).toIterator
   }
 
   def consumeUntil[T](src: BufferedIterator[T], predicate: Prediate[T]): Iterator[T] =
