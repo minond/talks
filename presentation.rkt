@@ -455,21 +455,21 @@ CODE
 (slide
   #:title "Helper definitions"
   (mono #:ratio 1.3 #<<CODE
-type Prediate[T] = T => Boolean
+def isDigit(c: Char): Boolean =
+  c >= '0' && c <= '9'
 
 def consumeWhile[T](
   src: BufferedIterator[T],
-  predicate: Prediate[T]
+  predicate: T => Boolean
 ): Iterator[T] = {
-    def aux(buff: List[T]): List[T] =
-      if (src.hasNext && predicate(src.head)) {
-        val curr = src.head
-        src.next ; aux(buff :+ curr)
-      } else buff
-    aux(List.empty).toIterator }
+  def aux(buff: List[T]): List[T] =
+    if (src.hasNext && predicate(src.head)) {
+      val curr = src.head
+      src.next ; aux(buff :+ curr)
+    } else buff
 
-def isDigit(c: Char): Boolean =
-  c >= '0' && c <= '9'
+  aux(List.empty).toIterator
+}
 CODE
 ))
 
@@ -480,7 +480,7 @@ CODE
 (slide
   #:title "Now we have tokens."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; TODO ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-  (p "On to whole expressions.")
+  (p "On to expressions.")
   (blank)
   (ht-append (* 4 gap-size)
     (mono "(+ 23 432)")
@@ -495,7 +495,7 @@ CODE
     (mono #<<CODE
 SEXPR(
   ID(+),
-  NUM(23)
+  NUM(23),
   NUM(432))
 CODE
 )))
