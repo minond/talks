@@ -730,13 +730,70 @@ CODE
 )))
 
 (slide
-  #:layout 'center
-  (t "Sooo close"))
+  #:title "Hey what about Lambda, Proc, and Builtin?"
+  (p "You may have noticed that our parser never returns Lambdas, Procs, or
+     Builtins. There is a simple answer as to why Procs nor Builtins are
+     returned, and that is because those are expression that are meant to only
+     be created programmatically, and as such the parser doesn't have to know
+     how to parse them.")
+  (p "That is not the case of Lambdas. So what is happening right now?"))
 
 (slide
-  #:layout 'center
-  (t "Let’s build an evaluator"))
+  #:title "This is what is happening right now"
+  #:layout 'top
+  (blank)
+  (blank)
+  (vc-append (* 2 gap-size)
+    (mono #<<CODE
+val code = "(lambda (x) (+ x x))"
+parse(tokenize(code))
+CODE
+)
+    (arrow gap-size (* pi 1.5))
+    (mono #<<CODE
+SExpr(List(
+  Identifier(lambda),
+  SExpr(List(Identifier(x))),
+  SExpr(List(Identifier(+),
+             Identifier(x),
+             Identifier(x)))))
+CODE
+)))
 
+(slide
+  #:title "But this is what we need"
+  #:layout 'top
+  (blank)
+  (blank)
+  (vc-append (* 2 gap-size)
+    (mono #<<CODE
+val code = "(lambda (x) (+ x x))"
+parse(tokenize(code))
+CODE
+)
+    (arrow gap-size (* pi 1.5))
+    (mono #<<CODE
+Lambda(List(Identifier(x)),
+       SExpr(List(Identifier(+),
+                  Identifier(x),
+                  Identifier(x))))
+CODE
+)))
+
+; (slide
+;   #:layout 'center
+;   (t "Sooo close"))
+;
+; (slide
+;   #:layout 'center
+;   (t "Let’s build an evaluator"))
+;
+; (slide
+;   #:title "def evaluate"
+;   (p "In its simplest form, an evaluator is a function that takes an expression
+;      and returns another expression. The returned expression can be thought of
+;      as the simplified version of the original."))
+;
 ; (slide
 ;   #:title "Resources"
 ;   (unordered
