@@ -61,8 +61,7 @@ object Main {
   )
 
   def main(args: Array[String]): Unit = {
-    println(parse(tokenize("(lambda (x) (+ x x))")))
-    return
+    run("((lambda (x) (add x 42)) 42)")
     run("(begin (define -a -123) (add -a -a))")
     run("(add -123 123)")
     run("(d (+ 1 2))")
@@ -150,7 +149,7 @@ object Main {
     expr match {
       case SExpr(Identifier("lambda") :: SExpr(args) :: body :: Nil) =>
         val (params, errs) =
-          args.foldRight[(List[Identifier], List[Err])](List.empty, List.empty) {
+          args.foldRight(List[Identifier](), List[Err]()) {
             case (curr, (params, errs)) =>
               curr match {
                 case id @ Identifier(_) => (id :: params, errs)

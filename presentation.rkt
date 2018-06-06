@@ -780,14 +780,123 @@ Lambda(List(Identifier(x)),
 CODE
 )))
 
-; (slide
-;   #:layout 'center
-;   (t "Sooo close"))
-;
-; (slide
-;   #:layout 'center
-;   (t "Let’s build an evaluator"))
-;
+(slide
+  #:title "From this to that"
+  #:layout 'top
+  (vc-append (* 2 gap-size)
+    (mono #<<CODE
+SExpr(List(
+  Identifier(lambda),
+  SExpr(List(Identifier(x))),
+  SExpr(List(Identifier(+),
+             Identifier(x),
+             Identifier(x)))))
+CODE
+)
+    (arrow gap-size (* pi 1.5))
+    (mono #<<CODE
+Lambda(List(Identifier(x)),
+       SExpr(List(Identifier(+),
+                  Identifier(x),
+                  Identifier(x))))
+CODE
+)))
+
+(slide
+  #:title "def passLambdas"
+  (mono #<<CODE
+def passLambdas(expr: Expr): Expr =
+  expr match {
+    // ...
+  }
+CODE
+))
+
+(slide
+  #:title "def passLambdas"
+  (mono #<<CODE
+expr match {
+  case SExpr(Identifier("lambda") ::
+             SExpr(args) ::
+             body ::
+             Nil) => ???
+}
+CODE
+))
+
+(slide
+  #:title "def passLambdas"
+  (mono #<<CODE
+val (params, errs) = ???
+
+if (!errs.isEmpty)
+  errs(0)
+else
+  Lambda(params, body)
+CODE
+))
+
+(slide
+  #:title "def passLambdas"
+  (mono #<<CODE
+args.foldRight(
+  List[Identifier](),
+  List[Err]()
+) {
+  case (curr, (params, errs)) =>
+    curr match {
+      case id @ Identifier(_) =>
+        (id :: params, errs)
+
+      case x => (
+        params,
+        Err("bad argument") :: errs
+      )
+    }
+}
+CODE
+))
+
+(slide
+  #:title "calling passLambdas"
+  (mono #<<CODE
+def parse(ts:Iterator[Token]):Expr = {
+  val tokens = ts.buffered
+
+  passLambdas(tokens.next match {
+    // ...
+  })
+}
+CODE
+))
+
+(slide
+  #:title "Lambdas!"
+  (vc-append (* 2 gap-size)
+    (mono #<<CODE
+val code = "(lambda (x) (+ x x))"
+parse(tokenize(code))
+CODE
+)
+    (arrow gap-size (* pi 1.5))
+    (mono #<<CODE
+Lambda(List(Identifier(x)),
+       SExpr(List(Identifier(+),
+                  Identifier(x),
+                  Identifier(x))))
+CODE
+)))
+
+(slide
+  #:title "So close"
+  (p "So far our interpreter can do a lot. I can parse numbers, booleans,
+     strings, s-expression, and it even knows about lambdas! But still, it
+     doesn't run any code."))
+
+(slide
+  #:layout 'center
+  (t "Let’s build an evaluator"))
+
 ; (slide
 ;   #:title "def evaluate"
 ;   (p "In its simplest form, an evaluator is a function that takes an expression
