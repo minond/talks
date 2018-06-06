@@ -376,16 +376,17 @@ CODE
 (slide
   #:title "What's a lexer?"
   (p "A lexer is a state machine that converts a string  They ‘tokenize’ the
-     input which is usually one of the first steps in compilation and
-     interpretation.")
+     input turning a string into a list of tokens. This is usually one of the
+     first steps in compilation and interpretation.")
   (blank)
-  (ht-append (* 5 gap-size)
-    (mono "(+ 23 432)")
+  (hc-append (* 3 gap-size)
+    (mono "(+ 21 43)")
+    (arrow gap-size 0)
     (mono #<<CODE
 OPAREN
 ID(+)
-NUM(23)
-NUM(432)
+NUM(21)
+NUM(43)
 CPAREN
 CODE
 )))
@@ -394,13 +395,17 @@ CODE
   #:title "Token types"
   (mono #:ratio 1.3 #<<CODE
 sealed trait Token
+
 case object SingleQuote extends Token
 case object OpenParen extends Token
 case object CloseParen extends Token
 case object True extends Token
 case object False extends Token
-case class Number(value: Double) extends Token
-case class Str(value: String) extends Token
+
+case class Number(value: Double)
+  extends Token
+case class Str(value: String)
+  extends Token
 CODE
 ))
 
@@ -439,12 +444,26 @@ CODE
 ))
 
 (slide
+  #:title "Tokenizing strings"
+  (mono #:ratio 1.3 #<<CODE
+val src = str.toList.toIterator.buffered
+
+yield c match {
+  case '"' =>
+    Str(src.takeWhile(c => c != '"')
+      .mkString)
+}
+CODE
+))
+
+(slide
   #:title "Tokenizing numbers"
   (mono #:ratio 1.3 #<<CODE
 val src = str.toList.toIterator.buffered
 
 yield c match {
-  case n if isDigit(n) =>
+  case n if isDigit(n) ||
+      (n == '=' && isDigit(src.head)) =>
     val num =
       (n + consumeWhile(src, isDigit).mkString)
     Number(num.toDouble)
@@ -473,30 +492,97 @@ def consumeWhile[T](
 CODE
 ))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; TODO ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(slide (t "Talk about ASTs, turning tokens into expressions"))
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; TODO ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(slide
+  #:title "Tokenizing identifiers"
+  (mono #:ratio 1.3 #<<CODE
+val src = str.toList.toIterator.buffered
+
+yield c match {
+  case c if isIdentifier(c) =>
+    val name =
+      c + consumeWhile(src, isIdentifier)
+
+    Identifier(name.mkString)
+}
+CODE
+))
 
 (slide
-  #:title "Now we have tokens."
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; TODO ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-  (p "On to expressions.")
-  (blank)
-  (ht-append (* 4 gap-size)
-    (mono "(+ 23 432)")
+  #:title "Helper definitions"
+  (mono #:ratio 1.3 #<<CODE
+def isIdentifier(c: Char): Boolean =
+  isDigit(c) || isLetter(c) || isSymbol(c)
+
+def isLetter(c: Char): Boolean =
+  c >= 'A' && c <= 'z'
+
+def isSymbol(c: Char): Boolean =
+  Set(
+    '<', '>', '*', '+', '-',
+    '=', '_', '/', '%'
+  ).contains(c)
+CODE
+))
+
+(slide
+  #:title "Tokenizing identifiers"
+  (mono #:ratio 1.3 #<<CODE
+val src = str.toList.toIterator.buffered
+
+yield c match {
+  case '#' =>
+    src.headOption match {
+      case Some('f') => src.next; False
+      case Some('t') => src.next; True
+      case Some(c) =>
+        src.next; InvalidToken(s"#$c")
+      case None => InvalidToken("<eof>")
+    }
+}
+CODE
+))
+
+(slide
+  #:title "Great, now we have tokens."
+  (vc-append (* 2 gap-size)
+    (mono #<<CODE
+tokenize("(+ 21 43)").toList
+CODE
+)
+    (arrow gap-size (* pi 1.5))
+    (mono #<<CODE
+List(
+  OpenParen,
+  Identifier(+),
+  Number(21.0),
+  Number(43.0),
+  CloseParen
+)
+CODE
+)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; TODO ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(slide #:title "Talk about parsers and ASTs")
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; TODO ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(slide
+  (hc-append (* 2 gap-size)
+    (mono "(+ 21 43)")
+    (arrow gap-size 0)
     (mono #<<CODE
 OPAREN
 ID(+)
-NUM(23)
-NUM(432)
+NUM(21)
+NUM(43)
 CPAREN
 CODE
 )
+    (arrow gap-size 0)
     (mono #<<CODE
 SEXPR(
   ID(+),
-  NUM(23),
-  NUM(432))
+  NUM(21),
+  NUM(43))
 CODE
 )))
 
