@@ -1,51 +1,144 @@
 import scala.collection.mutable.ListBuffer
 
-sealed trait Token
-case class InvalidToken(lexeme: String) extends Token
-case object SingleQuote extends Token
-case object OpenParen extends Token
-case object CloseParen extends Token
-
-sealed trait Expr extends Token
-case class InvalidExpr(message: String) extends Expr
-case class Number(value: Double) extends Expr
-case class Str(value: String) extends Expr
-case object True extends Expr
-case object False extends Expr
-case class Identifier(value: String) extends Expr
-case class SExpr(values: List[Expr]) extends Expr
-case class Quote(value: Expr) extends Expr
-case class Lambda(args: List[Identifier], body: Expr) extends Expr
-
 object Main {
   type Prediate[T] = T => Boolean
+  type Env = Map[Identifier, Expr]
+
+  sealed trait Token
+  case class InvalidToken(lexeme: String) extends Token
+  case object SingleQuote extends Token
+  case object OpenParen extends Token
+  case object CloseParen extends Token
+
+  sealed trait Expr extends Token
+  case class Err(message: String) extends Expr
+  case class Number(value: Double) extends Expr
+  case class Str(value: String) extends Expr
+  case object True extends Expr
+  case object False extends Expr
+  case class Identifier(value: String) extends Expr
+  case class SExpr(values: List[Expr]) extends Expr
+  case class Quote(value: Expr) extends Expr
+  case class Lambda(args: List[Identifier], body: Expr) extends Expr
+  case class Proc(f: (List[Expr], Env) => (Expr, Env)) extends Expr
+  case class Builtin(f: (List[Expr], Env) => (Expr, Env)) extends Expr
+
+  val env = Map(
+    Identifier("define") -> Builtin((args, env) =>
+      args match {
+        case (id @ Identifier(_)) :: expr :: Nil =>
+          (Quote(Str("ok")), env ++ Map(id -> expr))
+        case _ =>
+          (Err("bad call to define. expecting an identifier and a value"), env)
+    }),
+    Identifier("begin") -> Builtin((args, env) => {
+      val (last, _) =
+        args.foldLeft[(Expr, Env)]((Quote(Str("nil")), env)) {
+          case ((_, env), expr) => evaluate(expr, env)
+        }
+
+      (last, env)
+    }),
+    Identifier("cond") -> Builtin((args, env) => {
+      def aux(conds: List[Expr]): Expr =
+        conds match {
+          case SExpr(check :: body :: Nil) :: rest =>
+            evaluate(check, env)._1 match {
+              case False => aux(rest)
+              case _ => evaluate(body, env)._1
+            }
+          case Nil => Quote(Str("nil"))
+          case _ => Err("bad syntax. cond expects a list of expression pairs")
+        }
+
+      (aux(args), env)
+    }),
+    Identifier("add") -> Proc((args, env) =>
+      (args match {
+        case Number(a) :: Number(b) :: Nil => Number(a + b)
+        case _ => Err("bad call to add. expecting two numbers")
+      }, env))
+  )
 
   def main(args: Array[String]): Unit = {
-    println(parse(tokenize("(d (+ 1 2))")))
-    println(parse(tokenize("(lambda (a b) (+ a b))")))
-    println(parse(tokenize("((lambda (a 1) (+ a b)) 40 2)")))
-    println(parse(tokenize("(lambda (a b c) +)")))
-    println(parse(tokenize("#t")))
-    println(parse(tokenize("123")))
-    println(parse(tokenize("1 2 3")))
-    println(parse(tokenize(""""a b c"""")))
-    println(parse(tokenize("''''(1 2 3)")))
+    run("(d (+ 1 2))")
+    run("(lambda (a b) (+ a b))")
+    run("((lambda (a 1) (+ a b)) 40 2)")
+    run("(lambda (a b c) +)")
+    run("#t")
+    run("123")
+    run("1 2 3")
+    run(""""a b c"""")
+    run("''''(1 2 3)")
+    run("((lambda (a b) (add a b)) 40 2)")
+    run("(123 1 2)")
+    run("(define two 2)")
+    run("(cond (#f 123) (#t 321))")
+    run("""
+    (begin
+      (define a 123)
+      (define b 321)
+      (add a b))
+    """)
   }
+
+  def run(src: String, env: Env = env): Expr = {
+    val expr = evaluate(parse(tokenize(src)), env)._1
+    println(s"<= ${src.trim}\n=> $expr")
+    expr
+  }
+
+  def evaluate(expr: Expr, env: Env): (Expr, Env) =
+    expr match {
+      case expr @ (True | False | _: Str | _: Number | _: Quote | _: Lambda | _: Builtin |
+          _: Proc | _: Err) =>
+        (expr, env)
+
+      case id @ Identifier(name) =>
+        val value = env.getOrElse(id, Err(s"unbound variable: $id"))
+        (value, env)
+
+      case SExpr((id @ Identifier(_)) :: body) =>
+        val (head, _) = evaluate(id, env)
+        evaluate(SExpr(head :: body), env)
+
+      case SExpr(Lambda(args, body) :: values) =>
+        evaluate(body, args.zip(values).foldLeft(env) {
+          case (env, (arg, value)) => env ++ Map(arg -> value)
+        })
+
+      case SExpr(Proc(fn) :: args) =>
+        fn(args.map { arg =>
+          evaluate(arg, env)._1
+        }, env)
+
+      case SExpr(Builtin(fn) :: args) =>
+        fn(args, env)
+
+      case SExpr((err @ Err(_)) :: _) =>
+        (err, env)
+
+      case SExpr(head :: _) =>
+        (Err(s"bad s-expression, head cannot be $head"), env)
+
+      case SExpr(Nil) =>
+        (Err("empty s-expression not allowed"), env)
+    }
 
   def passErrors(expr: Expr): Expr =
     expr match {
       case SExpr(xs) =>
         xs flatMap {
-          case err @ InvalidExpr(_) => Some(err)
+          case err @ Err(_) => Some(err)
           case _ => None
         } match {
           case Nil => SExpr(xs)
           case err :: _ => err
         }
 
-      case err @ InvalidExpr(_) => err
-      case Quote(err @ InvalidExpr(_)) => err
-      case Lambda(_, err @ InvalidExpr(_)) => err
+      case err @ Err(_) => err
+      case Quote(err @ Err(_)) => err
+      case Lambda(_, err @ Err(_)) => err
       case expr => expr
     }
 
@@ -53,13 +146,13 @@ object Main {
     expr match {
       case SExpr(Identifier("lambda") :: SExpr(args) :: body :: Nil) =>
         val (params, errs) =
-          args.foldRight[(List[Identifier], List[InvalidExpr])](List.empty, List.empty) {
+          args.foldRight[(List[Identifier], List[Err])](List.empty, List.empty) {
             case (curr, (params, errs)) =>
               curr match {
                 case id @ Identifier(_) => (id :: params, errs)
                 case x =>
                   val msg = s"expecting identifier in lambda argument but got $x"
-                  (params, InvalidExpr(msg) :: errs)
+                  (params, Err(msg) :: errs)
               }
           }
 
@@ -73,12 +166,12 @@ object Main {
     val tokens = ts.buffered
     passErrors(passLambdas(tokens.next match {
       case expr @ (True | False | _: Str | _: Number | _: Identifier | _: SExpr |
-          _: Quote | _: Lambda | _: InvalidExpr) =>
+          _: Quote | _: Lambda | _: Builtin | _: Proc | _: Err) =>
         expr.asInstanceOf[Expr]
 
       case SingleQuote =>
         if (tokens.hasNext) Quote(parse(tokens))
-        else InvalidExpr("missing expression after quote")
+        else Err("missing expression after quote")
 
       case OpenParen =>
         def aux(tokens: BufferedIterator[Token]): List[Expr] =
@@ -91,13 +184,13 @@ object Main {
         if (tokens.hasNext) {
           tokens.next
           SExpr(values)
-        } else InvalidExpr("missing ')'")
+        } else Err("missing ')'")
 
       case InvalidToken(lexeme) =>
-        InvalidExpr(s"unexpected '$lexeme'")
+        Err(s"unexpected '$lexeme'")
 
       case CloseParen =>
-        InvalidExpr("unexpected ')'")
+        Err("unexpected ')'")
     }))
   }
 
