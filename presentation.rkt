@@ -331,7 +331,8 @@ CODE
   (mono #<<CODE
 atom = identifier | number | boolean ;
 
-exprs = [ "'" ] ( atom | sexpr ) ;
+exprs = [ "'" ]
+      ( atom | sexpr | exprs ) ;
 
 sexpr = "(" { exprs } ")" ;
 CODE
@@ -352,7 +353,8 @@ symbol  = "<" | ">" | "*" | "+" | "-"
         | "=" | "_" | "/" | "%" ;
 atom    = identifier | number
         | boolean ;
-exprs   = [ "'" ] ( atom | sexpr ) ;
+exprs   = [ "'" ]
+        ( atom | sexpr | exprs ) ;
 sexpr   = "(" { exprs } ")" ;
 CODE
 ))
@@ -536,14 +538,15 @@ yield c match {
       case Some('t') => src.next; True
       case Some(c) =>
         src.next; InvalidToken(s"#$c")
-      case None => InvalidToken("<eof>")
+      case None =>
+        InvalidToken("unexpected <eof>")
     }
 }
 CODE
 ))
 
 (slide
-  #:title "Great, now we have tokens."
+  #:title "And now we have tokens"
   (vc-append (* 2 gap-size)
     (mono #<<CODE
 tokenize("(+ 21 43)").toList
@@ -561,11 +564,27 @@ List(
 CODE
 )))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; TODO ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(slide #:title "Talk about parsers and ASTs")
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; TODO ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(slide
+  #:title "Getting there"
+  (p "We nearly have a full representation of our grammar. So far we've covered
+     cases the following cases: numbers, strings, booleans, and identifier. But
+     we're still missing the structured expressions: s-expressions."))
 
 (slide
+  #:title "We need these"
+  (mono #<<CODE
+atom    = identifier | number
+        | boolean ;
+
+exprs   = [ "'" ]
+        ( atom | sexpr | exprs ) ;
+
+sexpr   = "(" { exprs } ")" ;
+CODE
+))
+
+(slide
+  #:title "We need this"
   (hc-append (* 2 gap-size)
     (mono "(+ 21 43)")
     (arrow gap-size 0)
@@ -587,7 +606,21 @@ CODE
 )))
 
 (slide
-  #:title "Some changes to our Token data structures"
+  #:title "ASTs"
+  (p "An abstract syntax tree is a tree representation of source code
+     structure. It is abstract because parts of the source code are implicit,
+     such as parentheses, semicolons, etc.")
+  (p "ASTs may also include matadata used in later stages of
+     compilation/interpretation, but we won't be doing that. An AST will still
+     be very useful during evaluation, however. Without it there is no
+     structure."))
+
+(slide
+  #:layout 'center
+  (t "Let’s extend our data structures"))
+
+(slide
+  #:title "Some changes to our Tokens"
   (mono #:ratio 1.3 #<<CODE
 sealed trait Token
 case object SingleQuote extends Token
@@ -639,13 +672,98 @@ CODE
 ))
 
 (slide
+  #:title "Handling SingleQuote"
+  (mono #:ratio 1.3 #<<CODE
+tokens.next match {
+  case SingleQuote =>
+    if (tokens.hasNext)
+      Quote(parse(tokens))
+    else
+      Err("unexpected <eof>")
+}
+CODE
+))
+
+(slide
+  #:title "Handling OpenParen"
+  (mono #:ratio 1.3 #<<CODE
+tokens.next match {
+  case OpenParen =>
+    val values = parseExprs(tokens)
+
+    if (tokens.hasNext) {
+      tokens.next
+      SExpr(values)
+    } else Err("missing ')'")
+}
+CODE
+))
+
+(slide
+  #:title "Helper definitions"
+  (mono #:ratio 1.3 #<<CODE
+def parseExprs(
+  tokens: BufferedIterator[Token]
+): List[Expr] =
+
+  if (tokens.hasNext &&
+      tokens.head != CloseParen)
+    parse(tokens) :: aux(tokens)
+  else
+    List.empty
+CODE
+))
+
+(slide
+  #:title "Handling CloseParen, InvalidToken, and everything else"
+  (mono #:ratio 1.3 #<<CODE
+tokens.next match {
+  case InvalidToken(lexeme) =>
+    Err(s"unexpected '$lexeme'")
+
+  case CloseParen =>
+    Err("unexpected ')'")
+
+  // True, False, Str, Number,
+  // Identifier, SExpr, Quote,
+  // Lambda, Builtin, Proc, Err
+  case expr => expr
+}
+CODE
+))
+
+(slide
+  #:title "And now we have an AST"
+  (vc-append (* 2 gap-size)
+    (mono #<<CODE
+parse(tokenize("(+ 21 43)"))
+CODE
+)
+    (arrow gap-size (* pi 1.5))
+    (mono #<<CODE
+List(OpenParen, Identifier(+),
+  Number(21.0), Number(43.0),
+  CloseParen)
+CODE
+)
+    (arrow gap-size (* pi 1.5))
+    (mono #<<CODE
+SExpr(List(Identifier(+), Number(21.0), Number(43.0)))
+CODE
+)))
+
+(slide
+  #:layout 'center
+  (t "Sooo close"))
+
+(slide
   #:layout 'center
   (t "Let’s build an evaluator"))
 
-(slide
-  #:title "Resources"
-  (unordered
-    "https://en.wikipedia.org/wiki/Extended_Backus-Naur_form"
-    "https://en.wikipedia.org/wiki/Yacc"
-    "https://en.wikipedia.org/wiki/GNU_bison"
-    "https://en.wikipedia.org/wiki/ANTLR"))
+; (slide
+;   #:title "Resources"
+;   (unordered
+;     "https://en.wikipedia.org/wiki/Extended_Backus-Naur_form"
+;     "https://en.wikipedia.org/wiki/Yacc"
+;     "https://en.wikipedia.org/wiki/GNU_bison"
+;     "https://en.wikipedia.org/wiki/ANTLR"))

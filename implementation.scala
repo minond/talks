@@ -61,6 +61,8 @@ object Main {
   )
 
   def main(args: Array[String]): Unit = {
+    println(parse(tokenize("(+ 21 43)")))
+    return
     run("(begin (define -a -123) (add -a -a))")
     run("(add -123 123)")
     run("(d (+ 1 2))")
