@@ -61,6 +61,7 @@ object Main {
   )
 
   def main(args: Array[String]): Unit = {
+    run("(add -123 123)")
     run("(d (+ 1 2))")
     run("(lambda (a b) (+ a b))")
     run("((lambda (a 1) (+ a b)) 40 2)")
@@ -204,7 +205,7 @@ object Main {
           case ')' => CloseParen
           case '\'' => SingleQuote
           case '"' => Str(src.takeWhile(not(is('"'))).mkString)
-          case n if isDigit(n) =>
+          case n if isDigit(n) || is('-')(n) && isDigit(src.head) =>
             Number((n + consumeWhile(src, isDigit).mkString).toDouble)
           case c if isIdentifier(c) =>
             Identifier(c + consumeWhile(src, isIdentifier).mkString)

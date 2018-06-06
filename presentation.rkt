@@ -284,15 +284,15 @@ CODE
   (mono #<<CODE
 number = [ "-" ] , digit { digit } ;
 
-digit = 0 | 1 | 2 | 3 | 4 | 5 | 6
-      | 7 | 8 | 9 ;
+digit = "0" | "1" | "2" | "3" | "4"
+      | "5" | "6" | "7" | "8" | "9" ;
 CODE
 ))
 
 (slide
   #:title "Strings"
   (mono #<<CODE
-string = '"' , { letter } , '"' ;
+string = '"' { letter } '"' ;
 
 letter = "A" | "B" | "C" | "D" | "E"
        | "F" | "G" | "H" | "I" | "J"
@@ -342,7 +342,7 @@ CODE
   (mono #<<CODE
 main    = { exprs } ;
 number  = [ "-" ] , digit { digit } ;
-digit   = 0 | ... | 9 ;
+digit   = "0" | ... | "9" ;
 string  = '"' , { letter } , '"' ;
 letter  = "A" | ... | "z" ;
 boolean = "#t" | "#f" ;
