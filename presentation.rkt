@@ -47,6 +47,11 @@
                                        #:align 'left
                                        line))))))
 
+(define (code str)
+  (with-size (- (current-font-size) 6)
+             (with-font (current-code-font)
+                        (t str))))
+
 (define (ordered . items)
   (apply vl-append gap-size
          (for/list ([x items]
@@ -111,26 +116,19 @@
 
 (slide
   #:layout 'center
-  (t "Let’s build an interpreter."))
+  (t "Let’s build an interpreter"))
 
 (slide
+  #:title "What's that?"
   (scale (bitmap (build-path "assets" "interpreter-definitions.png")) .5))
 
 (slide
   #:title "A program that can analyze a program"
-  (mono #<<CODE
-> 21 * 2
-...
-CODE
-))
+  (scale (bitmap (build-path "assets" "interpreter-input.png")) .5))
 
 (slide
   #:title "A program that can analyze a program"
-  (mono #<<CODE
-> 21 * 2
-< 42
-CODE
-))
+  (scale (bitmap (build-path "assets" "interpreter-output.png")) .5))
 
 (slide
   #:layout 'center
@@ -168,7 +166,7 @@ CODE
 
 (slide
   #:layout 'center
-  (t "Let’s define a language."))
+  (t "Let’s define a language"))
 
 (slide
   #:layout 'center
@@ -185,12 +183,12 @@ CODE
   (mono "\"Hello, world.\""))
 
 (slide
-  #:title "It can understand something is logically true"
+  #:title "It can understand truth"
   #:layout 'center
   (mono "#t"))
 
 (slide
-  #:title "It can understand something is logically false"
+  #:title "It can understand lies"
   #:layout 'center
   (mono "#f"))
 
@@ -224,18 +222,62 @@ CODE
   (mono "(double 21)"))
 
 (slide
+  #:title "Does it look familiar?"
   #:layout 'center
-  (t "Let’s build a BNF grammar."))
+  (p "Yes, it looks like a Lisp. Notice all of those parenthesized lists? Those
+      are s-expressions."))
 
 (slide
   #:layout 'center
-  (t "Let’s build an EBNF grammar."))
+  (t "Let’s get a little more specific"))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; TODO ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (slide
   #:layout 'center
-  (t "TODO TALK ABOUT EBNF HERE!!!"))
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; TODO ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  (t "Let’s build a BNF grammar"))
+
+(slide
+  #:title "What's BNF?"
+  (p "Think of BNF as a language for languages. It's used in defining the
+     structure in a computer language (and just not a programming language)"))
+
+(slide
+  #:title "What's BNF?"
+  (para "BNF is made up of rules and their expansions, such as:"
+        (code "<expr> ::= <digit> \"+\" <digit>")
+        "where"
+        (code "<expr>")
+        "and"
+        (code "<digit>")
+        "are non-terminal symbols.")
+  (para "And terminal symbols:"
+        (code "<digit> ::= \"1\" | \"2\" | \"3\"")))
+
+(slide
+  #:layout 'center
+  (t "Let’s build an EBNF grammar"))
+
+(slide
+  #:title "What's EBNF?"
+  (para (string-normalize-spaces "EBNF is a set of extensions and modifications
+          placed on top of BNF. Differences include dropping of the angled
+          brackets,")
+        (code "::=")
+        "becomes"
+        (code "=")
+        ", and we add semi-colons at the end of expressions.")
+  (para "Other improvements include the ability to repeat expressions with"
+        (code "{}")
+        ", group expressions with"
+        (code "()")
+        ", add optional expressions with"
+        (code "[]")
+        ", and explicit concatenation with"
+        (code ",")
+        "."))
+
+(slide
+  #:layout 'center
+  (t "Some examples?"))
 
 (slide
   #:title "Numbers"
@@ -324,7 +366,7 @@ CODE
 
 (slide
   #:layout 'center
-  (t "Let’s build a parser."))
+  (t "Let’s build a parser"))
 
 (slide
   #:title "But wait!"
@@ -332,7 +374,7 @@ CODE
      ‘words’ instead?"))
 
 (slide
-  #:title "A program that can analyze a program"
+  #:title "A Tokenizer"
   (mono #:ratio 1.3 #<<CODE
 def tokenize(str: String): Iterator[Token] = {
   val src = str.toList.toIterator.buffered
