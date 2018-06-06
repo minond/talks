@@ -160,12 +160,12 @@
   (mono "\"Hello, world.\""))
 
 (slide
-  #:title "It can understand truth"
+  #:title "It can understand something is true"
   #:layout 'center
   (mono "#t"))
 
 (slide
-  #:title "It can understand lies"
+  #:title "It can understand something is false"
   #:layout 'center
   (mono "#f"))
 
@@ -888,6 +888,13 @@ CODE
 )))
 
 (slide
+  #:title "Multiple passes"
+  (p "We could employ this method of checking and manipulating an expression
+     after it is parsed and before being executed to do many things. In our
+     case we are adding a new feature, Lambda expressions, but one could also
+     do optimizations, type checking, and other static analysis checks."))
+
+(slide
   #:title "So close"
   (p "So far our interpreter can do a lot. I can parse numbers, booleans,
      strings, s-expression, and it even knows about lambdas! But still, it
@@ -897,16 +904,32 @@ CODE
   #:layout 'center
   (t "Let’s build an evaluator"))
 
-; (slide
-;   #:title "def evaluate"
-;   (p "In its simplest form, an evaluator is a function that takes an expression
-;      and returns another expression. The returned expression can be thought of
-;      as the simplified version of the original."))
-;
-; (slide
-;   #:title "Resources"
-;   (unordered
-;     "https://en.wikipedia.org/wiki/Extended_Backus-Naur_form"
-;     "https://en.wikipedia.org/wiki/Yacc"
-;     "https://en.wikipedia.org/wiki/GNU_bison"
-;     "https://en.wikipedia.org/wiki/ANTLR"))
+(slide
+  #:title "def evaluate"
+  (p "In its simplest form, an evaluator is a function that takes an expression
+     and returns another expression. The returned expression can be thought of
+     as the simplified version of the original."))
+
+(slide
+  #:title "Evaluate this!"
+  (table 3
+         (list
+           (mono "324") (arrow gap-size 0) (mono "324")
+           (mono "#t") (arrow gap-size 0) (mono "#t")
+           (mono "\"Hello, world.\"") (arrow gap-size 0) (mono "\"Hello, world.\"")
+           (mono "(+ 21 43)") (arrow gap-size 0) (mono "64"))
+
+         (list* rc-superimpose
+                cc-superimpose
+                lc-superimpose)
+
+         cc-superimpose
+         (* 2 gap-size)
+         gap-size))
+
+(slide
+  #:title "Resources"
+  (unordered
+    "https://en.wikipedia.org/wiki/Extended_Backus-Naur_form"
+    "https://en.wikipedia.org/wiki/Abstract_syntax_tree"
+    "https://en.wikipedia.org/wiki/Multi-pass_compiler"))
