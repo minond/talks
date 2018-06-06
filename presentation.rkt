@@ -478,6 +478,29 @@ CODE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; TODO ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (slide
+  #:title "Now we have tokens."
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; TODO ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  (p "On to whole expressions.")
+  (blank)
+  (ht-append (* 4 gap-size)
+    (mono "(+ 23 432)")
+    (mono #<<CODE
+OPAREN
+ID(+)
+NUM(23)
+NUM(432)
+CPAREN
+CODE
+)
+    (mono #<<CODE
+SEXPR(
+  ID(+),
+  NUM(23)
+  NUM(432))
+CODE
+)))
+
+(slide
   #:title "Some changes to our Token data structures"
   (mono #:ratio 1.3 #<<CODE
 sealed trait Token
