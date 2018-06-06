@@ -338,13 +338,13 @@ CODE
 ))
 
 (slide
-  #:title "All together now"
+  #:title "All together now. I present to you our Lisp."
   (mono #<<CODE
 main    = { exprs } ;
 number  = [ "-" ] , digit { digit } ;
-digit   = 0 ... 9 ;
+digit   = 0 | ... | 9 ;
 string  = '"' , { letter } , '"' ;
-letter  = "A" ... "z" ;
+letter  = "A" | ... | "z" ;
 boolean = "#t" | "#f" ;
 identifier = identifier ,
         { letter | symbol | digit } ;
@@ -373,8 +373,12 @@ CODE
   (p "Actually, let’s take a step back. Characters are hard but what if we had
      ‘words’ instead?"))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; TODO ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(slide (t "And here we talk about tokenizer, lexical analysis, etc"))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; TODO ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (slide
-  #:title "A Tokenizer"
+  #:title "Tokenizer function"
   (mono #:ratio 1.3 #<<CODE
 def tokenize(str: String): Iterator[Token] = {
   val src = str.toList.toIterator.buffered
@@ -383,15 +387,80 @@ def tokenize(str: String): Iterator[Token] = {
       case '(' => OpenParen
       case ')' => CloseParen
       case '\'' => SingleQuote
-      case '"' => ...
-      case n if isDigit(n) => ...
-      case c if isIdentifier(c) => ...
-      case '#' => ...
-      case c => ...
+      case '"' => ???
+      case n if isDigit(n) => ???
+      case c if isIdentifier(c) => ???
+      case '#' => ???
+      case c => ???
     }
 }
 CODE
 ))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; TODO ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(slide (t "And here we talk about tokenizer, lexical analysis, etc"))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; TODO ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; TODO ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(slide (t "Talk about ASTs"))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; TODO ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(slide
+  #:title "Token and AST data structures"
+  (mono #:ratio 1.3 #<<CODE
+sealed trait Token
+case object SingleQuote extends Token
+case object OpenParen extends Token
+case object CloseParen extends Token
+
+sealed trait Expr extends Token
+case class Number(value: Double) extends Expr
+case class Str(value: String) extends Expr
+case object True extends Expr
+case object False extends Expr
+case class Identifier(value: String)
+  extends Expr
+case class SExpr(values: List[Expr])
+  extends Expr
+CODE
+))
+
+(slide
+  #:title "Some extra token and AST data structures"
+  (mono #:ratio 1.3 #<<CODE
+case class InvalidToken(lexeme: String)
+  extends Token
+
+case class Err(message: String) extends Expr
+case class Quote(value: Expr) extends Expr
+case class Lambda(args: List[Identifier],
+  body: Expr) extends Expr
+case class Proc(f: (List[Expr], Env)
+  => (Expr, Env)) extends Expr
+case class Builtin(f: (List[Expr], Env)
+  => (Expr, Env)) extends Expr
+CODE
+))
+
+(slide
+  #:title "Parser function"
+  (mono #:ratio 1.3 #<<CODE
+def parse(ts: Iterator[Token]): Expr = {
+  val tokens = ts.buffered
+  tokens.next match {
+    case SingleQuote => ???
+    case OpenParen => ???
+    case CloseParen => ???
+    case InvalidToken(lexeme) => ???
+    case expr => expr
+  }
+}
+CODE
+))
+
+(slide
+  #:layout 'center
+  (t "Let’s build an evaluator"))
 
 (slide
   #:title "Resources"
