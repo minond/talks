@@ -373,9 +373,50 @@ CODE
   (p "Actually, let’s take a step back. Characters are hard but what if we had
      ‘words’ instead?"))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; TODO ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(slide (t "And here we talk about tokenizer, lexical analysis, etc"))
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; TODO ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(slide
+  #:title "What's a lexer?"
+  (p "A lexer is a state machine that converts a string  They ‘tokenize’ the
+     input which is usually one of the first steps in compilation and
+     interpretation.")
+  (blank)
+  (ht-append (* 5 gap-size)
+    (mono "(+ 23 432)")
+    (mono #<<CODE
+OPAREN
+ID(+)
+NUM(23)
+NUM(432)
+CPAREN
+CODE
+)))
+
+(slide
+  #:title "Token types"
+  (mono #:ratio 1.3 #<<CODE
+sealed trait Token
+case object SingleQuote extends Token
+case object OpenParen extends Token
+case object CloseParen extends Token
+case object True extends Token
+case object False extends Token
+case class Number(value: Double) extends Token
+case class Str(value: String) extends Token
+CODE
+))
+
+(slide
+  #:title "And even more tokens"
+  (mono #:ratio 1.3 #<<CODE
+case class InvalidToken(lexeme: String)
+  extends Token
+
+case class Identifier(value: String)
+  extends Token
+
+case class SExpr(values: List[Token])
+  extends Token
+CODE
+))
 
 (slide
   #:title "Tokenizer function"
@@ -397,16 +438,47 @@ def tokenize(str: String): Iterator[Token] = {
 CODE
 ))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; TODO ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(slide (t "And here we talk about tokenizer, lexical analysis, etc"))
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; TODO ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(slide
+  #:title "Tokenizing numbers"
+  (mono #:ratio 1.3 #<<CODE
+val src = str.toList.toIterator.buffered
+
+yield c match {
+  case n if isDigit(n) =>
+    val num =
+      (n + consumeWhile(src, isDigit).mkString)
+    Number(num.toDouble)
+}
+CODE
+))
+
+(slide
+  #:title "Helper definitions"
+  (mono #:ratio 1.3 #<<CODE
+type Prediate[T] = T => Boolean
+
+def consumeWhile[T](
+  src: BufferedIterator[T],
+  predicate: Prediate[T]
+): Iterator[T] = {
+    def aux(buff: List[T]): List[T] =
+      if (src.hasNext && predicate(src.head)) {
+        val curr = src.head
+        src.next ; aux(buff :+ curr)
+      } else buff
+    aux(List.empty).toIterator }
+
+def isDigit(c: Char): Boolean =
+  c >= '0' && c <= '9'
+CODE
+))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; TODO ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(slide (t "Talk about ASTs"))
+(slide (t "Talk about ASTs, turning tokens into expressions"))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; TODO ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (slide
-  #:title "Token and AST data structures"
+  #:title "Some changes to our Token data structures"
   (mono #:ratio 1.3 #<<CODE
 sealed trait Token
 case object SingleQuote extends Token
@@ -414,10 +486,10 @@ case object OpenParen extends Token
 case object CloseParen extends Token
 
 sealed trait Expr extends Token
-case class Number(value: Double) extends Expr
-case class Str(value: String) extends Expr
 case object True extends Expr
 case object False extends Expr
+case class Number(value: Double) extends Expr
+case class Str(value: String) extends Expr
 case class Identifier(value: String)
   extends Expr
 case class SExpr(values: List[Expr])
@@ -426,17 +498,16 @@ CODE
 ))
 
 (slide
-  #:title "Some extra token and AST data structures"
+  #:title "More expressions"
   (mono #:ratio 1.3 #<<CODE
-case class InvalidToken(lexeme: String)
-  extends Token
-
 case class Err(message: String) extends Expr
 case class Quote(value: Expr) extends Expr
 case class Lambda(args: List[Identifier],
   body: Expr) extends Expr
+
 case class Proc(f: (List[Expr], Env)
   => (Expr, Env)) extends Expr
+
 case class Builtin(f: (List[Expr], Env)
   => (Expr, Env)) extends Expr
 CODE
