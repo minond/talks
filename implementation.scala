@@ -27,13 +27,13 @@ object Main {
     Identifier("define") -> Builtin((args, env) =>
       args match {
         case (id @ Identifier(_)) :: expr :: Nil =>
-          (Quote(Str("ok")), env ++ Map(id -> expr))
+          (expr, env ++ Map(id -> expr))
         case _ =>
           (Err("bad call to define. expecting an identifier and a value"), env)
     }),
     Identifier("begin") -> Builtin((args, env) => {
       val (last, _) =
-        args.foldLeft[(Expr, Env)]((Quote(Str("nil")), env)) {
+        args.foldLeft[(Expr, Env)]((SExpr(List.empty), env)) {
           case ((_, env), expr) => evaluate(expr, env)
         }
 
@@ -47,7 +47,7 @@ object Main {
               case False => aux(rest)
               case _ => evaluate(body, env)._1
             }
-          case Nil => Quote(Str("nil"))
+          case Nil => SExpr(List.empty)
           case _ => Err("bad syntax. cond expects a list of expression pairs")
         }
 
@@ -80,6 +80,9 @@ object Main {
     run("(123 1 2)")
     run("(define two 2)")
     run("(cond (#f 123) (#t 321))")
+    run("(cond ('() 123))")
+    run("(cond (#f 123))")
+    run("(cond)")
     run("""
     (begin
       (define a 123)
