@@ -14,12 +14,12 @@
                    (car parts)
                    (car (cdr parts))))))
 
-(define (mono texts #:ratio [ratio 1])
+(define (mono texts #:ratio [ratio 1] #:fill [fill #f])
   (apply vl-append 1
          (for/list ([line (string-split (string-trim texts) "\n")])
            (with-size ((get-current-code-font-size))
                       (with-font (current-code-font)
-                                 (para #:fill? #f
+                                 (para #:fill? fill
                                        #:width (* ratio (current-para-width))
                                        #:align 'left
                                        line))))))
@@ -988,6 +988,160 @@ CODE
          cc-superimpose
          (* 2 gap-size)
          gap-size))
+
+(slide
+  #:title "def evaluate"
+  #:layout 'top
+  (mono #:fill #t #<<CODE
+def evaluate(expr: Expr, env: Env):
+    (Expr, Env) =
+
+  expr match {
+    // ...
+  }
+CODE
+))
+
+(slide
+  #:title "def evaluate"
+  #:layout 'top
+  (mono #:fill #t #<<CODE
+def evaluate(expr: Expr, env: Env):
+    (Expr, Env) =
+
+  expr match {
+    case expr @ (True | False
+      | _: Str | _: Number
+      | _: Quote | _: Lambda
+      | _: Builtin | _: Proc
+      | _: Err
+    ) =>
+
+      (expr, env)
+  }
+CODE
+))
+
+(slide
+  #:title "def evaluate"
+  #:layout 'top
+  (mono #:fill #t #<<CODE
+def evaluate(expr: Expr, env: Env):
+    (Expr, Env) =
+
+  expr match {
+    case id @ Identifier(name) =>
+      val err = Err(
+        s"unbound variable: $name")
+
+      (env.getOrElse(err), env)
+  }
+CODE
+))
+
+(slide
+  #:title "def evaluate"
+  #:layout 'top
+  (mono #:fill #t #<<CODE
+def evaluate(expr: Expr, env: Env):
+    (Expr, Env) =
+
+  expr match {
+    case SExpr(Nil) =>
+      (Err("empty expression"), env)
+  }
+CODE
+))
+
+(slide
+  #:title "def evaluate"
+  #:layout 'top
+  (mono #:fill #t #<<CODE
+def evaluate(expr: Expr, env: Env):
+    (Expr, Env) =
+
+  expr match {
+    case SExpr((id @ Identifier(_))
+        :: body) =>
+
+      val (head, _) =
+        evaluate(id, env)
+
+      evaluate(
+        SExpr(head :: body),
+        env)
+  }
+CODE
+))
+
+(slide
+  #:title "def evaluate"
+  #:layout 'top
+  (mono #:fill #t #<<CODE
+case SExpr(Lambda(args, body)
+    :: values) =>
+
+  val scope = args.zip(values)
+    .foldLeft(env) {
+      case (env, (arg, value)) =>
+        env ++ Map(arg -> value)
+    }
+
+  val (ret, _) =
+    evaluate(body, scope)
+
+  (ret, env)
+CODE
+))
+
+(slide
+  #:title "def evaluate"
+  #:layout 'top
+  (mono #:fill #t #<<CODE
+def evaluate(expr: Expr, env: Env):
+    (Expr, Env) =
+
+  expr match {
+    case SExpr(Proc(fn) :: args) =>
+      val evaled = args.map {
+        arg => evaluate(arg, env)._1
+      }
+
+      fn(evaled)
+  }
+CODE
+))
+
+(slide
+  #:title "def evaluate"
+  #:layout 'top
+  (mono #:fill #t #<<CODE
+def evaluate(expr: Expr, env: Env):
+    (Expr, Env) =
+
+  expr match {
+    case SExpr(Builtin(fn) :: args) =>
+      fn(args, env)
+  }
+CODE
+))
+
+(slide
+  #:title "def evaluate"
+  #:layout 'top
+  (mono #:fill #t #<<CODE
+def evaluate(expr: Expr, env: Env):
+    (Expr, Env) =
+
+  expr match {
+    case SExpr(head :: _) =>
+      val err = Err(
+        s"cannot call $head")
+
+      (err, env)
+  }
+CODE
+))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; TODO ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; TODO ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

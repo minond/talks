@@ -61,6 +61,7 @@ object Main {
   )
 
   def main(args: Array[String]): Unit = {
+    run("((lambda () 123))")
     run("((lambda (x) (add x 20)) 22)")
     run("((lambda (a b) (add a b)) 5 -10)")
     run("((lambda (a b) (add a b)) -10 5)")
@@ -100,7 +101,7 @@ object Main {
         (expr, env)
 
       case id @ Identifier(name) =>
-        val value = env.getOrElse(id, Err(s"unbound variable: $id"))
+        val value = env.getOrElse(id, Err(s"unbound variable: $name"))
         (value, env)
 
       case SExpr((id @ Identifier(_)) :: body) =>
@@ -108,9 +109,9 @@ object Main {
         evaluate(SExpr(head :: body), env)
 
       case SExpr(Lambda(args, body) :: values) =>
-        evaluate(body, args.zip(values).foldLeft(env) {
+        (evaluate(body, args.zip(values).foldLeft(env) {
           case (env, (arg, value)) => env ++ Map(arg -> value)
-        })
+        })._1, env)
 
       case SExpr(Proc(fn) :: args) =>
         fn(args.map { arg =>
