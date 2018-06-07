@@ -1220,6 +1220,21 @@ CODE
 ))
 
 (slide
+  #:title "Builtin: add"
+  (mono #<<CODE
+Proc((args, env) =>
+  (args match {
+    case Number(a) :: Number(b)
+        :: Nil =>
+
+      Number(a + b)
+
+    case _ => Err("bad call to add")
+  }, env))
+CODE
+))
+
+(slide
   #:layout 'center
   (t "Let’s test it out"))
 
@@ -1235,20 +1250,22 @@ CODE
 ))
 
 (slide
-  #:title "Lookups"
-  (hc-append (* 3 gap-size)
+  (vc-append (* 3 gap-size)
     (mono #<<CODE
+val code = """
+  ((lambda (x) (add x 20)) 22)
+"""
+
 val env = Map(
-  Identifier("x") ->
-    Str("It works!")
+  Identifier("add") -> builtinAdd
 )
 
-run("x", env)
+run(code, env)
 CODE
 )
-    (arrow gap-size 0)
+    (arrow gap-size (* pi 1.5))
     (mono #<<CODE
-Str("It works!")
+Number(42.0)
 CODE
 )))
 
