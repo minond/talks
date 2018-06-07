@@ -17,7 +17,7 @@
 (define (mono texts #:ratio [ratio 1] #:fill [fill #f])
   (apply vl-append 1
          (for/list ([line (string-split (string-trim texts) "\n")])
-           (with-size ((get-current-code-font-size))
+           (with-size (- ((get-current-code-font-size)) 4)
                       (with-font (current-code-font)
                                  (para #:fill? fill
                                        #:width (* ratio (current-para-width))
@@ -50,6 +50,16 @@
   #:layout 'center
   (titlet "From parsing to interpretation")
   (t "Let’s build a language"))
+
+(slide
+  #:layout 'center
+  (titlet "Lot’s of code. If you'd like to follow along:")
+  (t "https://minond.xyz/pti-talk"))
+
+(slide
+  #:layout 'center
+  (titlet "Marcos Minond")
+  (t "Software Engineer"))
 
 (slide
   #:title "What are we talking about?"
@@ -1239,17 +1249,6 @@ CODE
   (t "Let’s test it out"))
 
 (slide
-  #:title "def run"
-  (mono #:fill #t #<<CODE
-def run(code: String, env: Env):
-    Expr =
-
-  evaluate(parse(tokenize(code)),
-    env)._1
-CODE
-))
-
-(slide
   (vc-append (* 3 gap-size)
     (mono #<<CODE
 val code = """
@@ -1260,7 +1259,7 @@ val env = Map(
   Identifier("add") -> builtinAdd
 )
 
-run(code, env)
+evaluate(parse(tokenize(code)), env)
 CODE
 )
     (arrow gap-size (* pi 1.5))

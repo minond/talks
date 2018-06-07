@@ -33,6 +33,10 @@ Talking points:
 
 Todo:
 
+- Don't let slide content go all the way to the bottom
+
+- DONE Intro slide?
+- DONE Add short url to slides
 - DONE swap out variables and application slides. end with varaibles
 - DONE after "those are s-expression" add "we'll come back to those"
 - DONE there's a mistake with the identifier rule. also move it to the top
