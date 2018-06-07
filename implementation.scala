@@ -61,7 +61,9 @@ object Main {
   )
 
   def main(args: Array[String]): Unit = {
-    run("((lambda (x) (add x 42)) 42)")
+    run("((lambda (x) (add x 20)) 22)")
+    run("((lambda (a b) (add a b)) 5 -10)")
+    run("((lambda (a b) (add a b)) -10 5)")
     run("(begin (define -a -123) (add -a -a))")
     run("(add -123 123)")
     run("(d (+ 1 2))")
@@ -209,7 +211,7 @@ object Main {
           case '"' => Str(src.takeWhile(not(is('"'))).mkString)
           case n if isDigit(n) || (is('-')(n) && isDigit(src.head)) =>
             Number((n + consumeWhile(src, isDigit).mkString).toDouble)
-          case c if isIdentifier(c) =>
+          case c if isIdentifierStart(c) =>
             Identifier(c + consumeWhile(src, isIdentifier).mkString)
 
           case '#' =>
@@ -234,6 +236,9 @@ object Main {
 
     aux(List.empty).toIterator
   }
+
+  def isIdentifierStart(c: Char): Boolean =
+    isLetter(c) || isSymbol(c)
 
   def isIdentifier(c: Char): Boolean =
     isDigit(c) || isLetter(c) || isSymbol(c)

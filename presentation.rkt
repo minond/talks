@@ -190,19 +190,22 @@ CODE
   (mono "(lambda (n) (* n 2))"))
 
 (slide
-  #:title "It can store all of those values"
-  (mono "(define double (lambda (n) (* n 2)))"))
-
-(slide
   #:title "It can apply functions to parameters"
   #:layout 'center
   (mono "(double 21)"))
 
 (slide
+  #:title "It can store all of those values"
+  (mono "(define cool #t)")
+  (mono "(define age 99)")
+  (mono "(define name \"Marcos\")")
+  (mono "(define double (lambda (n) (* n 2)))"))
+
+(slide
   #:title "Does it look familiar?"
   #:layout 'center
   (p "Yes, it looks like a Lisp. Notice all of those parenthesized lists? Those
-      are s-expressions."))
+      are s-expressions and we’ll be talking about them again soon."))
 
 (slide
   #:layout 'center
@@ -241,7 +244,7 @@ CODE
         (code "::=")
         "becomes"
         (code "=")
-        ", and we add semi-colons at the end of expressions.")
+        ", and we add semicolons at the end of expressions.")
   (para "Other improvements include the ability to repeat expressions with"
         (code "{}")
         ", group expressions with"
@@ -298,7 +301,7 @@ CODE
 symbol = "<" | ">" | "*" | "+" | "-"
        | "=" | "_" | "/" | "%" ;
 
-identifier = identifier ,
+identifier = ( letter | symbol ) ,
    { letter | symbol | digit } ;
 CODE
 ))
@@ -306,12 +309,13 @@ CODE
 (slide
   #:title "S-expressions"
   (mono #<<CODE
-atom = identifier | number | boolean ;
+sexpr = "(" { exprs } ")" ;
 
 exprs = [ "'" ]
       ( atom | sexpr | exprs ) ;
 
-sexpr = "(" { exprs } ")" ;
+atom = identifier | number
+     | boolean | string ;
 CODE
 ))
 
@@ -324,12 +328,12 @@ digit   = "0" | ... | "9" ;
 string  = '"' , { letter } , '"' ;
 letter  = "A" | ... | "z" ;
 boolean = "#t" | "#f" ;
-identifier = identifier ,
+identifier = ( letter | symbol ) ,
         { letter | symbol | digit } ;
 symbol  = "<" | ">" | "*" | "+" | "-"
         | "=" | "_" | "/" | "%" ;
 atom    = identifier | number
-        | boolean ;
+        | boolean | string ;
 exprs   = [ "'" ]
         ( atom | sexpr | exprs ) ;
 sexpr   = "(" { exprs } ")" ;
@@ -350,13 +354,12 @@ CODE
 (slide
   #:title "But wait!"
   (p "Actually, let’s take a step back. Characters are hard but what if we had
-     ‘words’ instead?"))
+     ‘words’ instead? We need a lexer."))
 
 (slide
   #:title "What's a lexer?"
-  (p "A lexer is a state machine that converts a string  They ‘tokenize’ the
-     input turning a string into a list of tokens. This is usually one of the
-     first steps in compilation and interpretation.")
+  (p "Lexers analyze a string, character by character, and turn it into a
+     series of tokens that can be used in the later steps of parsing.")
   (blank)
   (hc-append (* 3 gap-size)
     (mono "(+ 21 43)")
@@ -404,6 +407,38 @@ CODE
 
 (slide
   #:title "Tokenizer function"
+  #:layout 'top
+  (mono #:ratio 1.3 #<<CODE
+def tokenize(str: String): Iterator[Token] = {
+  val src = str.toList.toIterator.buffered
+  for (c <- src if !c.isWhitespace)
+    yield c match {
+      // ...
+    }
+}
+CODE
+))
+
+(slide
+  #:title "Tokenizer function"
+  #:layout 'top
+  (mono #:ratio 1.3 #<<CODE
+def tokenize(str: String): Iterator[Token] = {
+  val src = str.toList.toIterator.buffered
+  for (c <- src if !c.isWhitespace)
+    yield c match {
+      case '(' => OpenParen
+      case ')' => CloseParen
+      case '\'' => SingleQuote
+      // ...
+    }
+}
+CODE
+))
+
+(slide
+  #:title "Tokenizer function"
+  #:layout 'top
   (mono #:ratio 1.3 #<<CODE
 def tokenize(str: String): Iterator[Token] = {
   val src = str.toList.toIterator.buffered
@@ -442,9 +477,11 @@ val src = str.toList.toIterator.buffered
 
 yield c match {
   case n if isDigit(n) ||
-      (n == '=' && isDigit(src.head)) =>
+      (n == '-' && isDigit(src.head)) =>
+
     val num =
       (n + consumeWhile(src, isDigit).mkString)
+
     Number(num.toDouble)
 }
 CODE
@@ -477,7 +514,7 @@ CODE
 val src = str.toList.toIterator.buffered
 
 yield c match {
-  case c if isIdentifier(c) =>
+  case c if isIdentifierStart(c) =>
     val name =
       c + consumeWhile(src, isIdentifier)
 
@@ -489,6 +526,9 @@ CODE
 (slide
   #:title "Helper definitions"
   (mono #:ratio 1.3 #<<CODE
+def isIdentifierStart(c: Char): Boolean =
+  isLetter(c) || isSymbol(c)
+
 def isIdentifier(c: Char): Boolean =
   isDigit(c) || isLetter(c) || isSymbol(c)
 
@@ -504,19 +544,19 @@ CODE
 ))
 
 (slide
-  #:title "Tokenizing identifiers"
+  #:title "Tokenizing booleans"
   (mono #:ratio 1.3 #<<CODE
 val src = str.toList.toIterator.buffered
 
 yield c match {
   case '#' =>
     src.headOption match {
+      case None =>
+        InvalidToken("unexpected <eof>")
       case Some('f') => src.next; False
       case Some('t') => src.next; True
       case Some(c) =>
         src.next; InvalidToken(s"#$c")
-      case None =>
-        InvalidToken("unexpected <eof>")
     }
 }
 CODE
@@ -550,13 +590,13 @@ CODE
 (slide
   #:title "We need these"
   (mono #<<CODE
-atom    = identifier | number
-        | boolean ;
+sexpr   = "(" { exprs } ")" ;
 
 exprs   = [ "'" ]
         ( atom | sexpr | exprs ) ;
 
-sexpr   = "(" { exprs } ")" ;
+atom    = identifier | number
+        | boolean | string ;
 CODE
 ))
 
@@ -585,25 +625,26 @@ CODE
 (slide
   #:title "ASTs"
   (p "An abstract syntax tree is a tree representation of source code
-     structure. It is abstract because parts of the source code are implicit,
-     such as parentheses, semicolons, etc.")
-  (p "ASTs may also include matadata used in later stages of
-     compilation/interpretation, but we won't be doing that. An AST will still
-     be very useful during evaluation, however. Without it there is no
-     structure."))
+     structure. ASTs represent some tokens explicitly, like numbers, booleans,
+     etc. and other implicitly, like parentheses and semicolons."))
 
 (slide
   #:layout 'center
-  (t "Let’s extend our data structures"))
+  (t "Let’s extend our data structures to match that"))
 
 (slide
-  #:title "Some changes to our Tokens"
+  #:title "Implicit data"
   (mono #:ratio 1.3 #<<CODE
 sealed trait Token
 case object SingleQuote extends Token
 case object OpenParen extends Token
 case object CloseParen extends Token
+CODE
+))
 
+(slide
+  #:title "Explicit data"
+  (mono #:ratio 1.3 #<<CODE
 sealed trait Expr extends Token
 case object True extends Expr
 case object False extends Expr
@@ -634,6 +675,20 @@ CODE
 
 (slide
   #:title "Parser function"
+  #:layout 'top
+  (mono #:ratio 1.3 #<<CODE
+def parse(ts: Iterator[Token]): Expr = {
+  val tokens = ts.buffered
+  tokens.next match {
+    // ...
+  }
+}
+CODE
+))
+
+(slide
+  #:title "Parser function"
+  #:layout 'top
   (mono #:ratio 1.3 #<<CODE
 def parse(ts: Iterator[Token]): Expr = {
   val tokens = ts.buffered
@@ -685,7 +740,7 @@ def parseExprs(
 
   if (tokens.hasNext &&
       tokens.head != CloseParen)
-    parse(tokens) :: aux(tokens)
+    parse(tokens) :: parseExprs(tokens)
   else
     List.empty
 CODE
@@ -725,7 +780,9 @@ CODE
 )
     (arrow gap-size (* pi 1.5))
     (mono #<<CODE
-SExpr(List(Identifier(+), Number(21.0), Number(43.0)))
+SExpr(List(Identifier(+),
+           Number(21.0),
+           Number(43.0)))
 CODE
 )))
 
@@ -736,7 +793,7 @@ CODE
      returned, and that is because those are expression that are meant to only
      be created programmatically, and as such the parser doesn't have to know
      how to parse them.")
-  (p "That is not the case of Lambdas. So what is happening right now?"))
+  (p "That is not the case of Lambdas."))
 
 (slide
   #:title "This is what is happening right now"
@@ -917,7 +974,12 @@ CODE
            (mono "324") (arrow gap-size 0) (mono "324")
            (mono "#t") (arrow gap-size 0) (mono "#t")
            (mono "\"Hello, world.\"") (arrow gap-size 0) (mono "\"Hello, world.\"")
-           (mono "(+ 21 43)") (arrow gap-size 0) (mono "64"))
+           (mono "(+ 21 43)") (arrow gap-size 0) (mono "64")
+           (mono #<<CODE
+((lambda (x)
+  (add x 20)) 22)
+CODE
+) (arrow gap-size 0) (mono "42"))
 
          (list* rc-superimpose
                 cc-superimpose
@@ -926,6 +988,9 @@ CODE
          cc-superimpose
          (* 2 gap-size)
          gap-size))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; TODO ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; TODO ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (slide
   #:title "Resources"
