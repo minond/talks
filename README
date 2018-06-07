@@ -1,11 +1,24 @@
 **From parsing to interpretation: let's build a language**
 
-An understanding of program evaluation can be a truly enlightening thing for a programmer. By breaking down the process to its essence and implementing the parsing and interpretation steps for a Lisp, we will explore both the interesting and oddly simple algorithms employed in making a language.
+An understanding of program evaluation can be a truly enlightening thing for a
+programmer. By breaking down the process to its essence and implementing the
+parsing and interpretation steps for a Lisp, we will explore both the
+interesting and oddly simple algorithms employed in making a language.
 
-Our Lisp will have familiar characteristics like variables, higher-order functions, conditionals, and lexical scope.
+Our Lisp will have familiar characteristics like variables, higher-order
+functions, conditionals, and lexical scope.
+
+
+
+Assets:
+
+- Computer image: https://pixabay.com/en/cartoon-computer-tooned-in-2026805/
+- Google search image: https://www.google.com/search?q=define+interpreter
 
 
 Resources:
 
-- Cartoon computer image: https://pixabay.com/en/cartoon-computer-tooned-in-2026805/
-- Google search image: https://www.google.com/search?q=define+interpreter
+- https://en.wikipedia.org/wiki/Extended_Backus-Naur_form
+- https://en.wikipedia.org/wiki/Abstract_syntax_tree
+- https://en.wikipedia.org/wiki/Recursive_descent_parser
+- https://en.wikipedia.org/wiki/Multi-pass_compiler
