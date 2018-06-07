@@ -1269,9 +1269,6 @@ Number(42.0)
 CODE
 )))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; TODO ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; TODO ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
 (slide
   #:layout 'center
   (titlet "From parsing to interpretation")
@@ -1282,4 +1279,5 @@ CODE
   (unordered
     "https://en.wikipedia.org/wiki/Extended_Backus-Naur_form"
     "https://en.wikipedia.org/wiki/Abstract_syntax_tree"
+    "https://en.wikipedia.org/wiki/Recursive_descent_parser"
     "https://en.wikipedia.org/wiki/Multi-pass_compiler"))
