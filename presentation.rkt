@@ -1143,8 +1143,122 @@ def evaluate(expr: Expr, env: Env):
 CODE
 ))
 
+(slide
+  #:title "That’s all for evaluate"
+  (p "You may have noticed our evaluate function was missing some
+     functionality. What happened to conditionals? What about variable
+     bindings?"))
+
+(slide
+  #:layout 'center
+  (t "This is what Proc and Builtin are for"))
+
+(slide
+  #:title "Builtin: define"
+  (mono #<<CODE
+Builtin((args, env) => args match {
+  case (id @ Identifier(_))
+      :: expr :: Nil =>
+
+    val update = env ++
+      Map(id -> expr)
+
+    (expr update)
+
+  case _ =>
+    (Err("bad call to define"), env)
+})
+CODE
+))
+
+(slide
+  #:title "Builtin: cond"
+  (mono #<<CODE
+Builtin((args, env) => {
+  def aux(conds: List[Expr]): Expr =
+    // ...
+
+  (aux(args), env)
+}),
+CODE
+))
+
+(slide
+  #:title "Builtin: cond"
+  #:layout 'top
+  (mono #<<CODE
+def aux(conds: List[Expr]): Expr =
+  conds match {
+    case SExpr(check :: body :: Nil)
+        :: rest => ???
+
+    case Nil => SExpr(List.empty)
+    case _ => Err("bad syntax. cond")
+  }
+CODE
+))
+
+(slide
+  #:title "Builtin: cond"
+  #:layout 'top
+  (mono #<<CODE
+def aux(conds: List[Expr]): Expr =
+  conds match {
+    case SExpr(check :: body :: Nil)
+        :: rest =>
+
+      evaluate(check, env)._1 match {
+        case False => aux(rest)
+        case _ =>
+          evaluate(body, env)._1
+      }
+
+    case Nil => SExpr(List.empty)
+    case _ => Err("bad syntax. cond")
+  }
+CODE
+))
+
+(slide
+  #:layout 'center
+  (t "Let’s test it out"))
+
+(slide
+  #:title "def run"
+  (mono #:fill #t #<<CODE
+def run(code: String, env: Env):
+    Expr =
+
+  evaluate(parse(tokenize(code)),
+    env)._1
+CODE
+))
+
+(slide
+  #:title "Lookups"
+  (hc-append (* 3 gap-size)
+    (mono #<<CODE
+val env = Map(
+  Identifier("x") ->
+    Str("It works!")
+)
+
+run("x", env)
+CODE
+)
+    (arrow gap-size 0)
+    (mono #<<CODE
+Str("It works!")
+CODE
+)))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; TODO ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; TODO ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(slide
+  #:layout 'center
+  (titlet "From parsing to interpretation")
+  (t "We’ve built a language"))
 
 (slide
   #:title "Resources"
