@@ -104,7 +104,7 @@ object Main {
     expr
   }
 
-  def evaluate(expr: Expr, env: Env): (Expr, Env) =
+  def evaluate(expr: Expr, env: Env = Map()): (Expr, Env) =
     expr match {
       case expr @ (True | False | _: Str | _: Number | _: Quote | _: Lambda | _: Builtin |
           _: Proc | _: Err) =>
