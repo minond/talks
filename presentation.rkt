@@ -52,12 +52,11 @@
   (t "Let’s build a language"))
 
 (slide
-  #:layout 'center
-  (titlet "Lot’s of code. If you'd like to follow along:")
+  #:title "Lot’s of code, if you'd like to follow along:"
   (t "https://minond.xyz/pti-talk"))
 
 (slide
-  #:layout 'center
+  #:title "Who am I?"
   (titlet "Marcos Minond")
   (t "Software Engineer"))
 
@@ -140,8 +139,8 @@
 (slide
   #:title "Where do we really start?"
   (ordered
-    "Parse"
-    "Evaluate"))
+    "We parse"
+    "And then we evaluate"))
 
 (slide
   #:title "This is where we start"
@@ -157,7 +156,7 @@
 
 (slide
   #:layout 'center
-  (t "What can our language do?"))
+  (t "First, what can our language do?"))
 
 (slide
   #:title "It can understand numbers"
@@ -228,7 +227,7 @@ CODE
 (slide
   #:title "What's BNF?"
   (p "Think of BNF as a language for languages. It's used in defining the
-     structure in a computer language (and just not a programming language)"))
+     structure in a computer language (not just programming languages)"))
 
 (slide
   #:title "What's BNF?"
@@ -272,7 +271,7 @@ CODE
 (slide
   #:title "Numbers"
   (mono #<<CODE
-number = [ "-" ] , digit { digit } ;
+number = [ "-" ] , ( digit , { digit } ) ;
 
 digit = "0" | "1" | "2" | "3" | "4"
       | "5" | "6" | "7" | "8" | "9" ;
@@ -282,8 +281,9 @@ CODE
 (slide
   #:title "Strings"
   (mono #<<CODE
-string = '"' { letter } '"' ;
+string = '"' { chars } '"' ;
 
+chars = letter | not-quote ;
 letter = "A" | "B" | "C" | "D" | "E"
        | "F" | "G" | "H" | "I" | "J"
        | "K" | "L" | "M" | "N" | "O"
@@ -321,7 +321,7 @@ CODE
   (mono #<<CODE
 sexpr = "(" { exprs } ")" ;
 
-exprs = [ "'" ]
+exprs = [ "'" ] ,
       ( atom | sexpr | exprs ) ;
 
 atom = identifier | number
@@ -333,9 +333,10 @@ CODE
   #:title "All together now. I present to you our Lisp."
   (mono #<<CODE
 main    = { exprs } ;
-number  = [ "-" ] , digit { digit } ;
+number = [ "-" ] , ( digit , { digit } ) ;
 digit   = "0" | ... | "9" ;
-string  = '"' , { letter } , '"' ;
+string = '"' { chars } '"' ;
+chars = letter | not-quote ;
 letter  = "A" | ... | "z" ;
 boolean = "#t" | "#f" ;
 identifier = ( letter | symbol ) ,
@@ -344,7 +345,7 @@ symbol  = "<" | ">" | "*" | "+" | "-"
         | "=" | "_" | "/" | "%" ;
 atom    = identifier | number
         | boolean | string ;
-exprs   = [ "'" ]
+exprs   = [ "'" ] ,
         ( atom | sexpr | exprs ) ;
 sexpr   = "(" { exprs } ")" ;
 CODE
@@ -1170,11 +1171,14 @@ Builtin((args, env) => args match {
   case (id @ Identifier(_))
       :: expr :: Nil =>
 
-    val update = env ++
-      Map(id -> expr)
+    evaluate(expr, env)._1 match {
+      case err: Err => (err, env)
+      case value =>
+        val update = env ++
+          Map(id -> value)
 
-    (expr update)
-
+        (value, update)
+    }
   case _ =>
     (Err("bad call to define"), env)
 })

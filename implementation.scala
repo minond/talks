@@ -27,7 +27,12 @@ object Main {
     Identifier("define") -> Builtin((args, env) =>
       args match {
         case (id @ Identifier(_)) :: expr :: Nil =>
-          (expr, env ++ Map(id -> expr))
+          evaluate(expr, env)._1 match {
+            case err: Err =>
+              (err, env)
+            case value =>
+              (value, env ++ Map(id -> value))
+          }
         case _ =>
           (Err("bad call to define. expecting an identifier and a value"), env)
     }),
@@ -79,6 +84,8 @@ object Main {
     run("((lambda (a b) (add a b)) 40 2)")
     run("(123 1 2)")
     run("(define two 2)")
+    run("(define a b)")
+    run("(define a 123)")
     run("(cond (#f 123) (#t 321))")
     run("(cond ('() 123))")
     run("(cond (#f 123))")

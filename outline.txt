@@ -35,6 +35,10 @@ Todo:
 
 - Don't let slide content go all the way to the bottom
 
+- DONE Define needs to eval the expr
+- DONE Also test err is final val for bad define call
+- DONE String rule is wrong
+- DONE Swapped words in first BNF slide
 - DONE Intro slide?
 - DONE Add short url to slides
 - DONE swap out variables and application slides. end with varaibles
