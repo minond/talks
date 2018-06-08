@@ -923,6 +923,8 @@ expr match {
              SExpr(args) ::
              body ::
              Nil) => ???
+
+  case expr => expr
 }
 CODE
 ))
@@ -963,7 +965,7 @@ CODE
 (slide
   #:title "calling passLambdas"
   (mono #<<CODE
-def parse(ts:Iterator[Token]):Expr = {
+def parse(ts: Iterator[Token]): Expr = {
   val tokens = ts.buffered
 
   passLambdas(tokens.next match {
@@ -1008,7 +1010,7 @@ CODE
   (t "Let’s build an evaluator"))
 
 (slide
-  #:title "def evaluate"
+  #:title "Eval"
   (p "In its simplest form, an evaluator is a function that takes an expression
      and returns another expression. The returned expression can be thought of
      as the simplified version of the original."))
@@ -1080,7 +1082,7 @@ def evaluate(expr: Expr, env: Env):
       val err = Err(
         s"unbound variable: $name")
 
-      (env.getOrElse(err), env)
+      (env.getOrElse(id, err), env)
   }
 CODE
 ))
@@ -1242,7 +1244,7 @@ def aux(conds: List[Expr]): Expr =
         :: rest => ???
 
     case Nil => SExpr(List.empty)
-    case _ => Err("bad syntax. cond")
+    case _ => Err("bad syntax: cond")
   }
 CODE
 ))
@@ -1263,7 +1265,7 @@ def aux(conds: List[Expr]): Expr =
       }
 
     case Nil => SExpr(List.empty)
-    case _ => Err("bad syntax. cond")
+    case _ => Err("bad syntax: cond")
   }
 CODE
 ))
