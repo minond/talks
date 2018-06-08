@@ -333,10 +333,10 @@ CODE
   #:title "All together now. I present to you our Lisp."
   (mono #<<CODE
 main    = { exprs } ;
-number = [ "-" ] , ( digit , { digit } ) ;
+number  = [ "-" ] , ( digit , { digit } ) ;
 digit   = "0" | ... | "9" ;
-string = '"' { chars } '"' ;
-chars = letter | not-quote ;
+string  = '"' { chars } '"' ;
+chars   = letter | not-quote ;
 letter  = "A" | ... | "z" ;
 boolean = "#t" | "#f" ;
 identifier = ( letter | symbol ) ,
@@ -629,7 +629,7 @@ CODE
   (mono #<<CODE
 sexpr   = "(" { exprs } ")" ;
 
-exprs   = [ "'" ]
+exprs   = [ "'" ] ,
         ( atom | sexpr | exprs ) ;
 
 atom    = identifier | number
