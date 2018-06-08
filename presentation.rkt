@@ -673,9 +673,13 @@ CODE
   #:title "Implicit data"
   (mono #:ratio 1.3 #<<CODE
 sealed trait Token
+
 case object SingleQuote extends Token
 case object OpenParen extends Token
 case object CloseParen extends Token
+
+case class InvalidToken(lexeme: String)
+  extends Token
 CODE
 ))
 
@@ -683,12 +687,15 @@ CODE
   #:title "Explicit data"
   (mono #:ratio 1.3 #<<CODE
 sealed trait Expr extends Token
+
 case object True extends Expr
 case object False extends Expr
 case class Number(value: Double) extends Expr
 case class Str(value: String) extends Expr
+
 case class Identifier(value: String)
   extends Expr
+
 case class SExpr(values: List[Expr])
   extends Expr
 CODE
@@ -699,6 +706,7 @@ CODE
   (mono #:ratio 1.3 #<<CODE
 case class Err(message: String) extends Expr
 case class Quote(value: Expr) extends Expr
+
 case class Lambda(args: List[Identifier],
   body: Expr) extends Expr
 
