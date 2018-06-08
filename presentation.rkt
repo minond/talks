@@ -57,8 +57,13 @@
 
 (slide
   #:title "Who am I?"
-  (titlet "Marcos Minond")
-  (t "Software Engineer"))
+  (ht-append  (* gap-size 2)
+              (bitmap (build-path "assets" "me.jpg"))
+              (para #:width (/ (current-para-width) 1.5)
+                    (string-normalize-spaces
+                      "My name is Marcos Minond, and I’m a Software Engineer.
+                      My biggest area of interest in CS is language design and
+                      implementation."))))
 
 (slide
   #:title "What are we talking about?"
