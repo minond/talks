@@ -813,21 +813,22 @@ CODE
   #:title "And now we have an AST"
   (vc-append (* 2 gap-size)
     (mono #<<CODE
-parse(tokenize("(+ 21 43)"))
+parse(tokenize("(((a)))"))
 CODE
 )
     (arrow gap-size (* pi 1.5))
     (mono #<<CODE
-List(OpenParen, Identifier(+),
-  Number(21.0), Number(43.0),
-  CloseParen)
+List(OpenParen, OpenParen, OpenParen,
+     Identifier(a), CloseParen,
+     CloseParen, CloseParen)
 CODE
 )
     (arrow gap-size (* pi 1.5))
     (mono #<<CODE
-SExpr(List(Identifier(+),
-           Number(21.0),
-           Number(43.0)))
+SExpr(List(
+  SExpr(List(
+    SExpr(List(
+      Identifier(a)))))))
 CODE
 )))
 
