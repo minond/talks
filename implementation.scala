@@ -220,7 +220,10 @@ object Main {
           case ')' => CloseParen
           case '\'' => SingleQuote
           case '"' => Str(src.takeWhile(not(is('"'))).mkString)
-          case n if isDigit(n) || (is('-')(n) && isDigit(src.head)) =>
+          case n if isDigit(n) || (
+              is('-')(n) &&
+              src.hasNext &&
+              isDigit(src.head)) =>
             Number((n + consumeWhile(src, isDigit).mkString).toDouble)
           case c if isIdentifierStart(c) =>
             Identifier(c + consumeWhile(src, isIdentifier).mkString)

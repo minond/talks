@@ -487,8 +487,8 @@ CODE
 val src = str.toList.toIterator.buffered
 
 yield c match {
-  case n if isDigit(n) ||
-      (n == '-' && isDigit(src.head)) =>
+  case n if isDigit(n) || (n == '-' &&
+      src.hasNext && isDigit(src.head)) =>
 
     val num =
       (n + consumeWhile(src, isDigit).mkString)
