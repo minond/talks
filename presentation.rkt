@@ -574,6 +574,32 @@ CODE
 ))
 
 (slide
+  #:title "Tokenizing everything else"
+  (mono #:ratio 1.3 #<<CODE
+val src = str.toList.toIterator.buffered
+
+yield c match {
+  case c =>
+    val word = c +
+      consumeWhile(src, isWord)
+
+    InvalidToken(word.mkString)
+}
+CODE
+))
+
+(slide
+  #:title "Helper definitions"
+  (mono #:ratio 1.3 #<<CODE
+def isParen(c: Char): Boolean =
+  c == '(' || c == ')'
+
+def isWord(c: Char): Boolean =
+  !c.isWhitespace && !isParen(c)
+CODE
+))
+
+(slide
   #:title "And now we have tokens"
   (vc-append (* 2 gap-size)
     (mono #<<CODE

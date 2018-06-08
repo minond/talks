@@ -233,7 +233,7 @@ object Main {
               case None => InvalidToken("#")
             }
 
-          case c => InvalidToken(c + consumeWhile[Char](src, isWord).mkString)
+          case c => InvalidToken(c + consumeWhile(src, isWord).mkString)
         }
   }
 
