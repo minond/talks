@@ -101,14 +101,36 @@ object Implementation {
           aux(env, mode)
 
         case (code, Evaluate) =>
-          val (ret, next) = evaluate(parse(tokenize(code)), env)
-          println(ret)
+          val toks = tokenize(code)
+          var next = env
+
+          while (toks.hasNext) {
+            val (ret, env) = evaluate(parse(toks), next)
+            println(pretty(ret))
+            next = env
+          }
+
           aux(next, mode)
       }
     }
 
     aux(env, Evaluate)
   }
+
+  def pretty(expr: Expr): String =
+    expr match {
+      case Err(message) => s"; $message"
+      case Number(value) => value.toString
+      case Str(value) => s""""$value""""
+      case True => "#t"
+      case False => "#f"
+      case Identifier(value) => value
+      case Quote(value) => s"'${pretty(value)}"
+      case Lambda(_, _) => "<proc>"
+      case Proc(_) => "<proc>"
+      case Builtin(_) => "<proc>"
+      case SExpr(exprs) => s"(${exprs.map(pretty).mkString(" ")})"
+    }
 
   def evaluate(expr: Expr, env: Env = Map()): (Expr, Env) =
     expr match {
