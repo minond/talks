@@ -118,6 +118,10 @@ object Main {
         val (head, _) = evaluate(id, env)
         evaluate(SExpr(head :: body), env)
 
+      case SExpr((sub @ SExpr(_)) :: body) =>
+        val (head, _) = evaluate(sub, env)
+        evaluate(SExpr(head :: body), env)
+
       case SExpr(Lambda(args, body) :: values) =>
         (evaluate(body, args.zip(values).foldLeft(env) {
           case (env, (arg, value)) => env ++ Map(arg -> value)
