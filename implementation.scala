@@ -1,6 +1,7 @@
+import java.io.{BufferedReader, InputStreamReader}
 import scala.collection.mutable.ListBuffer
 
-object Main {
+object Implementation {
   type Prediate[T] = T => Boolean
   type Env = Map[Identifier, Expr]
 
@@ -23,85 +24,90 @@ object Main {
   case class Proc(f: (List[Expr], Env) => (Expr, Env)) extends Expr
   case class Builtin(f: (List[Expr], Env) => (Expr, Env)) extends Expr
 
-  val env = Map(
-    Identifier("define") -> Builtin((args, env) =>
-      args match {
-        case (id @ Identifier(_)) :: expr :: Nil =>
-          evaluate(expr, env)._1 match {
-            case err: Err =>
-              (err, env)
-            case value =>
-              (value, env ++ Map(id -> value))
+  sealed trait Mode
+  case object Evaluate extends Mode { override def toString = "eval" }
+  case object Parse extends Mode { override def toString = "parse" }
+  case object Tokenize extends Mode { override def toString = "tokenize" }
+
+  val builtinDefine = Builtin((args, env) =>
+    args match {
+      case (id @ Identifier(_)) :: expr :: Nil =>
+        evaluate(expr, env)._1 match {
+          case err: Err =>
+            (err, env)
+          case value =>
+            (value, env ++ Map(id -> value))
+        }
+      case _ =>
+        (Err("bad call to define. expecting an identifier and a value"), env)
+  })
+
+  val builtinBegin = Builtin((args, env) => {
+    val (last, _) =
+      args.foldLeft[(Expr, Env)]((SExpr(List.empty), env)) {
+        case ((_, env), expr) => evaluate(expr, env)
+      }
+
+    (last, env)
+  })
+
+  val builtinCond = Builtin((args, env) => {
+    def aux(conds: List[Expr]): Expr =
+      conds match {
+        case SExpr(check :: body :: Nil) :: rest =>
+          evaluate(check, env)._1 match {
+            case False => aux(rest)
+            case _ => evaluate(body, env)._1
           }
-        case _ =>
-          (Err("bad call to define. expecting an identifier and a value"), env)
-    }),
-    Identifier("begin") -> Builtin((args, env) => {
-      val (last, _) =
-        args.foldLeft[(Expr, Env)]((SExpr(List.empty), env)) {
-          case ((_, env), expr) => evaluate(expr, env)
-        }
+        case Nil => SExpr(List.empty)
+        case _ => Err("bad syntax. cond expects a list of expression pairs")
+      }
 
-      (last, env)
-    }),
-    Identifier("cond") -> Builtin((args, env) => {
-      def aux(conds: List[Expr]): Expr =
-        conds match {
-          case SExpr(check :: body :: Nil) :: rest =>
-            evaluate(check, env)._1 match {
-              case False => aux(rest)
-              case _ => evaluate(body, env)._1
-            }
-          case Nil => SExpr(List.empty)
-          case _ => Err("bad syntax. cond expects a list of expression pairs")
-        }
+    (aux(args), env)
+  })
 
-      (aux(args), env)
-    }),
-    Identifier("add") -> Proc((args, env) =>
-      (args match {
-        case Number(a) :: Number(b) :: Nil => Number(a + b)
-        case _ => Err("bad call to add. expecting two numbers")
-      }, env))
+  val builtinAdd = Proc((args, env) =>
+    (args match {
+      case Number(a) :: Number(b) :: Nil => Number(a + b)
+      case _ => Err("bad call to add. expecting two numbers")
+    }, env))
+
+  val env = Map(
+    Identifier("add") -> builtinAdd,
+    Identifier("begin") -> builtinBegin,
+    Identifier("cond") -> builtinCond,
+    Identifier("define") -> builtinDefine,
   )
 
   def main(args: Array[String]): Unit = {
-    run("((lambda () 123))")
-    run("((lambda (x) (add x 20)) 22)")
-    run("((lambda (a b) (add a b)) 5 -10)")
-    run("((lambda (a b) (add a b)) -10 5)")
-    run("(begin (define -a -123) (add -a -a))")
-    run("(add -123 123)")
-    run("(d (+ 1 2))")
-    run("(lambda (a b) (+ a b))")
-    run("((lambda (a 1) (+ a b)) 40 2)")
-    run("(lambda (a b c) +)")
-    run("#t")
-    run("123")
-    run("1 2 3")
-    run(""""a b c"""")
-    run("''''(1 2 3)")
-    run("((lambda (a b) (add a b)) 40 2)")
-    run("(123 1 2)")
-    run("(define two 2)")
-    run("(define a b)")
-    run("(define a 123)")
-    run("(cond (#f 123) (#t 321))")
-    run("(cond ('() 123))")
-    run("(cond (#f 123))")
-    run("(cond)")
-    run("""
-    (begin
-      (define a 123)
-      (define b 321)
-      (add a b))
-    """)
-  }
+    val in = new BufferedReader(new InputStreamReader(System.in))
 
-  def run(src: String, env: Env = env): Expr = {
-    val expr = evaluate(parse(tokenize(src)), env)._1
-    println(s"<= ${src.trim}\n=> $expr")
-    expr
+    def aux(env: Env, mode: Mode): Unit = {
+      printf("%s> ", mode)
+      (in.readLine.trim, mode) match {
+        case ("", _) => aux(env, mode)
+
+        case ("(exit)", _) => return
+        case ("(mode eval)", _) => aux(env, Evaluate)
+        case ("(mode parse)", _) => aux(env, Parse)
+        case ("(mode tokenize)", _) => aux(env, Tokenize)
+
+        case (code, Tokenize) =>
+          println(tokenize(code).toList)
+          aux(env, mode)
+
+        case (code, Parse) =>
+          println(parse(tokenize(code)))
+          aux(env, mode)
+
+        case (code, Evaluate) =>
+          val (ret, next) = evaluate(parse(tokenize(code)), env)
+          println(ret)
+          aux(next, mode)
+      }
+    }
+
+    aux(env, Evaluate)
   }
 
   def evaluate(expr: Expr, env: Env = Map()): (Expr, Env) =
@@ -224,10 +230,10 @@ object Main {
           case ')' => CloseParen
           case '\'' => SingleQuote
           case '"' => Str(src.takeWhile(not(is('"'))).mkString)
-          case n if isDigit(n) || (
-              is('-')(n) &&
-              src.hasNext &&
-              isDigit(src.head)) =>
+          case n
+              if isDigit(n) || (is('-')(n) &&
+                src.hasNext &&
+                isDigit(src.head)) =>
             Number((n + consumeWhile(src, isDigit).mkString).toDouble)
           case c if isIdentifierStart(c) =>
             Identifier(c + consumeWhile(src, isIdentifier).mkString)
