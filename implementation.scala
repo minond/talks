@@ -152,7 +152,7 @@ object Implementation {
 
       case SExpr(Lambda(args, body) :: values) =>
         (evaluate(body, args.zip(values).foldLeft(env) {
-          case (env, (arg, value)) => env ++ Map(arg -> value)
+          case (_env, (arg, value)) => _env ++ Map(arg -> evaluate(value, env)._1)
         })._1, env)
 
       case SExpr(Proc(fn) :: args) =>
@@ -296,7 +296,7 @@ object Implementation {
     c >= 'A' && c <= 'z'
 
   def isSymbol(c: Char): Boolean =
-    Set('<', '>', '*', '+', '-', '=', '_', '/', '%').contains(c)
+    Set('<', '>', '*', '+', '-', '=', '_', '/', '%', '?').contains(c)
 
   def isParen(c: Char): Boolean =
     c == '(' || c == ')'

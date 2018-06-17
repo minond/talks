@@ -314,7 +314,7 @@ CODE
   #:title "Identifiers"
   (mono #<<CODE
 symbol = "<" | ">" | "*" | "+" | "-"
-       | "=" | "_" | "/" | "%" ;
+       | "=" | "_" | "/" | "%" | "?" ;
 
 identifier = ( letter | symbol ) ,
    { letter | symbol | digit } ;
@@ -347,7 +347,7 @@ boolean = "#t" | "#f" ;
 identifier = ( letter | symbol ) ,
         { letter | symbol | digit } ;
 symbol  = "<" | ">" | "*" | "+" | "-"
-        | "=" | "_" | "/" | "%" ;
+        | "=" | "_" | "/" | "%" | "?" ;
 atom    = identifier | number
         | boolean | string ;
 exprs   = [ "'" ] ,
@@ -554,7 +554,7 @@ def isLetter(c: Char): Boolean =
 def isSymbol(c: Char): Boolean =
   Set(
     '<', '>', '*', '+', '-',
-    '=', '_', '/', '%'
+    '=', '_', '/', '%', '?'
   ).contains(c)
 CODE
 ))
@@ -1136,8 +1136,9 @@ case SExpr(Lambda(args, body)
 
   val scope = args.zip(values)
     .foldLeft(env) {
-      case (env, (arg, value)) =>
-        env ++ Map(arg -> value)
+      case (_env, (arg, value)) =>
+        _env ++ Map(arg ->
+          evaluate(value, env)._1)
     }
 
   val (ret, _) =
