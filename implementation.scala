@@ -24,114 +24,6 @@ object Implementation {
   case class Proc(f: (List[Expr], Env) => (Expr, Env)) extends Expr
   case class Builtin(f: (List[Expr], Env) => (Expr, Env)) extends Expr
 
-  sealed trait Mode
-  case object Evaluate extends Mode { override def toString = "eval" }
-  case object Parse extends Mode { override def toString = "parse" }
-  case object Tokenize extends Mode { override def toString = "tokenize" }
-
-  val builtinDefine = Builtin((args, env) =>
-    args match {
-      case (id @ Identifier(_)) :: expr :: Nil =>
-        evaluate(expr, env)._1 match {
-          case err: Err =>
-            (err, env)
-          case value =>
-            (value, env ++ Map(id -> value))
-        }
-      case _ =>
-        (Err("bad call to define. expecting an identifier and a value"), env)
-  })
-
-  val builtinBegin = Builtin((args, env) => {
-    val (last, _) =
-      args.foldLeft[(Expr, Env)]((SExpr(List.empty), env)) {
-        case ((_, env), expr) => evaluate(expr, env)
-      }
-
-    (last, env)
-  })
-
-  val builtinCond = Builtin((args, env) => {
-    def aux(conds: List[Expr]): Expr =
-      conds match {
-        case SExpr(check :: body :: Nil) :: rest =>
-          evaluate(check, env)._1 match {
-            case False => aux(rest)
-            case _ => evaluate(body, env)._1
-          }
-        case Nil => SExpr(List.empty)
-        case _ => Err("bad syntax. cond expects a list of expression pairs")
-      }
-
-    (aux(args), env)
-  })
-
-  val builtinAdd = Proc((args, env) =>
-    (args match {
-      case Number(a) :: Number(b) :: Nil => Number(a + b)
-      case _ => Err("bad call to add. expecting two numbers")
-    }, env))
-
-  val env = Map(
-    Identifier("add") -> builtinAdd,
-    Identifier("begin") -> builtinBegin,
-    Identifier("cond") -> builtinCond,
-    Identifier("define") -> builtinDefine,
-  )
-
-  def main(args: Array[String]): Unit = {
-    val in = new BufferedReader(new InputStreamReader(System.in))
-
-    def aux(env: Env, mode: Mode): Unit = {
-      printf("%s> ", mode)
-      (in.readLine.trim, mode) match {
-        case ("", _) => aux(env, mode)
-
-        case ("(exit)", _) => return
-        case ("(mode eval)", _) => aux(env, Evaluate)
-        case ("(mode parse)", _) => aux(env, Parse)
-        case ("(mode tokenize)", _) => aux(env, Tokenize)
-
-        case (code, Tokenize) =>
-          println(tokenize(code).toList)
-          aux(env, mode)
-
-        case (code, Parse) =>
-          println(parse(tokenize(code)))
-          aux(env, mode)
-
-        case (code, Evaluate) =>
-          val toks = tokenize(code)
-          var next = env
-
-          while (toks.hasNext) {
-            val (ret, env) = evaluate(parse(toks), next)
-            println(pretty(ret))
-            next = env
-          }
-
-          aux(next, mode)
-      }
-    }
-
-    aux(env, Evaluate)
-  }
-
-  def pretty(expr: Expr): String =
-    expr match {
-      case Err(message) => s"; $message"
-      case Number(value) => value.toString
-      case Str(value) => s""""$value""""
-      case True => "#t"
-      case False => "#f"
-      case Identifier(value) => value
-      case Quote(value) => s"'${pretty(value)}"
-      case Lambda(_, _) => "<proc>"
-      case Proc(_) => "<proc>"
-      case Builtin(_) => "<proc>"
-      case SExpr(exprs) => s"(${exprs.map(pretty).mkString(" ")})"
-    }
-
   def evaluate(expr: Expr, env: Env = Map()): (Expr, Env) =
     expr match {
       case expr @ (True | False | _: Str | _: Number | _: Quote | _: Lambda | _: Builtin |
@@ -244,7 +136,6 @@ object Implementation {
 
   def tokenize(str: String): Iterator[Token] = {
     val src = str.toList.toIterator.buffered
-
     for (c <- src if !c.isWhitespace)
       yield
         c match {
@@ -309,4 +200,145 @@ object Implementation {
 
   def not[T](f: Prediate[T]): Prediate[T] =
     (x: T) => !f(x)
+
+  sealed trait Mode
+  case object Evaluate extends Mode { override def toString = "eval" }
+  case object Parse extends Mode { override def toString = "parse" }
+  case object Tokenize extends Mode { override def toString = "tokenize" }
+
+  val builtinDefine = Builtin((args, env) =>
+    args match {
+      case (id @ Identifier(_)) :: expr :: Nil =>
+        evaluate(expr, env)._1 match {
+          case err: Err =>
+            (err, env)
+          case value =>
+            (value, env ++ Map(id -> value))
+        }
+      case _ =>
+        (Err("bad call to define. expecting an identifier and a value"), env)
+  })
+
+  val builtinBegin = Builtin((args, env) => {
+    val (last, _) =
+      args.foldLeft[(Expr, Env)]((SExpr(List.empty), env)) {
+        case ((_, env), expr) => evaluate(expr, env)
+      }
+
+    (last, env)
+  })
+
+  val builtinCond = Builtin((args, env) => {
+    def aux(conds: List[Expr]): Expr =
+      conds match {
+        case SExpr(check :: body :: Nil) :: rest =>
+          evaluate(check, env)._1 match {
+            case False => aux(rest)
+            case _ => evaluate(body, env)._1
+          }
+        case Nil => SExpr(List.empty)
+        case _ => Err("bad syntax. cond expects a list of expression pairs")
+      }
+
+    (aux(args), env)
+  })
+
+  val builtinAdd = Proc((args, env) =>
+    (args match {
+      case Number(a) :: Number(b) :: Nil => Number(a + b)
+      case _ => Err("bad call to add. expecting two numbers")
+    }, env))
+
+  val builtinNullQ = Proc((args, env) =>
+    (args match {
+      case SExpr(Nil) :: Nil => True
+      case Quote(SExpr(Nil)) :: Nil => True
+      case _ :: Nil => False
+      case _ => Err("bad call to null?. expecting two numbers")
+    }, env))
+
+  val builtinCar = Proc((args, env) =>
+    (args match {
+      case SExpr(h :: _) :: Nil => h
+      case Quote(SExpr(h :: _)) :: Nil => h
+      case _ => Err("bad call to car. expecting a single list with items")
+    }, env))
+
+  val builtinCdr = Proc((args, env) =>
+    (args match {
+      case SExpr(_ :: t) :: Nil => SExpr(t)
+      case Quote(SExpr(_ :: t)) :: Nil => SExpr(t)
+      case _ => Err("bad call to cdr. expecting a single list")
+    }, env))
+
+  val builtinCons = Proc((args, env) =>
+    (args match {
+      case h :: SExpr(t) :: Nil => SExpr(h :: t)
+      case h :: Quote(SExpr(t)) :: Nil => SExpr(h :: t)
+      case _ => Err("bad call to cons. expecting an item and a list")
+    }, env))
+
+  val env = Map(
+    Identifier("add") -> builtinAdd,
+    Identifier("begin") -> builtinBegin,
+    Identifier("car") -> builtinCar,
+    Identifier("cdr") -> builtinCdr,
+    Identifier("cond") -> builtinCond,
+    Identifier("cons") -> builtinCons,
+    Identifier("define") -> builtinDefine,
+    Identifier("null?") -> builtinNullQ,
+  )
+
+  def main(args: Array[String]): Unit = {
+    val in = new BufferedReader(new InputStreamReader(System.in))
+
+    def aux(env: Env, mode: Mode): Unit = {
+      printf("%s> ", mode)
+      (in.readLine.trim, mode) match {
+        case ("", _) => aux(env, mode)
+
+        case ("(exit)", _) => return
+        case ("(mode eval)", _) => aux(env, Evaluate)
+        case ("(mode parse)", _) => aux(env, Parse)
+        case ("(mode tokenize)", _) => aux(env, Tokenize)
+
+        case (code, Tokenize) =>
+          println(tokenize(code).toList)
+          aux(env, mode)
+
+        case (code, Parse) =>
+          println(parse(tokenize(code)))
+          aux(env, mode)
+
+        case (code, Evaluate) =>
+          val toks = tokenize(code)
+          var next = env
+
+          while (toks.hasNext) {
+            val (ret, env) = evaluate(parse(toks), next)
+            println(pretty(ret))
+            next = env
+          }
+
+          aux(next, mode)
+      }
+    }
+
+    aux(env, Evaluate)
+  }
+
+  def pretty(expr: Expr): String =
+    expr match {
+      case Err(message) => s"; $message"
+      case Number(value) => value.toString
+      case Str(value) => s""""$value""""
+      case True => "#t"
+      case False => "#f"
+      case Identifier(value) => value
+      case Quote(value) => s"'${pretty(value)}"
+      case Lambda(_, _) => "<proc>"
+      case Proc(_) => "<proc>"
+      case Builtin(_) => "<proc>"
+      case SExpr(exprs) => s"(${exprs.map(pretty).mkString(" ")})"
+    }
 }
