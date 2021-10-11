@@ -1,0 +1,53 @@
+An overview of Ruby
+-------------------
+
+## For C++ programmers
+
+
+Syntax overview:
+- Strings, hashes, arrays, numbers
+- Variable definitions
+- Classes and modules
+- Conditionals
+
+Basics:
+- Base class types, String, Hash, Array, Float/Integer/Numeric, etc.
+- Loops
+- Conditionals, false/nil = false
+- Printing to the screen
+- Class declaration, constructors, self
+- Namespaces vs Modules
+- Objects in Ruby
+- Blocks and yield in Ruby
+- Instance variables/methods
+- Class/static variables/methods, valid names and conventions
+- Calling methods, parenthesis, named arguments, varargs
+- Exception handling
+- Constants
+- Nil
+- Garbage collection
+- Including files
+- File handling as an example of concepts
+
+
+Intermediate:
+- Dynamic dispatch
+- Statements vs expressions
+- Lambdas
+- Scoping
+- Enumerators in Ruby vs Iterators in C++
+- Mixins and monkey patching
+- Reflection, class, superclass, ancestors
+
+
+Advanced:
+- Binding as scope
+- Method references
+- Metaprogramming
+
+
+Rails:
+- TODO
+
+Ruby applications at MX:
+- TODO
