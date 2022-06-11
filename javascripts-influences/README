@@ -1,0 +1,13 @@
+**Exploring JavaScript's Influences**
+
+This presentation will be a short tour of programming languages, specifically
+programming languages that influenced the design of JavaScript. Let's learn
+about languages like Self and Scheme, and see where some of the features of
+JavaScript come from and how they are used in those languages
+
+
+Resources:
+
+- https://2ality.com/2011/03/javascript-how-it-all-began.html
+- http://speakingjs.com/es5/ch03.html
+- https://exploring-data.com/vis/programming-languages-influence-network/#JavaScript
